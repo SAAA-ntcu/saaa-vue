@@ -33,9 +33,17 @@
         </button>
       </div>
 
-      <!-- Unit Tag -->
-      <div class="text-xs text-slate-400 font-medium">
-        目前單位：<span class="text-slate-700 font-bold">{{ state.username }}</span>
+      <!-- Year & Username Tag -->
+      <div class="flex items-center gap-3 text-xs flex-wrap">
+        <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 font-bold flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          年度：<strong class="font-bold font-mono">115</strong> 學年度
+        </span>
+        <span class="text-slate-600 font-medium">
+          使用者名稱：<strong class="text-slate-800 font-bold font-mono">{{ state.username }}</strong>
+        </span>
       </div>
     </div>
 
@@ -142,7 +150,7 @@
                 v-model="teacherFilters.keyword"
                 @input="handleTeacherFilterChange"
                 type="text"
-                placeholder="姓名、管理碼或信箱"
+                placeholder="搜尋：使用者名稱、姓名或信箱"
                 class="w-full h-9 px-2.5 text-xs bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
               />
               <button
@@ -207,7 +215,9 @@
                   />
                 </th>
                 <th class="py-3 px-2 text-center w-10">No.</th>
-                <th class="py-3 px-4">教師姓名 / 管理專用碼</th>
+                <th class="py-3 px-3 text-center w-16">年度</th>
+                <th class="py-3 px-4">使用者名稱</th>
+                <th class="py-3 px-4">教師姓名</th>
                 <th class="py-3 px-4">組別身分</th>
                 <th class="py-3 px-4">任教年級 / 班級</th>
                 <th class="py-3 px-4">電子郵件信箱</th>
@@ -236,10 +246,19 @@
                   {{ (teacherCurrentPage - 1) * teacherPageSize + index + 1 }}
                 </td>
 
-                <!-- 姓名 / 管理專用碼 (複合欄位) -->
-                <td class="py-3 px-4">
-                  <div class="font-bold text-slate-800 text-xs">{{ t.name }}</div>
-                  <div class="font-mono text-[11px] text-slate-400 tracking-tight">{{ t.adminCode }}</div>
+                <!-- 年度 -->
+                <td class="py-3 px-3 text-center font-mono font-bold text-slate-700">
+                  {{ t.year || teacherFilters.year }}
+                </td>
+
+                <!-- 使用者名稱 -->
+                <td class="py-3 px-4 font-mono font-bold text-[#52796f]">
+                  {{ t.username || t.adminCode }}
+                </td>
+
+                <!-- 教師姓名 -->
+                <td class="py-3 px-4 font-bold text-slate-800">
+                  {{ t.name }}
                 </td>
 
                 <!-- 組別身分 -->
@@ -297,7 +316,7 @@
 
               <!-- Empty state -->
               <tr v-if="filteredTeacherList.length === 0">
-                <td colspan="8" class="py-12 text-center text-slate-400">
+                <td colspan="10" class="py-12 text-center text-slate-400">
                   <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
@@ -357,9 +376,23 @@
           </button>
         </div>
 
-        <!-- Filter Controls (年級、班級、科目、關鍵字) -->
+        <!-- Filter Controls (學年度、年級、班級、科目、關鍵字) -->
         <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-3.5 sm:p-4">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <!-- 學年度篩選 -->
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">學年度</label>
+              <select
+                v-model="absenteeFilters.year"
+                @change="handleFilterChange"
+                class="w-full h-9 px-2.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f] cursor-pointer"
+              >
+                <option value="115">115 學年度</option>
+                <option value="114">114 學年度</option>
+                <option value="113">113 學年度</option>
+              </select>
+            </div>
+
             <!-- 年級篩選 -->
             <div>
               <label class="block text-[11px] font-bold text-slate-600 mb-1">施測年級</label>
@@ -437,6 +470,7 @@
             <table class="w-full text-left border-collapse text-xs">
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                  <th class="py-3 px-3 text-center w-16">年度</th>
                   <th class="py-3 px-4">年級班級</th>
                   <th class="py-3 px-4 text-center">座號</th>
                   <th class="py-3 px-4">學生姓名</th>
@@ -449,6 +483,9 @@
                   :key="st.id"
                   class="hover:bg-slate-50/70 transition"
                 >
+                  <td class="py-3 px-3 text-center font-mono font-bold text-slate-700">
+                    {{ st.year || absenteeFilters.year }}
+                  </td>
                   <td class="py-3 px-4 font-bold text-slate-800">{{ st.class }}</td>
                   <td class="py-3 px-4 text-center font-mono text-slate-500">{{ st.seatNo }}</td>
                   <td class="py-3 px-4 font-bold text-slate-800">{{ st.name }}</td>
@@ -468,7 +505,7 @@
 
                 <!-- Empty state if no matched items -->
                 <tr v-if="filteredAbsenteeList.length === 0">
-                  <td colspan="4" class="py-12 text-center text-slate-400">
+                  <td colspan="5" class="py-12 text-center text-slate-400">
                     <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
@@ -770,6 +807,8 @@ const allTeacherList = ref([
   {
     id: 1,
     selected: false,
+    year: '115',
+    username: 'PAdmin_054628',
     name: `${state.school}_校長`,
     adminCode: 'PAdmin_054628',
     role: '校長',
@@ -781,6 +820,8 @@ const allTeacherList = ref([
   {
     id: 2,
     selected: false,
+    year: '115',
+    username: 'DAdmin_014628',
     name: '陳○廷',
     adminCode: 'DAdmin_014628',
     role: '學年主任',
@@ -792,6 +833,8 @@ const allTeacherList = ref([
   {
     id: 3,
     selected: false,
+    year: '115',
+    username: 'DAdmin_024628',
     name: '林○萱',
     adminCode: 'DAdmin_024628',
     role: '學年主任',
@@ -803,6 +846,8 @@ const allTeacherList = ref([
   {
     id: 4,
     selected: false,
+    year: '115',
+    username: 'DAdmin_034628',
     name: '張○恩',
     adminCode: 'DAdmin_034628',
     role: '學年主任',
@@ -814,6 +859,8 @@ const allTeacherList = ref([
   {
     id: 5,
     selected: false,
+    year: '115',
+    username: 'TAdmin_301001',
     name: '王○晴',
     adminCode: 'TAdmin_301001',
     role: '班級導師',
@@ -825,6 +872,8 @@ const allTeacherList = ref([
   {
     id: 6,
     selected: false,
+    year: '115',
+    username: 'TAdmin_302002',
     name: '李○哲',
     adminCode: 'TAdmin_302002',
     role: '班級導師',
@@ -836,6 +885,8 @@ const allTeacherList = ref([
   {
     id: 7,
     selected: false,
+    year: '115',
+    username: 'TAdmin_401003',
     name: '許○婷',
     adminCode: 'TAdmin_401003',
     role: '科任教師',
@@ -847,6 +898,8 @@ const allTeacherList = ref([
   {
     id: 8,
     selected: false,
+    year: '115',
+    username: 'TAdmin_501004',
     name: '趙○芬',
     adminCode: 'TAdmin_501004',
     role: '班級導師',
@@ -858,6 +911,8 @@ const allTeacherList = ref([
   {
     id: 9,
     selected: false,
+    year: '115',
+    username: 'TAdmin_502005',
     name: '周○廷',
     adminCode: 'TAdmin_502005',
     role: '授課教師',
@@ -869,6 +924,8 @@ const allTeacherList = ref([
   {
     id: 10,
     selected: false,
+    year: '115',
+    username: 'TAdmin_601006',
     name: '謝○睿',
     adminCode: 'TAdmin_601006',
     role: '科任教師',
@@ -892,6 +949,10 @@ function getRoleBadgeClass(role) {
 // 篩選後名單
 const filteredTeacherList = computed(() => {
   return allTeacherList.value.filter(t => {
+    // 學年度篩選
+    if (teacherFilters.year && t.year && t.year !== teacherFilters.year) {
+      return false
+    }
     // 身分群組篩選
     if (teacherFilters.role !== 'all' && t.role !== teacherFilters.role) {
       return false
@@ -900,14 +961,15 @@ const filteredTeacherList = computed(() => {
     if (teacherFilters.grade !== 'all' && t.grade !== teacherFilters.grade && t.grade !== 'all') {
       return false
     }
-    // 關鍵字搜尋
+    // 關鍵字搜尋 (支援搜尋 使用者名稱、姓名、管理碼、信箱、班級)
     if (teacherFilters.keyword.trim()) {
       const kw = teacherFilters.keyword.trim().toLowerCase()
       const matchName = t.name.toLowerCase().includes(kw)
-      const matchCode = t.adminCode.toLowerCase().includes(kw)
-      const matchEmail = t.email.toLowerCase().includes(kw)
-      const matchClass = t.assignedClass.toLowerCase().includes(kw)
-      if (!matchName && !matchCode && !matchEmail && !matchClass) {
+      const matchUser = (t.username || '').toLowerCase().includes(kw)
+      const matchCode = (t.adminCode || '').toLowerCase().includes(kw)
+      const matchEmail = (t.email || '').toLowerCase().includes(kw)
+      const matchClass = (t.assignedClass || '').toLowerCase().includes(kw)
+      if (!matchName && !matchUser && !matchCode && !matchEmail && !matchClass) {
         return false
       }
     }
@@ -1012,7 +1074,7 @@ function openEditTeacherModal(t) {
   currentEditingId.value = t.id
   teacherForm.role = t.role
   teacherForm.name = t.name
-  teacherForm.username = t.adminCode
+  teacherForm.username = t.username || t.adminCode
   teacherForm.grade = t.grade !== 'all' ? t.grade : '3'
   teacherForm.assignedClass = t.assignedClass
   teacherForm.email = t.email
@@ -1031,6 +1093,8 @@ function saveTeacher() {
     const item = allTeacherList.value.find(t => t.id === currentEditingId.value)
     if (item) {
       item.name = teacherForm.name
+      item.username = teacherForm.username
+      item.adminCode = teacherForm.username
       item.role = teacherForm.role
       item.grade = teacherForm.grade
       item.assignedClass = teacherForm.assignedClass || `${teacherForm.grade}年級`
@@ -1042,8 +1106,10 @@ function saveTeacher() {
     allTeacherList.value.unshift({
       id: Date.now(),
       selected: false,
+      year: teacherFilters.year || '115',
+      username: teacherForm.username,
       name: teacherForm.name,
-      adminCode: `TAdmin_${Math.floor(100000 + Math.random() * 900000)}`,
+      adminCode: teacherForm.username,
       role: teacherForm.role,
       grade: teacherForm.grade,
       assignedClass: teacherForm.assignedClass || `${teacherForm.grade}年級`,
@@ -1092,6 +1158,7 @@ function uploadBatch() {
 // 2. 缺考名單下載 (年級、班級、科目篩選與分頁)
 // ==========================================
 const absenteeFilters = reactive({
+  year: '115',
   grade: 'all',
   classroom: 'all',
   subject: 'all',
@@ -1103,31 +1170,31 @@ const absenteePageSize = ref(8)
 
 const allAbsenteeList = ref([
   // 三年級
-  { id: 1, grade: '3', classroom: '1', class: '三年1班', seatNo: '04', name: '王○晴', subjects: ['國語文', '數學'] },
-  { id: 2, grade: '3', classroom: '1', class: '三年1班', seatNo: '12', name: '李○哲', subjects: ['數學'] },
-  { id: 3, grade: '3', classroom: '2', class: '三年2班', seatNo: '09', name: '張○恩', subjects: ['英語文'] },
-  { id: 4, grade: '3', classroom: '3', class: '三年3班', seatNo: '18', name: '林○辰', subjects: ['國語文'] },
+  { id: 1, year: '115', grade: '3', classroom: '1', class: '三年1班', seatNo: '04', name: '王○晴', subjects: ['國語文', '數學'] },
+  { id: 2, year: '115', grade: '3', classroom: '1', class: '三年1班', seatNo: '12', name: '李○哲', subjects: ['數學'] },
+  { id: 3, year: '115', grade: '3', classroom: '2', class: '三年2班', seatNo: '09', name: '張○恩', subjects: ['英語文'] },
+  { id: 4, year: '115', grade: '3', classroom: '3', class: '三年3班', seatNo: '18', name: '林○辰', subjects: ['國語文'] },
   
   // 四年級
-  { id: 5, grade: '4', classroom: '1', class: '四年1班', seatNo: '02', name: '黃○宏', subjects: ['國語文', '數學', '英語文'] }, // 全科缺考
-  { id: 6, grade: '4', classroom: '1', class: '四年1班', seatNo: '15', name: '許○婷', subjects: ['英語文'] },
-  { id: 7, grade: '4', classroom: '2', class: '四年2班', seatNo: '11', name: '蔡○安', subjects: ['數學', '英語文'] },
-  { id: 8, grade: '4', classroom: '3', class: '四年3班', seatNo: '23', name: '劉○廷', subjects: ['英語文'] },
-  { id: 9, grade: '4', classroom: '4', class: '四年4班', seatNo: '06', name: '范○宇', subjects: ['國語文'] },
+  { id: 5, year: '115', grade: '4', classroom: '1', class: '四年1班', seatNo: '02', name: '黃○宏', subjects: ['國語文', '數學', '英語文'] }, // 全科缺考
+  { id: 6, year: '115', grade: '4', classroom: '1', class: '四年1班', seatNo: '15', name: '許○婷', subjects: ['英語文'] },
+  { id: 7, year: '115', grade: '4', classroom: '2', class: '四年2班', seatNo: '11', name: '蔡○安', subjects: ['數學', '英語文'] },
+  { id: 8, year: '115', grade: '4', classroom: '3', class: '四年3班', seatNo: '23', name: '劉○廷', subjects: ['英語文'] },
+  { id: 9, year: '115', grade: '4', classroom: '4', class: '四年4班', seatNo: '06', name: '范○宇', subjects: ['國語文'] },
 
   // 五年級
-  { id: 10, grade: '5', classroom: '1', class: '五年1班', seatNo: '07', name: '林○宇', subjects: ['數學', '英語文'] },
-  { id: 11, grade: '5', classroom: '1', class: '五年1班', seatNo: '21', name: '鄭○凱', subjects: ['國語文'] },
-  { id: 12, grade: '5', classroom: '2', class: '五年2班', seatNo: '15', name: '張○萱', subjects: ['英語文'] },
-  { id: 13, grade: '5', classroom: '2', class: '五年2班', seatNo: '26', name: '吳○嘉', subjects: ['數學'] },
-  { id: 14, grade: '5', classroom: '3', class: '五年3班', seatNo: '08', name: '趙○芬', subjects: ['國語文', '數學'] },
+  { id: 10, year: '115', grade: '5', classroom: '1', class: '五年1班', seatNo: '07', name: '林○宇', subjects: ['數學', '英語文'] },
+  { id: 11, year: '115', grade: '5', classroom: '1', class: '五年1班', seatNo: '21', name: '鄭○凱', subjects: ['國語文'] },
+  { id: 12, year: '115', grade: '5', classroom: '2', class: '五年2班', seatNo: '15', name: '張○萱', subjects: ['英語文'] },
+  { id: 13, year: '115', grade: '5', classroom: '2', class: '五年2班', seatNo: '26', name: '吳○嘉', subjects: ['數學'] },
+  { id: 14, year: '115', grade: '5', classroom: '3', class: '五年3班', seatNo: '08', name: '趙○芬', subjects: ['國語文', '數學'] },
 
   // 六年級
-  { id: 15, grade: '6', classroom: '1', class: '六年1班', seatNo: '05', name: '周○廷', subjects: ['國語文', '數學', '英語文'] }, // 全科缺考
-  { id: 16, grade: '6', classroom: '1', class: '六年1班', seatNo: '22', name: '陳○翔', subjects: ['國語文'] },
-  { id: 17, grade: '6', classroom: '2', class: '六年2班', seatNo: '14', name: '謝○睿', subjects: ['英語文'] },
-  { id: 18, grade: '6', classroom: '3', class: '六年3班', seatNo: '19', name: '楊○萱', subjects: ['國語文'] },
-  { id: 19, grade: '6', classroom: '3', class: '六年3班', seatNo: '27', name: '郭○豪', subjects: ['數學'] }
+  { id: 15, year: '115', grade: '6', classroom: '1', class: '六年1班', seatNo: '05', name: '周○廷', subjects: ['國語文', '數學', '英語文'] }, // 全科缺考
+  { id: 16, year: '115', grade: '6', classroom: '1', class: '六年1班', seatNo: '22', name: '陳○翔', subjects: ['國語文'] },
+  { id: 17, year: '115', grade: '6', classroom: '2', class: '六年2班', seatNo: '14', name: '謝○睿', subjects: ['英語文'] },
+  { id: 18, year: '115', grade: '6', classroom: '3', class: '六年3班', seatNo: '19', name: '楊○萱', subjects: ['國語文'] },
+  { id: 19, year: '115', grade: '6', classroom: '3', class: '六年3班', seatNo: '27', name: '郭○豪', subjects: ['數學'] }
 ])
 
 const totalAbsenteeSubjectCount = computed(() => {
@@ -1136,6 +1203,10 @@ const totalAbsenteeSubjectCount = computed(() => {
 
 const filteredAbsenteeList = computed(() => {
   return allAbsenteeList.value.filter(item => {
+    // Year filter
+    if (absenteeFilters.year && item.year && item.year !== absenteeFilters.year) {
+      return false
+    }
     // Grade filter
     if (absenteeFilters.grade !== 'all' && item.grade !== absenteeFilters.grade) {
       return false
@@ -1172,6 +1243,7 @@ function handleFilterChange() {
 }
 
 function resetAbsenteeFilters() {
+  absenteeFilters.year = '115'
   absenteeFilters.grade = 'all'
   absenteeFilters.classroom = 'all'
   absenteeFilters.subject = 'all'
