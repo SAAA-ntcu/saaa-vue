@@ -314,17 +314,6 @@
                     </svg>
                     <span class="underline decoration-amber-300 group-hover/btn:decoration-amber-600">下載</span>
                   </button>
-
-                  <!-- For 個人成績, show extra Class/Student Modal Trigger -->
-                  <button
-                    v-if="rpt.key === 'individual_score'"
-                    type="button"
-                    @click="openClassFilterModal(paper)"
-                    class="px-1.5 py-0.5 rounded text-[11px] text-[#52796f] hover:bg-[#52796f]/10 font-medium transition cursor-pointer border border-[#52796f]/30 shadow-2xs"
-                    title="指定班級或學生個別下載"
-                  >
-                    分班/個人
-                  </button>
                 </div>
 
                 <!-- Unavailable Cell (e.g. 各校等級比例 for 3rd grade) -->
@@ -341,7 +330,7 @@
       <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/70 text-xs text-slate-600 flex items-center justify-between flex-wrap gap-2">
         <div class="flex items-center gap-2">
           <span class="text-base">💡</span>
-          <span>提示：點擊上方<strong>報表欄首</strong>可全選該報表之所有學段；點擊左側<strong>卷別列首</strong>可全選該學段的所有報表；點擊「分班/個人」可篩選單一班級列印通知單。</span>
+          <span>提示：點擊上方<strong>報表欄首</strong>可全選該報表之所有學段；點擊左側<strong>卷別列首</strong>可全選該學段之所有報表；支援個別勾選與批次下載。</span>
         </div>
       </div>
 
@@ -577,87 +566,6 @@
         </button>
       </div>
     </div>
-
-    <!-- Class/Individual Student Download Modal -->
-    <el-dialog
-      v-model="isClassModalOpen"
-      :title="`個人成績下載 - ${modalPaper?.label || ''}`"
-      width="480px"
-      append-to-body
-      destroy-on-close
-      class="rounded-2xl overflow-hidden"
-    >
-      <div class="space-y-4 py-1 text-xs">
-        <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between text-slate-700">
-          <div>
-            <span class="font-bold text-slate-800">{{ selectedReportYear }} 年度 {{ modalPaper?.label }}</span>
-            <div class="text-[11px] text-slate-500 mt-0.5">學生學習診斷卡與個人成績通知單</div>
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1.5">選擇班級</label>
-          <select
-            v-model="modalSelectedClass"
-            class="w-full h-9 px-3 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:border-[#52796f]"
-          >
-            <option value="all">全學年所有班級 (整批打包)</option>
-            <option v-for="c in availableModalClasses" :key="c" :value="c">{{ c }}</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1.5">選擇座號 / 學生</label>
-          <select
-            v-model="modalSelectedSeat"
-            class="w-full h-9 px-3 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:border-[#52796f]"
-          >
-            <option value="all">全班學生 (列印版總冊)</option>
-            <option value="1">01號 - 王小明 (個別診斷單)</option>
-            <option value="2">02號 - 李小華 (個別診斷單)</option>
-            <option value="3">03號 - 張雅婷 (個別診斷單)</option>
-            <option value="4">04號 - 陳冠宇 (個別診斷單)</option>
-            <option value="5">05號 - 林佩君 (個別診斷單)</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1.5">報表類型</label>
-          <div class="grid grid-cols-2 gap-2">
-            <label class="p-2.5 border rounded-xl flex items-center gap-2 cursor-pointer transition" :class="modalFormat === 'notice' ? 'border-[#52796f] bg-[#52796f]/5 text-[#52796f] font-bold' : 'border-slate-200 text-slate-600'">
-              <input type="radio" v-model="modalFormat" value="notice" class="accent-[#52796f]" />
-              <span>個別成績通知單</span>
-            </label>
-            <label class="p-2.5 border rounded-xl flex items-center gap-2 cursor-pointer transition" :class="modalFormat === 'roster' ? 'border-[#52796f] bg-[#52796f]/5 text-[#52796f] font-bold' : 'border-slate-200 text-slate-600'">
-              <input type="radio" v-model="modalFormat" value="roster" class="accent-[#52796f]" />
-              <span>班級成績清冊</span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <template #footer>
-        <div class="flex items-center justify-end gap-2 pt-2">
-          <button
-            type="button"
-            @click="isClassModalOpen = false"
-            class="px-3.5 py-1.5 border border-slate-200 hover:bg-slate-100 rounded-xl text-xs font-medium text-slate-600 transition cursor-pointer"
-          >
-            取消
-          </button>
-          <button
-            type="button"
-            @click="executeModalClassDownload"
-            class="px-4 py-1.5 bg-[#52796f] hover:bg-[#43645b] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-            </svg>
-            <span>開始下載</span>
-          </button>
-        </div>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -747,35 +655,6 @@ const { activeYear: selectedReportYear, setYear: changeReportYear } = useAssessm
 const selectedReportMap = reactive(new Map())
 const isReportDownloading = ref(false)
 const reportDownloadProgress = reactive({ current: 0, total: 0 })
-
-// Class/Individual score modal state
-const isClassModalOpen = ref(false)
-const modalPaper = ref(null)
-const modalSelectedClass = ref('all')
-const modalSelectedSeat = ref('all')
-const modalFormat = ref('notice')
-
-const availableModalClasses = computed(() => {
-  if (modalPaper.value?.grade === '3年級') {
-    return ['三年1班', '三年2班', '三年3班', '三年4班']
-  }
-  return ['五年1班', '五年2班', '五年3班', '五年4班']
-})
-
-function openClassFilterModal(paper) {
-  modalPaper.value = paper
-  modalSelectedClass.value = 'all'
-  modalSelectedSeat.value = 'all'
-  modalFormat.value = 'notice'
-  isClassModalOpen.value = true
-}
-
-function executeModalClassDownload() {
-  const cls = modalSelectedClass.value === 'all' ? '全學年班級' : modalSelectedClass.value
-  const seat = modalSelectedSeat.value === 'all' ? '全班' : `${modalSelectedSeat.value}號`
-  ElMessage.success(`開始下載【${selectedReportYear.value}年度 ${modalPaper.value?.label} 個人成績 - ${cls} (${seat})】`)
-  isClassModalOpen.value = false
-}
 
 function getReportItemKey(paperKey, reportKey) {
   return `${selectedReportYear.value}_${paperKey}_${reportKey}`
