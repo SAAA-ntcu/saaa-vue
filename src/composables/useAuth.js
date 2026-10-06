@@ -35,6 +35,8 @@ const defaultInitial = {
   classroom: '1',
   username: '測試市立測試國小_校管',
   ip: '172.16.113.107',
+  realPublicIp: '',
+  isRealIpMode: false,
   countdownSeconds: 3600
 }
 
@@ -67,6 +69,26 @@ if (stored) {
 const state = reactive(initial)
 let timer = null
 
+// Asynchronously attempt to detect client public IP
+async function detectRealIp() {
+  try {
+    const res = await fetch('https://api.ipify.org?format=json', { signal: AbortSignal.timeout?.(3000) })
+    if (res.ok) {
+      const data = await res.json()
+      if (data.ip) {
+        state.realPublicIp = data.ip
+        if (state.isRealIpMode) {
+          state.ip = data.ip
+        }
+      }
+    }
+  } catch (e) {
+    // Keep internal network IP
+  }
+}
+
+detectRealIp()
+
 function saveState() {
   localStorage.setItem('saaa_auth_state', JSON.stringify({
     isLoggedIn: state.isLoggedIn,
@@ -78,6 +100,8 @@ function saveState() {
     classroom: state.classroom,
     username: state.username,
     ip: state.ip,
+    realPublicIp: state.realPublicIp,
+    isRealIpMode: state.isRealIpMode,
     countdownSeconds: state.countdownSeconds
   }))
 }
@@ -121,7 +145,7 @@ export function useAuth() {
       grade: state.grade,
       classroom: state.classroom
     })
-    state.ip = payload.ip || '172.16.113.107'
+    state.ip = payload.ip || (state.isRealIpMode && state.realPublicIp ? state.realPublicIp : '172.16.113.107')
     state.countdownSeconds = 3600
     saveState()
     startTimer()
@@ -140,6 +164,19 @@ export function useAuth() {
       grade: state.grade,
       classroom: state.classroom
     })
+    saveState()
+  }
+
+  function toggleIpMode() {
+    if (!state.isRealIpMode) {
+      state.isRealIpMode = true
+      if (state.realPublicIp) {
+        state.ip = state.realPublicIp
+      }
+    } else {
+      state.isRealIpMode = false
+      state.ip = '172.16.113.107'
+    }
     saveState()
   }
 
@@ -162,6 +199,7 @@ export function useAuth() {
     formattedCountdown,
     login,
     switchRole,
+    toggleIpMode,
     logout,
     toggleLogin
   }

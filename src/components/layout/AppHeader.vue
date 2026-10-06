@@ -21,19 +21,78 @@
 
         <!-- Desktop Navigation & User Section -->
         <div class="hidden md:flex items-center space-x-3 lg:space-x-6 pointer-events-auto">
-          <!-- Navigation Links -->
+          <!-- Navigation Links with Dropdowns -->
           <nav>
             <ul class="flex items-center space-x-1 lg:space-x-2 py-2 text-sm lg:text-base font-medium text-slate-600 list-none m-0 p-0">
-              <li v-for="item in currentNavItems" :key="item.path">
+              <li
+                v-for="item in currentNavItems"
+                :key="item.path"
+                class="relative"
+                @mouseenter="item.children ? handleMouseEnter(item.title) : null"
+                @mouseleave="item.children ? handleMouseLeave() : null"
+              >
+                <!-- Nav Item Link -->
                 <router-link
                   :to="item.path"
-                  class="px-3 lg:px-3.5 py-2 rounded-xl whitespace-nowrap transition-all duration-150 inline-block no-underline"
-                  :class="isActive(item.path)
+                  class="px-3 lg:px-3.5 py-2 rounded-xl whitespace-nowrap transition-all duration-150 inline-flex items-center gap-1 no-underline"
+                  :class="(isActive(item.path) || (item.children && activeHoverMenu === item.title))
                     ? 'bg-[#edf2ee] text-[#354f52] font-bold shadow-xs ring-1 ring-[#52796f]/20'
                     : 'text-slate-600 hover:bg-[#f4f7f5] hover:text-[#52796f]'"
                 >
-                  {{ item.title }}
+                  <span>{{ item.title }}</span>
                 </router-link>
+
+                <!-- Dropdown Menu (成績專區, 綜合專區) -->
+                <transition name="dropdown-fade">
+                  <div
+                    v-if="item.children && activeHoverMenu === item.title"
+                    class="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 min-w-[145px] z-50 origin-top-left"
+                  >
+                    <div
+                      v-for="sub in item.children"
+                      :key="sub.title"
+                      class="relative"
+                      @mouseenter="sub.hasSubmenu ? activeSubHover = sub.title : null"
+                      @mouseleave="sub.hasSubmenu ? activeSubHover = null : null"
+                    >
+                      <router-link
+                        :to="sub.path"
+                        @click="activeHoverMenu = null"
+                        class="flex items-center justify-between px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-[#f4f7f5] hover:text-[#52796f] transition-colors no-underline whitespace-nowrap"
+                      >
+                        <span>{{ sub.title }}</span>
+                        <!-- Right arrow for 教師帳號管理 -->
+                        <svg
+                          v-if="sub.hasSubmenu"
+                          class="w-3.5 h-3.5 text-slate-400 ml-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </router-link>
+
+                      <!-- Flyout Submenu for 教師帳號管理 -->
+                      <transition name="dropdown-fade">
+                        <div
+                          v-if="sub.hasSubmenu && activeSubHover === sub.title"
+                          class="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 min-w-[135px] z-50 origin-top-left"
+                        >
+                          <router-link
+                            v-for="subChild in sub.subChildren"
+                            :key="subChild.title"
+                            :to="subChild.path"
+                            @click="activeHoverMenu = null; activeSubHover = null"
+                            class="block px-3.5 py-2 text-xs font-medium text-slate-700 hover:bg-[#f4f7f5] hover:text-[#52796f] transition-colors no-underline whitespace-nowrap"
+                          >
+                            {{ subChild.title }}
+                          </router-link>
+                        </div>
+                      </transition>
+                    </div>
+                  </div>
+                </transition>
               </li>
             </ul>
           </nav>
@@ -79,7 +138,7 @@
             <transition name="dropdown-fade">
               <div
                 v-if="isDropdownOpen"
-                class="absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-xl border border-slate-100 p-2.5 z-50 origin-top-right text-left"
+                class="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 p-2.5 z-50 origin-top-right text-left"
               >
                 <!-- User Unit info -->
                 <div class="px-2.5 py-2 bg-slate-50 rounded-xl mb-2 border border-slate-100">
@@ -89,6 +148,18 @@
                   </div>
                   <div class="text-xs font-bold text-slate-800 mt-1 truncate" :title="state.username">
                     {{ state.username }}
+                  </div>
+
+                  <!-- Real IP Switcher -->
+                  <div class="mt-2 pt-1.5 border-t border-slate-200/50 flex items-center justify-between text-[11px]">
+                    <span class="text-slate-400">目前 IP ({{ state.isRealIpMode ? '真實' : '模擬' }})</span>
+                    <button
+                      type="button"
+                      @click="handleToggleIp"
+                      class="text-[#52796f] hover:underline font-semibold cursor-pointer bg-transparent border-0 p-0"
+                    >
+                      {{ state.isRealIpMode ? '切換回內網測試 IP' : '切換為真實對外 IP' }}
+                    </button>
                   </div>
                 </div>
 
@@ -200,6 +271,7 @@
             </div>
             <div class="text-[11px] text-slate-400 font-medium space-y-0.5 mb-2.5">
               <div>單位: {{ state.city }} · {{ state.area }}</div>
+              <div>IP: {{ state.ip }} ({{ state.isRealIpMode ? '真實' : '模擬' }})</div>
               <div>剩餘時間: <span class="text-emerald-600 font-mono font-semibold">{{ formattedCountdown }}</span></div>
             </div>
 
@@ -223,13 +295,50 @@
             </div>
           </div>
 
-          <!-- Nav Items -->
+          <!-- Nav Items with Expandable Submenus -->
           <ul class="space-y-1.5 text-sm font-medium text-slate-700 flex-1 list-none p-0 m-0">
             <li v-for="item in currentNavItems" :key="item.path">
+              <!-- Item with children -->
+              <div v-if="item.children">
+                <div
+                  @click="toggleMobileSubmenu(item.title)"
+                  class="flex items-center justify-between py-2.5 px-4 rounded-xl transition cursor-pointer select-none"
+                  :class="isActive(item.path) || openMobileSubs[item.title]
+                    ? 'bg-[#edf2ee] text-[#354f52] font-bold'
+                    : 'hover:bg-[#f4f7f5] text-slate-700'"
+                >
+                  <span>{{ item.title }}</span>
+                  <svg
+                    class="w-4 h-4 text-slate-400 transition-transform duration-200"
+                    :class="{ 'rotate-180': openMobileSubs[item.title] }"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+
+                <!-- Submenu list -->
+                <div v-if="openMobileSubs[item.title]" class="pl-4 pr-1 py-1 space-y-1 mt-1 border-l-2 border-[#52796f]/30 ml-3">
+                  <router-link
+                    v-for="sub in item.children"
+                    :key="sub.title"
+                    :to="sub.path"
+                    @click="isMobileMenuOpen = false"
+                    class="block py-2 px-3 rounded-lg text-xs font-medium text-slate-600 hover:text-[#52796f] hover:bg-slate-50 transition no-underline"
+                  >
+                    {{ sub.title }}
+                  </router-link>
+                </div>
+              </div>
+
+              <!-- Normal Item without children -->
               <router-link
+                v-else
                 :to="item.path"
                 @click="isMobileMenuOpen = false"
-                class="block py-3 px-4 rounded-xl transition no-underline"
+                class="block py-2.5 px-4 rounded-xl transition no-underline"
                 :class="isActive(item.path)
                   ? 'bg-[#edf2ee] text-[#354f52] font-bold'
                   : 'hover:bg-[#f4f7f5] text-slate-700'"
@@ -273,7 +382,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAuth } from '../../composables/useAuth'
@@ -284,7 +393,32 @@ const isMobileMenuOpen = ref(false)
 const isDropdownOpen = ref(false)
 const profileDropdownRef = ref(null)
 
-const { state, formattedCountdown, logout, switchRole } = useAuth()
+const activeHoverMenu = ref(null)
+const activeSubHover = ref(null)
+let menuTimer = null
+
+function handleMouseEnter(title) {
+  if (menuTimer) clearTimeout(menuTimer)
+  activeHoverMenu.value = title
+}
+
+function handleMouseLeave() {
+  menuTimer = setTimeout(() => {
+    activeHoverMenu.value = null
+    activeSubHover.value = null
+  }, 160)
+}
+
+const openMobileSubs = reactive({
+  '成績專區': true,
+  '綜合專區': false
+})
+
+function toggleMobileSubmenu(title) {
+  openMobileSubs[title] = !openMobileSubs[title]
+}
+
+const { state, formattedCountdown, logout, switchRole, toggleIpMode } = useAuth()
 
 const roleOptions = ['校長', '校管理者', '學年主任', '導師', '科任教師']
 
@@ -293,15 +427,53 @@ function handleSwitchRole(r) {
   ElMessage.success(`已切換身分為：【${state.username}】`)
 }
 
-// Dynamic navigation items based on login status
+function handleToggleIp() {
+  toggleIpMode()
+  if (state.isRealIpMode) {
+    if (state.realPublicIp) {
+      ElMessage.success(`已切換為真實對外 IP：${state.ip}`)
+    } else {
+      ElMessage.info('正在偵測對外真實 IP 中...')
+    }
+  } else {
+    ElMessage.info(`已切換回內網測試 IP：${state.ip}`)
+  }
+}
+
+// Dynamic navigation items based on login status matching uploaded screenshots
 const currentNavItems = computed(() => {
   if (state.isLoggedIn) {
     return [
       { title: '最新消息', path: '/' },
       { title: '評量架構', path: '/AssessmentFrames' },
       { title: '試題公告', path: '/ExamReleases' },
-      { title: '成績專區', path: '/scores' },
-      { title: '綜合專區', path: '/integrated' }
+      {
+        title: '成績專區',
+        path: '/scores',
+        children: [
+          { title: '學生成績查詢', path: '/scores?tab=inquiry' },
+          { title: '各級報表下載', path: '/scores?tab=reports' },
+          { title: '年度成果報告', path: '/scores?tab=annual' },
+          { title: '試題分析結果', path: '/scores?tab=analysis' },
+          { title: '背景資料分析', path: '/scores?tab=background' }
+        ]
+      },
+      {
+        title: '綜合專區',
+        path: '/integrated',
+        children: [
+          {
+            title: '教師帳號管理',
+            path: '/integrated?tab=teachers',
+            hasSubmenu: true,
+            subChildren: [
+              { title: '教師名冊維護', path: '/integrated?tab=teachers' },
+              { title: '批次匯入帳號', path: '/integrated?tab=teachers' }
+            ]
+          },
+          { title: '缺考名單下載', path: '/integrated?tab=absentee' }
+        ]
+      }
     ]
   } else {
     return [
@@ -317,7 +489,7 @@ function isActive(path) {
   if (path === '/') {
     return route.path === '/'
   }
-  return route.path.startsWith(path)
+  return route.path === path || route.path.startsWith(path + '/')
 }
 
 function handleLogout() {
