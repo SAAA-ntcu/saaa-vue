@@ -462,16 +462,7 @@ const currentNavItems = computed(() => {
         title: '綜合專區',
         path: '/integrated',
         children: [
-          {
-            title: '教師帳號管理',
-            path: '/integrated?tab=teachers',
-            hasSubmenu: true,
-            subChildren: [
-              { title: '校內帳號總表', path: '/integrated?tab=teachers&sub=list' },
-              { title: '新增帳號', path: '/integrated?tab=teachers&sub=create' },
-              { title: '批次新增帳號', path: '/integrated?tab=teachers&sub=batch' }
-            ]
-          },
+          { title: '教師帳號管理', path: '/integrated?tab=teachers' },
           { title: '缺考名單下載', path: '/integrated?tab=absentee' }
         ]
       }
