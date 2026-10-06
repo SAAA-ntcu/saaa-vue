@@ -542,12 +542,19 @@
                   <td class="py-3 px-4 text-center font-mono text-slate-500">{{ st.seatNo }}</td>
                   <td class="py-3 px-4 font-bold text-slate-800">{{ st.name }}</td>
                   <td class="py-3 px-4">
-                    <span
-                      class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold"
-                      :class="st.subject === '國語文' ? 'bg-amber-50 text-amber-700 border border-amber-200' : st.subject === '數學' ? 'bg-sky-50 text-sky-700 border border-sky-200' : 'bg-rose-50 text-rose-700 border border-rose-200'"
-                    >
-                      {{ st.subject }}
-                    </span>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      <span
+                        v-for="sub in st.subjects"
+                        :key="sub"
+                        class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold shrink-0"
+                        :class="sub === '國語文' ? 'bg-amber-50 text-amber-700 border border-amber-200' : sub === '數學' ? 'bg-sky-50 text-sky-700 border border-sky-200' : 'bg-rose-50 text-rose-700 border border-rose-200'"
+                      >
+                        {{ sub }}
+                      </span>
+                      <span v-if="st.subjects && st.subjects.length > 1" class="text-[10px] text-slate-400 font-medium">
+                        (共 {{ st.subjects.length }} 科)
+                      </span>
+                    </div>
                   </td>
                 </tr>
 
@@ -570,7 +577,7 @@
         <!-- Bottom Pagination & Counts -->
         <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
           <div class="text-xs text-slate-500 font-medium">
-            全校缺考學生共 <span class="font-bold text-slate-800">{{ allAbsenteeList.length }}</span> 人，符合篩選條件：<span class="font-bold text-[#52796f]">{{ filteredAbsenteeList.length }}</span> 人
+            全校缺考學生共 <span class="font-bold text-slate-800">{{ allAbsenteeList.length }}</span> 人（共 <span class="font-bold text-slate-800">{{ totalAbsenteeSubjectCount }}</span> 科次），符合篩選條件：<span class="font-bold text-[#52796f]">{{ filteredAbsenteeList.length }}</span> 人
           </div>
           <el-pagination
             v-if="filteredAbsenteeList.length > absenteePageSize"
@@ -829,32 +836,36 @@ const absenteePageSize = ref(8)
 
 const allAbsenteeList = ref([
   // 三年級
-  { id: 1, grade: '3', classroom: '1', class: '三年1班', seatNo: '04', name: '王○晴', subject: '國語文' },
-  { id: 2, grade: '3', classroom: '1', class: '三年1班', seatNo: '12', name: '李○哲', subject: '數學' },
-  { id: 3, grade: '3', classroom: '2', class: '三年2班', seatNo: '09', name: '張○恩', subject: '英語文' },
-  { id: 4, grade: '3', classroom: '3', class: '三年3班', seatNo: '18', name: '林○辰', subject: '數學' },
+  { id: 1, grade: '3', classroom: '1', class: '三年1班', seatNo: '04', name: '王○晴', subjects: ['國語文', '數學'] },
+  { id: 2, grade: '3', classroom: '1', class: '三年1班', seatNo: '12', name: '李○哲', subjects: ['數學'] },
+  { id: 3, grade: '3', classroom: '2', class: '三年2班', seatNo: '09', name: '張○恩', subjects: ['英語文'] },
+  { id: 4, grade: '3', classroom: '3', class: '三年3班', seatNo: '18', name: '林○辰', subjects: ['國語文'] },
   
   // 四年級
-  { id: 5, grade: '4', classroom: '1', class: '四年1班', seatNo: '02', name: '黃○宏', subject: '國語文' },
-  { id: 6, grade: '4', classroom: '1', class: '四年1班', seatNo: '15', name: '許○婷', subject: '英語文' },
-  { id: 7, grade: '4', classroom: '2', class: '四年2班', seatNo: '11', name: '蔡○安', subject: '數學' },
-  { id: 8, grade: '4', classroom: '3', class: '四年3班', seatNo: '23', name: '劉○廷', subject: '英語文' },
-  { id: 9, grade: '4', classroom: '4', class: '四年4班', seatNo: '06', name: '范○宇', subject: '國語文' },
+  { id: 5, grade: '4', classroom: '1', class: '四年1班', seatNo: '02', name: '黃○宏', subjects: ['國語文', '數學', '英語文'] }, // 全科缺考
+  { id: 6, grade: '4', classroom: '1', class: '四年1班', seatNo: '15', name: '許○婷', subjects: ['英語文'] },
+  { id: 7, grade: '4', classroom: '2', class: '四年2班', seatNo: '11', name: '蔡○安', subjects: ['數學', '英語文'] },
+  { id: 8, grade: '4', classroom: '3', class: '四年3班', seatNo: '23', name: '劉○廷', subjects: ['英語文'] },
+  { id: 9, grade: '4', classroom: '4', class: '四年4班', seatNo: '06', name: '范○宇', subjects: ['國語文'] },
 
   // 五年級
-  { id: 10, grade: '5', classroom: '1', class: '五年1班', seatNo: '07', name: '林○宇', subject: '數學' },
-  { id: 11, grade: '5', classroom: '1', class: '五年1班', seatNo: '21', name: '鄭○凱', subject: '國語文' },
-  { id: 12, grade: '5', classroom: '2', class: '五年2班', seatNo: '15', name: '張○萱', subject: '英語文' },
-  { id: 13, grade: '5', classroom: '2', class: '五年2班', seatNo: '26', name: '吳○嘉', subject: '數學' },
-  { id: 14, grade: '5', classroom: '3', class: '五年3班', seatNo: '08', name: '趙○芬', subject: '國語文' },
+  { id: 10, grade: '5', classroom: '1', class: '五年1班', seatNo: '07', name: '林○宇', subjects: ['數學', '英語文'] },
+  { id: 11, grade: '5', classroom: '1', class: '五年1班', seatNo: '21', name: '鄭○凱', subjects: ['國語文'] },
+  { id: 12, grade: '5', classroom: '2', class: '五年2班', seatNo: '15', name: '張○萱', subjects: ['英語文'] },
+  { id: 13, grade: '5', classroom: '2', class: '五年2班', seatNo: '26', name: '吳○嘉', subjects: ['數學'] },
+  { id: 14, grade: '5', classroom: '3', class: '五年3班', seatNo: '08', name: '趙○芬', subjects: ['國語文', '數學'] },
 
   // 六年級
-  { id: 15, grade: '6', classroom: '1', class: '六年1班', seatNo: '05', name: '周○廷', subject: '數學' },
-  { id: 16, grade: '6', classroom: '1', class: '六年1班', seatNo: '22', name: '陳○翔', subject: '國語文' },
-  { id: 17, grade: '6', classroom: '2', class: '六年2班', seatNo: '14', name: '謝○睿', subject: '英語文' },
-  { id: 18, grade: '6', classroom: '3', class: '六年3班', seatNo: '19', name: '楊○萱', subject: '國語文' },
-  { id: 19, grade: '6', classroom: '3', class: '六年3班', seatNo: '27', name: '郭○豪', subject: '數學' }
+  { id: 15, grade: '6', classroom: '1', class: '六年1班', seatNo: '05', name: '周○廷', subjects: ['國語文', '數學', '英語文'] }, // 全科缺考
+  { id: 16, grade: '6', classroom: '1', class: '六年1班', seatNo: '22', name: '陳○翔', subjects: ['國語文'] },
+  { id: 17, grade: '6', classroom: '2', class: '六年2班', seatNo: '14', name: '謝○睿', subjects: ['英語文'] },
+  { id: 18, grade: '6', classroom: '3', class: '六年3班', seatNo: '19', name: '楊○萱', subjects: ['國語文'] },
+  { id: 19, grade: '6', classroom: '3', class: '六年3班', seatNo: '27', name: '郭○豪', subjects: ['數學'] }
 ])
+
+const totalAbsenteeSubjectCount = computed(() => {
+  return allAbsenteeList.value.reduce((sum, item) => sum + (item.subjects?.length || 0), 0)
+})
 
 const filteredAbsenteeList = computed(() => {
   return allAbsenteeList.value.filter(item => {
@@ -867,7 +878,7 @@ const filteredAbsenteeList = computed(() => {
       return false
     }
     // Subject filter
-    if (absenteeFilters.subject !== 'all' && item.subject !== absenteeFilters.subject) {
+    if (absenteeFilters.subject !== 'all' && !item.subjects.includes(absenteeFilters.subject)) {
       return false
     }
     // Keyword search (name or seat number or class)
@@ -904,6 +915,7 @@ function resetAbsenteeFilters() {
 
 function exportAbsentee() {
   const count = filteredAbsenteeList.value.length
-  ElMessage.success(`已開始匯出符合條件之【${count} 位缺考學生名冊】EXCEL 檔案`)
+  const subCount = filteredAbsenteeList.value.reduce((s, it) => s + (it.subjects?.length || 0), 0)
+  ElMessage.success(`已開始匯出符合條件之【${count} 位缺考學生名冊（共 ${subCount} 科次）】EXCEL 檔案`)
 }
 </script>
