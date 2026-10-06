@@ -18,19 +18,21 @@
         </div>
       </div>
 
-      <!-- Notice Alert -->
-      <div class="bg-amber-50/80 border border-amber-200/80 rounded-xl px-3.5 py-1.5 flex items-center gap-2 text-xs text-amber-800">
-        <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span>成績查詢及下載功能僅以三年為限，請於期限內自行下載留存。</span>
+      <div class="flex flex-col items-end gap-2">
+        <!-- Notice Alert -->
+        <div class="bg-amber-50/80 border border-amber-200/80 rounded-xl px-3.5 py-1.5 flex items-center gap-2 text-xs text-amber-800">
+          <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>成績查詢及下載功能僅以三年為限，請於期限內自行下載留存。</span>
+        </div>
       </div>
     </div>
 
     <!-- Navigation Tabs matching Dropdown Fields -->
     <div class="flex items-center gap-2 overflow-x-auto pb-2 mb-6 border-b border-slate-100 scrollbar-none">
       <button
-        v-for="t in scoreTabs"
+        v-for="t in visibleScoreTabs"
         :key="t.key"
         type="button"
         @click="switchTab(t.key)"
@@ -45,131 +47,7 @@
 
     <!-- TAB 1: 學生成績查詢 (預設) -->
     <div v-if="activeTab === 'inquiry'">
-      <!-- Filter Form -->
-      <div class="bg-slate-50/70 border border-slate-200/70 rounded-2xl p-4 sm:p-5 mb-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <!-- School Year -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5">年度</label>
-            <select
-              v-model="filters.year"
-              class="w-full h-10 px-3 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl outline-none focus:border-[#52796f] focus:ring-2 focus:ring-[#52796f]/20 transition"
-            >
-              <option value="115">115 年度</option>
-              <option value="114">114 年度</option>
-              <option value="113">113 年度</option>
-            </select>
-          </div>
-
-          <!-- Grade -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5">施測年級</label>
-            <select
-              v-model="filters.grade"
-              class="w-full h-10 px-3 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl outline-none focus:border-[#52796f] focus:ring-2 focus:ring-[#52796f]/20 transition"
-            >
-              <option value="all">全學年</option>
-              <option value="3">三年級</option>
-              <option value="4">四年級</option>
-              <option value="5">五年級</option>
-              <option value="6">六年級</option>
-            </select>
-          </div>
-
-          <!-- Subject -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5">施測科目</label>
-            <select
-              v-model="filters.subject"
-              class="w-full h-10 px-3 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl outline-none focus:border-[#52796f] focus:ring-2 focus:ring-[#52796f]/20 transition"
-            >
-              <option value="all">全部科目</option>
-              <option value="國語文">國語文</option>
-              <option value="數學">數學</option>
-              <option value="英語文">英語文</option>
-            </select>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex items-end gap-2">
-            <button
-              @click="handleQuery"
-              class="flex-1 h-10 bg-[#52796f] hover:bg-[#354f52] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              查詢成績
-            </button>
-            <button
-              @click="downloadAll"
-              class="h-10 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
-              title="匯出查詢結果"
-            >
-              <svg class="w-4 h-4 text-[#52796f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              匯出
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Data Table -->
-      <div class="border border-slate-200/80 rounded-2xl overflow-hidden shadow-xs bg-white">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
-                <th class="py-3.5 px-4">年度</th>
-                <th class="py-3.5 px-4">年級/班級</th>
-                <th class="py-3.5 px-4">科目</th>
-                <th class="py-3.5 px-4 text-center">應測人數</th>
-                <th class="py-3.5 px-4 text-center">實測人數</th>
-                <th class="py-3.5 px-4 text-center">平均分數</th>
-                <th class="py-3.5 px-4 text-center">通過率</th>
-                <th class="py-3.5 px-4 text-center">報告下載</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-              <tr v-for="item in tableData" :key="item.id" class="hover:bg-slate-50/60 transition">
-                <td class="py-3 px-4 font-mono text-slate-500">{{ item.year }}</td>
-                <td class="py-3 px-4 font-bold text-slate-800">{{ item.gradeClass }}</td>
-                <td class="py-3 px-4">
-                  <span
-                    class="px-2 py-0.5 rounded-md text-[11px] font-semibold"
-                    :class="item.subject === '國語文' ? 'bg-amber-50 text-amber-700 border border-amber-200' : item.subject === '數學' ? 'bg-sky-50 text-sky-700 border border-sky-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'"
-                  >
-                    {{ item.subject }}
-                  </span>
-                </td>
-                <td class="py-3 px-4 text-center font-mono">{{ item.expected }}</td>
-                <td class="py-3 px-4 text-center font-mono">{{ item.actual }}</td>
-                <td class="py-3 px-4 text-center font-mono font-bold text-[#52796f]">{{ item.average }}</td>
-                <td class="py-3 px-4 text-center">
-                  <div class="inline-flex items-center gap-1.5">
-                    <div class="w-16 bg-slate-100 rounded-full h-2 overflow-hidden">
-                      <div class="bg-[#52796f] h-full rounded-full" :style="{ width: item.passRate }"></div>
-                    </div>
-                    <span class="font-mono text-[11px] font-bold text-slate-600">{{ item.passRate }}</span>
-                  </div>
-                </td>
-                <td class="py-3 px-4 text-center">
-                  <button
-                    @click="downloadReport(item)"
-                    class="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-[#52796f] text-[#52796f] hover:text-white border border-[#52796f]/40 hover:border-[#52796f] rounded-lg transition text-xs font-semibold cursor-pointer shadow-2xs"
-                  >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    清冊
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <InquiryDrillDown />
     </div>
 
     <!-- TAB 2: 各級報表下載 (方案 A: 報表矩陣下載總覽) -->
@@ -422,17 +300,15 @@
                 <span class="text-[10px] font-normal opacity-80 block font-mono">點擊列首全選</span>
               </th>
               <th
-                v-for="grade in annualGradesHeader"
+                v-for="grade in annualGradesHeader.filter(g => isGradeHasAvailableItems(g.key))"
                 :key="grade.key"
-                @click="isGradeHasAvailableItems(grade.key) ? toggleSelectAnnualGrade(grade.key) : null"
-                class="bg-[#52796f] py-3.5 px-2 tracking-wider select-none transition group"
-                :class="isGradeHasAvailableItems(grade.key) ? 'cursor-pointer hover:bg-[#43645b]' : 'cursor-default opacity-85'"
-                :title="isGradeHasAvailableItems(grade.key) ? `點擊全選/取消 ${grade.label}` : `${grade.label} 本年度未施測`"
+                @click="toggleSelectAnnualGrade(grade.key)"
+                class="bg-[#52796f] py-3.5 px-2 tracking-wider select-none transition group cursor-pointer hover:bg-[#43645b]"
+                :title="`點擊全選/取消 ${grade.label}`"
               >
                 <div class="flex items-center justify-center gap-1.5">
                   <span>{{ grade.label }}</span>
                   <span
-                    v-if="isGradeHasAvailableItems(grade.key)"
                     class="w-3.5 h-3.5 rounded border border-white/60 flex items-center justify-center text-[10px] transition-colors"
                     :class="isGradeAllSelected(grade.key) ? 'bg-white text-[#52796f]' : 'bg-transparent text-transparent'"
                   >
@@ -444,21 +320,19 @@
           </thead>
           <tbody class="divide-y divide-slate-100 text-xs md:text-sm font-medium text-slate-700 bg-white">
             <tr
-              v-for="subject in annualReportSubjects"
+              v-for="subject in annualReportSubjects.filter(s => isSubjectHasAvailableItems(s.name))"
               :key="subject.name"
               class="hover:bg-slate-50/60 transition"
             >
               <!-- Subject Row Header (Clickable to select whole row if available items exist) -->
               <td
-                @click="isSubjectHasAvailableItems(subject.name) ? toggleSelectAnnualSubject(subject.name) : null"
-                class="font-bold py-3 px-5 text-slate-800 bg-slate-50/70 select-none text-left transition"
-                :class="isSubjectHasAvailableItems(subject.name) ? 'cursor-pointer hover:bg-[#52796f]/10' : 'cursor-default'"
-                :title="isSubjectHasAvailableItems(subject.name) ? `點擊全選/取消 ${subject.name}` : `${subject.name} 本年度無施測年級`"
+                @click="toggleSelectAnnualSubject(subject.name)"
+                class="font-bold py-3 px-5 text-slate-800 bg-slate-50/70 select-none text-left transition cursor-pointer hover:bg-[#52796f]/10"
+                :title="`點擊全選/取消 ${subject.name}`"
               >
                 <div class="flex items-center justify-between gap-2">
                   <span>{{ subject.name }}</span>
                   <span
-                    v-if="isSubjectHasAvailableItems(subject.name)"
                     class="w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center text-[10px] transition-colors"
                     :class="isSubjectAllSelected(subject.name) ? 'bg-[#52796f] border-[#52796f] text-white' : 'bg-white text-transparent'"
                   >
@@ -469,7 +343,7 @@
 
               <!-- Grade Cells -->
               <td
-                v-for="grade in annualGradesHeader"
+                v-for="grade in annualGradesHeader.filter(g => isGradeHasAvailableItems(g.key))"
                 :key="grade.key"
                 class="py-3 px-2 transition-colors relative"
                 :class="isAnnualSelected(grade.key, subject.name) ? 'bg-[#52796f]/10 ring-1 ring-inset ring-[#52796f]/25' : ''"
@@ -546,25 +420,197 @@
     </div>
 
     <!-- TAB 4: 試題分析結果 -->
-    <div v-else-if="activeTab === 'analysis'" class="p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
-      <h3 class="text-base font-bold text-slate-800 mb-2">試題難易度與鑑別度分析</h3>
-      <p class="text-xs text-slate-500 mb-4">針對國語文、數學、英語文各題答對率(P值)及鑑別指標(D值)進行精準診斷。</p>
-      <div class="flex items-center gap-3">
-        <button @click="downloadSpecialReport('試題難易度分佈清單')" class="px-4 py-2 bg-[#52796f] hover:bg-[#354f52] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-          下載試題分析矩陣表 (EXCEL)
-        </button>
+    <div v-else-if="activeTab === 'analysis'" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+      
+      <!-- Top Actions Bar -->
+      <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50">
+        <div class="flex items-center gap-3 flex-wrap">
+          <select v-model="analysisFilters.year" class="h-9 px-3 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl outline-none focus:border-[#52796f] focus:ring-2 focus:ring-[#52796f]/20 transition">
+            <option value="115">115 年度</option>
+            <option value="114">114 年度</option>
+            <option value="113">113 年度</option>
+          </select>
+          <select v-model="analysisFilters.grade" class="h-9 px-3 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl outline-none focus:border-[#52796f] focus:ring-2 focus:ring-[#52796f]/20 transition">
+            <option value="3">三年級</option>
+            <option value="4">四年級</option>
+            <option value="5">五年級</option>
+            <option value="6">六年級</option>
+          </select>
+          <select v-model="analysisFilters.subject" class="h-9 px-3 text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl outline-none focus:border-[#52796f] focus:ring-2 focus:ring-[#52796f]/20 transition">
+            <option value="國語文">國語文</option>
+            <option value="數學">數學</option>
+            <option value="英語文">英語文</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2">
+          <button @click="downloadSpecialReport('學校試題分析結果')" class="h-9 px-3 bg-[#52796f] hover:bg-[#354f52] text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+            學校試題分析結果
+          </button>
+          <button @click="downloadSpecialReport('縣市試題分析結果')" class="h-9 px-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <svg class="w-4 h-4 text-[#52796f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+            縣市試題分析結果
+          </button>
+        </div>
+      </div>
+
+      <!-- Chart Section -->
+      <div class="p-5 border-b border-slate-100 relative">
+        <div class="flex items-center justify-between mb-4">
+          <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+            <svg class="w-4 h-4 text-[#52796f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+            校級答對率圖
+          </h4>
+          <div class="flex items-center gap-4 text-xs font-medium">
+            <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-[#52796f]"></span>學校</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-[#e07a5f]"></span>縣市</div>
+            <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-slate-300" style="border-top: 2px dashed #94a3b8"></span>整體</div>
+          </div>
+        </div>
+
+        <div class="w-full overflow-x-auto scrollbar-none" @mouseleave="hoveredPoint = null">
+          <div class="min-w-[600px] relative">
+            <svg :viewBox="`0 0 ${chartWidth} ${chartHeight}`" class="w-full h-auto overflow-visible">
+              <!-- Y Axis labels -->
+              <g class="text-[10px] fill-slate-400 font-mono">
+                <text x="30" :y="chartPadding.top + 4" text-anchor="end">100%</text>
+                <text x="30" :y="(chartHeight - chartPadding.bottom + chartPadding.top) / 2 + 4" text-anchor="end">50%</text>
+                <text x="30" :y="chartHeight - chartPadding.bottom + 4" text-anchor="end">0%</text>
+              </g>
+              
+              <!-- Grid lines -->
+              <g class="stroke-slate-100" stroke-width="1" stroke-dasharray="4 4">
+                <line :x1="chartPadding.left" :y1="chartPadding.top" :x2="chartWidth - chartPadding.right" :y2="chartPadding.top" />
+                <line :x1="chartPadding.left" :y1="(chartHeight - chartPadding.bottom + chartPadding.top) / 2" :x2="chartWidth - chartPadding.right" :y2="(chartHeight - chartPadding.bottom + chartPadding.top) / 2" />
+                <line :x1="chartPadding.left" :y1="chartHeight - chartPadding.bottom" :x2="chartWidth - chartPadding.right" :y2="chartHeight - chartPadding.bottom" stroke-dasharray="none" class="stroke-slate-200" />
+              </g>
+
+              <!-- Overall Path -->
+              <path :d="chartPaths.overall" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 4" />
+              <!-- County Path -->
+              <path :d="chartPaths.county" fill="none" stroke="#e07a5f" stroke-width="2" />
+              <!-- School Path -->
+              <path :d="chartPaths.school" fill="none" stroke="#52796f" stroke-width="2.5" />
+
+              <!-- Hover interaction area per point -->
+              <g v-for="p in chartPoints" :key="'area-'+p.data.qNum">
+                <rect 
+                  :x="p.x - ((chartWidth - chartPadding.left - chartPadding.right) / Math.max(1, chartPoints.length - 1)) / 2" 
+                  :y="chartPadding.top" 
+                  :width="(chartWidth - chartPadding.left - chartPadding.right) / Math.max(1, chartPoints.length - 1)" 
+                  :height="chartHeight - chartPadding.top - chartPadding.bottom" 
+                  fill="transparent" 
+                  class="cursor-pointer"
+                  @mouseover="hoveredPoint = p"
+                />
+              </g>
+
+              <!-- Points and Indicators -->
+              <g v-for="p in chartPoints" :key="'pt-'+p.data.qNum">
+                <!-- X Axis labels -->
+                <text :x="p.x" :y="chartHeight - 10" text-anchor="middle" class="text-[10px] fill-slate-500 font-mono">{{ p.data.qNum }}</text>
+                
+                <!-- Highlight weak questions on X axis -->
+                <circle v-if="p.isWeak" :cx="p.x" :cy="chartHeight - 22" r="3" fill="#e07a5f" />
+
+                <!-- Hover state styling -->
+                <g v-if="hoveredPoint && hoveredPoint.data.qNum === p.data.qNum">
+                  <!-- Vertical guideline -->
+                  <line :x1="p.x" :y1="chartPadding.top" :x2="p.x" :y2="chartHeight - chartPadding.bottom" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3 3" />
+                  
+                  <!-- Hovered Points -->
+                  <circle :cx="p.x" :cy="p.overallY" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2" />
+                  <circle :cx="p.x" :cy="p.countyY" r="4" fill="#fff" stroke="#e07a5f" stroke-width="2" />
+                  <circle :cx="p.x" :cy="p.schoolY" r="5" fill="#fff" stroke="#52796f" stroke-width="2.5" />
+                </g>
+                <g v-else>
+                  <!-- Normal Points -->
+                  <circle :cx="p.x" :cy="p.schoolY" r="3" fill="#52796f" />
+                </g>
+              </g>
+            </svg>
+            
+            <!-- Tooltip -->
+            <div v-if="hoveredPoint" class="absolute z-10 bg-slate-800 text-white p-2.5 rounded-lg shadow-xl text-xs pointer-events-none transform -translate-x-1/2 -translate-y-full" 
+                 :style="{ left: `${(hoveredPoint.x / chartWidth) * 100}%`, top: `${(hoveredPoint.schoolY / chartHeight) * 100}%`, marginTop: '-12px' }">
+              <div class="font-bold mb-1 border-b border-slate-600 pb-1">第 {{ hoveredPoint.data.qNum }} 題</div>
+              <div class="grid grid-cols-2 gap-x-3 gap-y-1">
+                <span class="text-slate-300">學校:</span> <span class="font-mono text-[#a8d5c8] font-bold">{{ hoveredPoint.data.schoolAcc }}%</span>
+                <span class="text-slate-300">縣市:</span> <span class="font-mono">{{ hoveredPoint.data.countyAcc }}%</span>
+                <span class="text-slate-300">整體:</span> <span class="font-mono">{{ hoveredPoint.data.overallAcc }}%</span>
+                <span class="text-slate-300">落差:</span> 
+                <span class="font-mono font-bold" :class="Number(hoveredPoint.data.schoolAcc) - Number(hoveredPoint.data.countyAcc) < 0 ? 'text-[#e07a5f]' : 'text-[#a8d5c8]'">
+                  {{ (Number(hoveredPoint.data.schoolAcc) - Number(hoveredPoint.data.countyAcc)) > 0 ? '+' : '' }}{{ (Number(hoveredPoint.data.schoolAcc) - Number(hoveredPoint.data.countyAcc)).toFixed(1) }}%
+                </span>
+              </div>
+              <!-- Small arrow -->
+              <div class="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-full border-4 border-transparent border-t-slate-800"></div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-2 text-center text-[11px] text-slate-400">
+          <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#e07a5f]"></span> 題號上方的紅點表示該題本校答對率顯著低於縣市平均 (相差 > 10%)</span>
+        </div>
+      </div>
+
+      <!-- Data Table Section -->
+      <div class="p-5">
+        <h4 class="text-sm font-bold text-slate-800 mb-3">試題詳細數據</h4>
+        <div class="border border-slate-200/80 rounded-xl overflow-hidden">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                <th class="py-2.5 px-4 cursor-pointer hover:bg-slate-100 select-none w-16" @click="sortBy('qNum')">
+                  <div class="flex items-center gap-1">題號 <span v-if="sortKey==='qNum'" class="text-[10px]">{{ sortOrder==='asc'?'▲':'▼' }}</span></div>
+                </th>
+                <th class="py-2.5 px-4">測驗主題</th>
+                <th class="py-2.5 px-4 text-center cursor-pointer hover:bg-slate-100 select-none" @click="sortBy('schoolAcc')">
+                  <div class="flex items-center justify-center gap-1">學校答對率 <span v-if="sortKey==='schoolAcc'" class="text-[10px]">{{ sortOrder==='asc'?'▲':'▼' }}</span></div>
+                </th>
+                <th class="py-2.5 px-4 text-center cursor-pointer hover:bg-slate-100 select-none hidden sm:table-cell" @click="sortBy('countyAcc')">
+                  <div class="flex items-center justify-center gap-1">縣市答對率 <span v-if="sortKey==='countyAcc'" class="text-[10px]">{{ sortOrder==='asc'?'▲':'▼' }}</span></div>
+                </th>
+                <th class="py-2.5 px-4 text-center cursor-pointer hover:bg-slate-100 select-none hidden md:table-cell" @click="sortBy('overallAcc')">
+                  <div class="flex items-center justify-center gap-1">整體答對率 <span v-if="sortKey==='overallAcc'" class="text-[10px]">{{ sortOrder==='asc'?'▲':'▼' }}</span></div>
+                </th>
+                <th class="py-2.5 px-4 text-center cursor-pointer hover:bg-slate-100 select-none" @click="sortBy('delta')">
+                  <div class="flex items-center justify-center gap-1">校與縣市落差 (Δ) <span v-if="sortKey==='delta'" class="text-[10px]">{{ sortOrder==='asc'?'▲':'▼' }}</span></div>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+              <tr v-for="d in sortedAnalysisData" :key="d.qNum" class="hover:bg-slate-50/60 transition" :class="{'bg-rose-50/30': (Number(d.schoolAcc) - Number(d.countyAcc)) <= -10}">
+                <td class="py-2 px-4 font-mono text-slate-500">{{ d.qNum }}</td>
+                <td class="py-2 px-4 text-slate-600">{{ d.topic }}</td>
+                <td class="py-2 px-4 text-center font-mono font-bold text-[#52796f]">{{ d.schoolAcc }}%</td>
+                <td class="py-2 px-4 text-center font-mono hidden sm:table-cell">{{ d.countyAcc }}%</td>
+                <td class="py-2 px-4 text-center font-mono hidden md:table-cell text-slate-400">{{ d.overallAcc }}%</td>
+                <td class="py-2 px-4 text-center font-mono font-bold">
+                  <span :class="(Number(d.schoolAcc) - Number(d.countyAcc)) < 0 ? 'text-[#e07a5f]' : 'text-emerald-600'">
+                    {{ (Number(d.schoolAcc) - Number(d.countyAcc)) > 0 ? '+' : '' }}{{ (Number(d.schoolAcc) - Number(d.countyAcc)).toFixed(1) }}%
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
     <!-- TAB 5: 背景資料分析 -->
-    <div v-else-if="activeTab === 'background'" class="p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
-      <h3 class="text-base font-bold text-slate-800 mb-2">背景變項與學力表現關聯分析</h3>
-      <p class="text-xs text-slate-500 mb-4">深入比對學生家庭數位環境、閱讀自主習慣與學科表現之交叉交叉統計分析。</p>
-      <div class="flex items-center gap-3">
-        <button @click="downloadSpecialReport('背景資料交叉分析表')" class="px-4 py-2 bg-[#52796f] hover:bg-[#354f52] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-          下載背景分析圖表 (PDF)
-        </button>
+    <div v-else-if="activeTab === 'background'" class="p-8 md:p-16 bg-white rounded-2xl border border-slate-200/80 shadow-xs flex flex-col items-center justify-center min-h-[400px]">
+      <div class="w-20 h-20 mb-6 bg-slate-50 rounded-full flex items-center justify-center border-4 border-slate-100 shadow-inner">
+        <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+        </svg>
       </div>
+      <h3 class="text-xl md:text-2xl font-bold text-slate-700 mb-3 tracking-wider">背景資料分析（學習特質問卷）</h3>
+      <div class="bg-slate-100 text-slate-500 px-4 py-1.5 rounded-full text-sm font-semibold mb-4 tracking-wide border border-slate-200">
+        開發中 / 尚待更新
+      </div>
+      <p class="text-sm text-slate-400 max-w-md text-center leading-relaxed">
+        本模組功能目前正在積極開發中，將提供學生背景變項與學力表現之深度關聯分析，敬請期待後續系統更新。
+      </p>
     </div>
   </div>
 </template>
@@ -589,23 +635,44 @@ import {
 } from '../data/reportsMatrixData'
 import { downloadMultipleFiles } from '../utils/batchDownloader'
 import YearSelector from '../components/common/YearSelector.vue'
+import InquiryDrillDown from '../components/scores/InquiryDrillDown.vue'
 import { useAssessmentYear } from '../composables/useAssessmentYear'
 
+import { useAuth } from '../composables/useAuth'
+
+const { state } = useAuth()
 const route = useRoute()
 const router = useRouter()
 
-const scoreTabs = [
+const baseTabs = [
   { key: 'inquiry', title: '學生成績查詢' },
-  { key: 'reports', title: '各級報表下載' },
+  { key: 'reports', title: '各級報表下載' }
+]
+
+const adminTabs = [
   { key: 'annual', title: '年度成果報告' },
   { key: 'analysis', title: '試題分析結果' },
   { key: 'background', title: '背景資料分析' }
 ]
 
+const visibleScoreTabs = computed(() => {
+  if (state.role === '校長' || state.role === '校管理者') {
+    return [...baseTabs, ...adminTabs]
+  }
+  return baseTabs
+})
+
 const activeTab = ref(route.query.tab || 'inquiry')
 
+watch(() => state.role, () => {
+  // If current tab is hidden by role switch, redirect to 'inquiry'
+  if (!visibleScoreTabs.value.some(t => t.key === activeTab.value)) {
+    switchTab('inquiry')
+  }
+})
+
 watch(() => route.query.tab, (newTab) => {
-  if (newTab && scoreTabs.some(t => t.key === newTab)) {
+  if (newTab && visibleScoreTabs.value.some(t => t.key === newTab)) {
     activeTab.value = newTab
   }
 })
@@ -962,6 +1029,111 @@ async function handleAnnualBatchDownload() {
     isAnnualDownloading.value = false
   }
 }
+
+// ----------------------------------------------------
+// TAB 4: 試題分析結果 (方案A)
+// ----------------------------------------------------
+const analysisFilters = reactive({
+  year: '115',
+  grade: '5',
+  subject: '國語文'
+})
+
+// Mock up to 30 questions
+const analysisData = ref(Array.from({ length: 30 }, (_, i) => {
+  const qNum = i + 1;
+  const countyAcc = 50 + Math.random() * 40; 
+  const overallAcc = countyAcc + (Math.random() * 10 - 5); 
+  const schoolAcc = countyAcc + (Math.random() * 20 - 10); 
+  
+  if (i === 4 || i === 12 || i === 25) {
+    return {
+      qNum,
+      overallAcc: overallAcc.toFixed(1),
+      countyAcc: countyAcc.toFixed(1),
+      schoolAcc: Math.max(0, countyAcc - 15 - Math.random() * 10).toFixed(1), 
+      topic: ['字詞認讀', '文意推論', '結構分析'][i % 3]
+    }
+  }
+
+  return {
+    qNum,
+    overallAcc: Math.min(100, Math.max(0, overallAcc)).toFixed(1),
+    countyAcc: Math.min(100, Math.max(0, countyAcc)).toFixed(1),
+    schoolAcc: Math.min(100, Math.max(0, schoolAcc)).toFixed(1),
+    topic: ['字詞認讀', '文意推論', '結構分析', '寫作技巧'][i % 4]
+  }
+}))
+
+const sortKey = ref('qNum')
+const sortOrder = ref('asc') 
+
+const sortedAnalysisData = computed(() => {
+  return [...analysisData.value].sort((a, b) => {
+    let valA = a[sortKey.value];
+    let valB = b[sortKey.value];
+    
+    if (sortKey.value === 'delta') {
+      valA = Number(a.schoolAcc) - Number(a.countyAcc);
+      valB = Number(b.schoolAcc) - Number(b.countyAcc);
+    } else {
+      valA = Number(valA);
+      valB = Number(valB);
+    }
+
+    if (valA < valB) return sortOrder.value === 'asc' ? -1 : 1;
+    if (valA > valB) return sortOrder.value === 'asc' ? 1 : -1;
+    return 0;
+  });
+})
+
+function sortBy(key) {
+  if (sortKey.value === key) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortKey.value = key;
+    sortOrder.value = key === 'qNum' ? 'asc' : 'desc'; 
+  }
+}
+
+const hoveredPoint = ref(null)
+
+const chartWidth = 800;
+const chartHeight = 260;
+const chartPadding = { top: 20, right: 20, bottom: 30, left: 40 };
+
+const chartPoints = computed(() => {
+  const data = analysisData.value;
+  const numPoints = data.length;
+  const xStep = (chartWidth - chartPadding.left - chartPadding.right) / Math.max(1, numPoints - 1);
+  
+  const getY = (val) => {
+    const height = chartHeight - chartPadding.top - chartPadding.bottom;
+    return chartHeight - chartPadding.bottom - (Number(val) / 100) * height;
+  };
+
+  return data.map((d, i) => {
+    const x = chartPadding.left + i * xStep;
+    return {
+      x,
+      data: d,
+      schoolY: getY(d.schoolAcc),
+      countyY: getY(d.countyAcc),
+      overallY: getY(d.overallAcc),
+      isWeak: (Number(d.schoolAcc) - Number(d.countyAcc)) <= -10
+    };
+  });
+});
+
+const chartPaths = computed(() => {
+  const points = chartPoints.value;
+  if (points.length === 0) return { school: '', county: '', overall: '' };
+  return {
+    school: points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.schoolY}`).join(' '),
+    county: points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.countyY}`).join(' '),
+    overall: points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.overallY}`).join(' ')
+  };
+});
 </script>
 
 <style scoped>

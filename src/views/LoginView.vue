@@ -185,6 +185,69 @@
         </form>
       </div>
     </div>
+
+    <!-- Operation Manuals & Browser Recommendation Card -->
+    <div class="w-full max-w-[920px] mt-4 bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center md:justify-start">
+        <span class="font-bold text-slate-700 flex items-center gap-1.5 mr-0.5">
+          <svg class="w-4 h-4 text-[#52796f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+          操作說明：
+        </span>
+        <button
+          type="button"
+          @click="handleDownloadManual('校長')"
+          class="px-2.5 py-1 bg-slate-50 hover:bg-[#52796f]/10 text-slate-700 hover:text-[#52796f] border border-slate-200 rounded-lg font-semibold transition cursor-pointer"
+        >
+          校長
+        </button>
+        <button
+          type="button"
+          @click="handleDownloadManual('校管理者')"
+          class="px-2.5 py-1 bg-slate-50 hover:bg-[#52796f]/10 text-slate-700 hover:text-[#52796f] border border-slate-200 rounded-lg font-semibold transition cursor-pointer"
+        >
+          校管理者
+        </button>
+        <button
+          type="button"
+          @click="handleDownloadManual('學年主任')"
+          class="px-2.5 py-1 bg-slate-50 hover:bg-[#52796f]/10 text-slate-700 hover:text-[#52796f] border border-slate-200 rounded-lg font-semibold transition cursor-pointer"
+        >
+          學年主任
+        </button>
+        <button
+          type="button"
+          @click="handleDownloadManual('導師')"
+          class="px-2.5 py-1 bg-slate-50 hover:bg-[#52796f]/10 text-slate-700 hover:text-[#52796f] border border-slate-200 rounded-lg font-semibold transition cursor-pointer"
+        >
+          導師
+        </button>
+        <button
+          type="button"
+          @click="handleDownloadManual('科任教師')"
+          class="px-2.5 py-1 bg-slate-50 hover:bg-[#52796f]/10 text-slate-700 hover:text-[#52796f] border border-slate-200 rounded-lg font-semibold transition cursor-pointer"
+        >
+          科任教師
+        </button>
+        <button
+          type="button"
+          @click="showQaModal = true"
+          class="px-2.5 py-1 bg-[#c47c5d]/10 hover:bg-[#c47c5d]/20 text-[#c47c5d] border border-[#c47c5d]/30 rounded-lg font-bold transition cursor-pointer flex items-center gap-1"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          登入 Q&A
+        </button>
+      </div>
+      <div class="text-[11px] text-slate-400 text-center md:text-right shrink-0">
+        建議使用 <strong class="text-slate-600 font-medium">Chrome、Edge、Firefox</strong> 瀏覽器
+      </div>
+    </div>
+
+    <!-- 登入 Q&A 彈窗 -->
+    <LoginQaDialog v-model="showQaModal" />
   </div>
 </template>
 
@@ -192,9 +255,15 @@
 import { reactive, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import LoginQaDialog from '../components/common/LoginQaDialog.vue'
 
 const router = useRouter()
 const showPassword = ref(false)
+const showQaModal = ref(false)
+
+function handleDownloadManual(type) {
+  ElMessage.success(`正在為您下載【${type}操作手冊.pdf】...`)
+}
 
 // 縣市選項
 const cities = ['測試市', '測試縣']

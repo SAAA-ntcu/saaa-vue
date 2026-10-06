@@ -150,17 +150,6 @@
                     {{ state.username }}
                   </div>
 
-                  <!-- Real IP Switcher -->
-                  <div class="mt-2 pt-1.5 border-t border-slate-200/50 flex items-center justify-between text-[11px]">
-                    <span class="text-slate-400">目前 IP ({{ state.isRealIpMode ? '真實' : '模擬' }})</span>
-                    <button
-                      type="button"
-                      @click="handleToggleIp"
-                      class="text-[#52796f] hover:underline font-semibold cursor-pointer bg-transparent border-0 p-0"
-                    >
-                      {{ state.isRealIpMode ? '切換回內網測試 IP' : '切換為真實對外 IP' }}
-                    </button>
-                  </div>
                 </div>
 
                 <!-- Quick Role Switcher section -->
@@ -271,7 +260,7 @@
             </div>
             <div class="text-[11px] text-slate-400 font-medium space-y-0.5 mb-2.5">
               <div>單位: {{ state.city }} · {{ state.area }}</div>
-              <div>IP: {{ state.ip }} ({{ state.isRealIpMode ? '真實' : '模擬' }})</div>
+              <div>IP: {{ state.ip }}</div>
               <div>剩餘時間: <span class="text-emerald-600 font-mono font-semibold">{{ formattedCountdown }}</span></div>
             </div>
 
@@ -443,7 +432,7 @@ function handleToggleIp() {
 // Dynamic navigation items based on login status matching uploaded screenshots
 const currentNavItems = computed(() => {
   if (state.isLoggedIn) {
-    return [
+    const baseNav = [
       { title: '最新消息', path: '/' },
       { title: '評量架構', path: '/AssessmentFrames' },
       { title: '試題公告', path: '/ExamReleases' },
@@ -457,16 +446,27 @@ const currentNavItems = computed(() => {
           { title: '試題分析結果', path: '/scores?tab=analysis' },
           { title: '背景資料分析', path: '/scores?tab=background' }
         ]
-      },
-      {
-        title: '綜合專區',
-        path: '/integrated',
-        children: [
-          { title: '教師帳號管理', path: '/integrated?tab=teachers' },
-          { title: '缺考名單下載', path: '/integrated?tab=absentee' }
-        ]
       }
     ]
+
+    const integratedChildren = []
+    if (state.role === '校管理者') {
+      integratedChildren.push({ title: '教師帳號管理', path: '/integrated?tab=teachers' })
+    }
+    // 導師、科任教師不顯示缺考名單
+    if (state.role !== '導師' && state.role !== '科任教師') {
+      integratedChildren.push({ title: '缺考名單下載', path: '/integrated?tab=absentee' })
+    }
+
+    if (integratedChildren.length > 0) {
+      baseNav.push({
+        title: '綜合專區',
+        path: '/integrated',
+        children: integratedChildren
+      })
+    }
+
+    return baseNav
   } else {
     return [
       { title: '最新消息', path: '/' },

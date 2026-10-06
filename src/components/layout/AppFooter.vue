@@ -9,7 +9,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
           </svg>
           <span class="text-slate-500">電話：</span>
-          <span class="font-mono text-slate-700 font-medium">(04) 2218-8100 · (04) 2218-8177</span>
+          <span class="font-mono text-slate-700 font-medium">(04) 2218-8100 · (04) 2218-8177 · (04) 2218-1024</span>
         </span>
 
         <span class="text-slate-300 hidden sm:inline">|</span>
@@ -37,26 +37,90 @@
           </svg>
           <span>服務時間：週一至週五 08:30-12:00 / 13:30-17:30</span>
         </span>
+      </div>
 
-        <span class="text-slate-300 hidden lg:inline">|</span>
+      <!-- Operation Manuals & Browser Recommendation Line -->
+      <div class="flex flex-wrap items-center justify-center gap-x-2 sm:gap-x-2.5 gap-y-1 text-slate-500 text-[11px] pt-0.5">
+        <span class="font-bold text-slate-600">操作說明：</span>
+        <button
+          type="button"
+          @click="handleDownloadManual('校長')"
+          class="hover:text-[#52796f] hover:underline cursor-pointer bg-transparent border-0 p-0 text-slate-600 font-medium transition"
+        >
+          校長
+        </button>
+        <span class="text-slate-300">·</span>
+        <button
+          type="button"
+          @click="handleDownloadManual('校管理者')"
+          class="hover:text-[#52796f] hover:underline cursor-pointer bg-transparent border-0 p-0 text-slate-600 font-medium transition"
+        >
+          校管理者
+        </button>
+        <span class="text-slate-300">·</span>
+        <button
+          type="button"
+          @click="handleDownloadManual('學年主任')"
+          class="hover:text-[#52796f] hover:underline cursor-pointer bg-transparent border-0 p-0 text-slate-600 font-medium transition"
+        >
+          學年主任
+        </button>
+        <span class="text-slate-300">·</span>
+        <button
+          type="button"
+          @click="handleDownloadManual('導師')"
+          class="hover:text-[#52796f] hover:underline cursor-pointer bg-transparent border-0 p-0 text-slate-600 font-medium transition"
+        >
+          導師
+        </button>
+        <span class="text-slate-300">·</span>
+        <button
+          type="button"
+          @click="handleDownloadManual('科任教師')"
+          class="hover:text-[#52796f] hover:underline cursor-pointer bg-transparent border-0 p-0 text-slate-600 font-medium transition"
+        >
+          科任教師
+        </button>
+        <span class="text-slate-300">·</span>
+        <button
+          type="button"
+          @click="showQaModal = true"
+          class="text-[#c47c5d] hover:text-[#a25a3d] hover:underline font-bold cursor-pointer bg-transparent border-0 p-0 transition"
+        >
+          登入 Q&A
+        </button>
 
-        <!-- Address -->
-        <span class="inline-flex items-center gap-1.5 text-slate-500 hidden lg:inline-flex">
+        <span class="text-slate-300 hidden sm:inline">|</span>
+        <span class="text-slate-400">建議使用 Chrome、Edge、Firefox 瀏覽器</span>
+      </div>
+
+      <!-- Address & Copyright (Centered on one line) -->
+      <div class="flex flex-wrap items-center justify-center gap-x-2 sm:gap-x-3 gap-y-0.5 text-slate-500 text-[11px] font-medium tracking-wide">
+        <span class="inline-flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
           <span>403臺中市西區民生路140號 教育樓 5F</span>
         </span>
-      </div>
-
-      <!-- Copyright (Centered) -->
-      <div class="text-slate-500 text-[11px] font-medium tracking-wide">
-        &copy; 國立臺中教育大學 ｜ 測驗統計與適性學習研究中心
+        <span class="text-slate-300 hidden sm:inline">|</span>
+        <span>&copy; 國立臺中教育大學 ｜ 測驗統計與適性學習研究中心</span>
       </div>
     </div>
+
+    <!-- 登入 Q&A 彈窗 -->
+    <LoginQaDialog v-model="showQaModal" />
   </footer>
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import { ElMessage } from 'element-plus'
+import LoginQaDialog from '../common/LoginQaDialog.vue'
+
+const showQaModal = ref(false)
+
+function handleDownloadManual(type) {
+  ElMessage.success(`正在為您下載【${type}操作手冊.pdf】...`)
+}
 </script>

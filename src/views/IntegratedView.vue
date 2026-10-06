@@ -5,6 +5,7 @@
     <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 flex-wrap gap-3">
       <div class="flex items-center gap-2">
         <button
+          v-if="state.role === '校管理者'"
           type="button"
           @click="switchMainTab('teachers')"
           class="px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1.5"
@@ -1037,16 +1038,28 @@ const router = useRouter()
 const { state } = useAuth()
 
 // Main tab: 'teachers' or 'absentee'
-const mainTab = ref(route.query.tab === 'absentee' ? 'absentee' : 'teachers')
+const mainTab = ref(
+  (route.query.tab === 'absentee' || state.role !== '校管理者') ? 'absentee' : 'teachers'
+)
 
 // Watch query changes from Header dropdown clicks
 watch(() => route.query.tab, (newTab) => {
   if (newTab === 'absentee') {
     mainTab.value = 'absentee'
-  } else if (newTab === 'teachers') {
+  } else if (newTab === 'teachers' && state.role === '校管理者') {
     mainTab.value = 'teachers'
   }
 })
+
+// Enforce permission if role changes while on the page
+watch(() => state.role, (newRole) => {
+  if (newRole === '導師' || newRole === '科任教師') {
+    ElMessage.warning('您的身分權限無法訪問綜合專區')
+    router.replace('/')
+  } else if (newRole !== '校管理者' && mainTab.value === 'teachers') {
+    switchMainTab('absentee')
+  }
+}, { immediate: true })
 
 function switchMainTab(tab) {
   mainTab.value = tab
