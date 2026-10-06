@@ -263,12 +263,21 @@
 
                 <!-- 組別身分 -->
                 <td class="py-3 px-4">
-                  <span
-                    class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold"
-                    :class="getRoleBadgeClass(t.role)"
-                  >
-                    {{ t.role }}
-                  </span>
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span
+                      class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold"
+                      :class="getRoleBadgeClass(t.role)"
+                    >
+                      {{ t.role }}
+                    </span>
+                    <span
+                      v-if="t.role === '校長' || t.role === '學年主任'"
+                      class="text-[10px] text-slate-400 font-medium"
+                      title="系統預設管理帳號"
+                    >
+                      (系統預設)
+                    </span>
+                  </div>
                 </td>
 
                 <!-- 任教年級 / 班級 (校長與學年主任依規範留空) -->
@@ -544,39 +553,51 @@
     <!-- ============================================== -->
     <el-dialog
       v-model="createDialogVisible"
-      :title="isEditMode ? '編輯教師帳號資訊' : '新增校內教師帳號'"
+      :title="isEditMode ? (teacherForm.role === '校長' || teacherForm.role === '學年主任' ? `編輯${teacherForm.role}帳號資訊 (系統預設)` : '編輯教師帳號資訊') : '新增校內教師帳號'"
       width="560px"
       append-to-body
       destroy-on-close
       class="rounded-2xl overflow-hidden"
     >
       <form @submit.prevent="saveTeacher" class="space-y-4 text-xs">
-        <!-- 權限身分 (舊版 Radio) -->
+        <!-- 權限身分 (校長與學年主任為系統預設帳號，無法手動選取) -->
         <div>
           <label class="block font-bold text-slate-700 mb-1.5">
             權限身分 <span class="text-rose-500">*</span>
           </label>
-          <div class="bg-slate-50/70 border border-slate-200 rounded-xl p-3 space-y-2">
-            <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
-              <input type="radio" v-model="teacherForm.role" value="校長" class="text-[#52796f]" />
-              <span>校長 (全校業務統整，年級班級留空)</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
-              <input type="radio" v-model="teacherForm.role" value="學年主任" class="text-[#52796f]" />
-              <span>學年主任 (負責全學年年段施測與成績檢閱，年級班級留空)</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
-              <input type="radio" v-model="teacherForm.role" value="班級導師" class="text-[#52796f]" />
-              <span>班級導師 (擔任單一班級導師)</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
-              <input type="radio" v-model="teacherForm.role" value="科任教師" class="text-[#52796f]" />
-              <span>科任教師 (未擔任班導，僅教授特定學科)</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
-              <input type="radio" v-model="teacherForm.role" value="授課教師" class="text-[#52796f]" />
-              <span>授課教師 (兼任導師身分，亦教授其它班級特定學科)</span>
-            </label>
+
+          <!-- 編輯系統預設帳號時：固定顯示不可更改身分 -->
+          <div v-if="isEditMode && (teacherForm.role === '校長' || teacherForm.role === '學年主任')" class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-md text-[11px] font-bold" :class="getRoleBadgeClass(teacherForm.role)">
+                {{ teacherForm.role }}
+              </span>
+              <span class="text-[11px] font-bold text-[#52796f]">【系統預設帳號】</span>
+            </div>
+            <p class="text-[11px] text-slate-500 m-0 leading-normal">
+              此帳號為系統依學校編制預設之管理帳號，無法手動變更權限身分，任教年級與班級依規範自動留空。
+            </p>
+          </div>
+
+          <!-- 新增教師或編輯一般教師：僅供選擇「班級導師」、「科任教師」、「授課教師」 -->
+          <div v-else class="space-y-1.5">
+            <div class="bg-slate-50/70 border border-slate-200 rounded-xl p-3 space-y-2">
+              <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
+                <input type="radio" v-model="teacherForm.role" value="班級導師" class="text-[#52796f]" />
+                <span>班級導師 (擔任單一班級導師)</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
+                <input type="radio" v-model="teacherForm.role" value="科任教師" class="text-[#52796f]" />
+                <span>科任教師 (未擔任班導，僅教授特定學科)</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
+                <input type="radio" v-model="teacherForm.role" value="授課教師" class="text-[#52796f]" />
+                <span>授課教師 (兼任導師身分，亦教授其它班級特定學科)</span>
+              </label>
+            </div>
+            <p class="text-[11px] text-slate-400 m-0">
+              ※「校長」與「學年主任」為系統預設管理帳號，由系統依編制生成，無法在此手動選取或建立。
+            </p>
           </div>
         </div>
 
