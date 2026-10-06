@@ -190,7 +190,7 @@
 
                 <!-- 更改密碼 -->
                 <router-link
-                  to="/forgot-password?bWVtb2ZvcmdldHB3=TVRnek5qRTA="
+                  to="/changepasss"
                   @click="isDropdownOpen = false"
                   class="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-[#52796f] hover:bg-slate-50 rounded-xl transition no-underline"
                 >
@@ -351,7 +351,7 @@
           <!-- Action buttons in Mobile Drawer when logged in -->
           <div v-if="state.isLoggedIn" class="mt-4 pt-4 border-t border-slate-100 space-y-2">
             <router-link
-              to="/forgot-password?bWVtb2ZvcmdldHB3=TVRnek5qRTA="
+              to="/changepasss"
               @click="isMobileMenuOpen = false"
               class="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold no-underline"
             >
@@ -467,8 +467,9 @@ const currentNavItems = computed(() => {
             path: '/integrated?tab=teachers',
             hasSubmenu: true,
             subChildren: [
-              { title: '教師名冊維護', path: '/integrated?tab=teachers' },
-              { title: '批次匯入帳號', path: '/integrated?tab=teachers' }
+              { title: '校內帳號總表', path: '/integrated?tab=teachers&sub=list' },
+              { title: '新增帳號', path: '/integrated?tab=teachers&sub=create' },
+              { title: '批次新增帳號', path: '/integrated?tab=teachers&sub=batch' }
             ]
           },
           { title: '缺考名單下載', path: '/integrated?tab=absentee' }

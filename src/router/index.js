@@ -38,6 +38,12 @@ const routes = [
     meta: { title: '綜合專區 - 縣市學生學習能力檢測' }
   },
   {
+    path: '/changepasss',
+    name: 'ChangePassword',
+    component: () => import('../views/ChangePasswordView.vue'),
+    meta: { title: '更改密碼 - 縣市學生學習能力檢測' }
+  },
+  {
     path: '/forgot-password',
     name: 'ForgotPassword',
     component: () => import('../views/ForgotPasswordView.vue'),
