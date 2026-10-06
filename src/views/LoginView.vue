@@ -175,12 +175,12 @@
               登入系統
             </button>
 
-            <a
-              href="http://172.16.113.103:8080/forgot-password?bWVtb2ZvcmdldHB3=TVRnek5qRTA="
+            <router-link
+              to="/forgot-password?bWVtb2ZvcmdldHB3=TVRnek5qRTA="
               class="flex-1 text-center bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-500 hover:text-white hover:border-rose-500 text-xs font-semibold py-2.5 px-4 rounded-xl shadow-2xs transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 tracking-wider no-underline cursor-pointer flex items-center justify-center gap-1"
             >
               忘記密碼
-            </a>
+            </router-link>
           </div>
         </form>
       </div>

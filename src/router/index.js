@@ -26,6 +26,12 @@ const routes = [
     meta: { title: '系統登入 - 縣市學生學習能力檢測' }
   },
   {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: () => import('../views/ForgotPasswordView.vue'),
+    meta: { title: '忘記密碼 - 縣市學生學習能力檢測' }
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/'
   }
