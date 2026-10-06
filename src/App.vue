@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col min-h-screen overflow-x-hidden main_bg pb-20 md:pb-24">
+  <div class="flex flex-col min-h-screen overflow-x-hidden main_bg pt-16 lg:pt-20 pb-20 md:pb-24">
     <AppHeader />
     <NotebookFrame>
       <router-view v-slot="{ Component }">
