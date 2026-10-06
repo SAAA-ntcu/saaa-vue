@@ -551,9 +551,6 @@
                       >
                         {{ sub }}
                       </span>
-                      <span v-if="st.subjects && st.subjects.length > 1" class="text-[10px] text-slate-400 font-medium">
-                        (共 {{ st.subjects.length }} 科)
-                      </span>
                     </div>
                   </td>
                 </tr>
