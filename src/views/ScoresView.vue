@@ -338,29 +338,6 @@
         </table>
       </div>
 
-      <!-- Whole-school summary report shortcut card -->
-      <div class="mt-4 p-4 rounded-xl bg-slate-50 border border-slate-200/70 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-[#52796f]/10 text-[#52796f] flex items-center justify-center shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <div>
-            <div class="text-xs font-bold text-slate-800">{{ selectedAnnualYear }} 年度全校施測成果總報告書</div>
-            <div class="text-[11px] text-slate-500">彙整全校各年級整體學力指標達成率及縣市常模參照比對分析。</div>
-          </div>
-        </div>
-        <button
-          @click="downloadSpecialReport(`${selectedAnnualYear}年度成果總報告書`)"
-          class="px-3.5 py-1.5 bg-[#52796f] hover:bg-[#354f52] text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs"
-        >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          下載全校總報告 (PDF)
-        </button>
-      </div>
 
       <!-- Floating Batch Download Bar -->
       <transition name="slide-up">
