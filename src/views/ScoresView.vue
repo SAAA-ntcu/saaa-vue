@@ -183,16 +183,13 @@
 
       <!-- Controls & Quick Actions Bar -->
       <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 mb-5 shrink-0 px-1">
-        <!-- Year Selector & School Badge -->
+        <!-- Year Selector (3 Years Only) -->
         <div class="flex items-center gap-2 flex-wrap">
           <YearSelector
             v-model="selectedReportYear"
-            :years="annualReportYears"
+            :years="reportYears"
             @change="changeReportYear"
           />
-          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200/70">
-            🏫 縣立中正國小
-          </span>
         </div>
 
         <!-- Quick Action Buttons -->
@@ -224,7 +221,7 @@
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
             </svg>
-            <span>一鍵全校打包 (ZIP)</span>
+            <span>一鍵全校打包</span>
           </button>
         </div>
       </div>
@@ -245,21 +242,16 @@
                 v-for="rpt in reportTypes"
                 :key="rpt.key"
                 @click="toggleSelectReportColumn(rpt.key)"
-                class="bg-[#52796f] py-3 px-2 tracking-wider cursor-pointer hover:bg-[#43645b] transition select-none group"
+                class="bg-[#52796f] py-3.5 px-2 tracking-wider cursor-pointer hover:bg-[#43645b] transition select-none group"
                 :title="`點擊全選/取消【${rpt.name}】所有卷別`"
               >
-                <div class="flex items-center justify-center gap-1.5 mb-0.5">
+                <div class="flex items-center justify-center gap-1.5">
                   <span>{{ rpt.name }}</span>
                   <span
                     class="w-3.5 h-3.5 rounded border border-white/60 flex items-center justify-center text-[10px] transition-colors"
                     :class="isReportColumnAllSelected(rpt.key) ? 'bg-white text-[#52796f]' : 'bg-transparent text-transparent'"
                   >
                     ✓
-                  </span>
-                </div>
-                <div class="flex items-center justify-center gap-1">
-                  <span class="text-[10px] font-normal opacity-85 px-1 py-0.2 rounded bg-black/15 font-mono">
-                    {{ rpt.format }}
                   </span>
                 </div>
               </th>
@@ -601,7 +593,6 @@
             <span class="font-bold text-slate-800">{{ selectedReportYear }} 年度 {{ modalPaper?.label }}</span>
             <div class="text-[11px] text-slate-500 mt-0.5">學生學習診斷卡與個人成績通知單</div>
           </div>
-          <span class="px-2 py-0.5 bg-[#52796f]/10 text-[#52796f] font-bold rounded-md">縣立中正國小</span>
         </div>
 
         <div>
@@ -621,7 +612,7 @@
             v-model="modalSelectedSeat"
             class="w-full h-9 px-3 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:border-[#52796f]"
           >
-            <option value="all">全班學生 (列印版總冊 PDF)</option>
+            <option value="all">全班學生 (列印版總冊)</option>
             <option value="1">01號 - 王小明 (個別診斷單)</option>
             <option value="2">02號 - 李小華 (個別診斷單)</option>
             <option value="3">03號 - 張雅婷 (個別診斷單)</option>
@@ -631,15 +622,15 @@
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-slate-700 mb-1.5">報表格式</label>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5">報表類型</label>
           <div class="grid grid-cols-2 gap-2">
-            <label class="p-2.5 border rounded-xl flex items-center gap-2 cursor-pointer transition" :class="modalFormat === 'pdf' ? 'border-[#52796f] bg-[#52796f]/5 text-[#52796f] font-bold' : 'border-slate-200 text-slate-600'">
-              <input type="radio" v-model="modalFormat" value="pdf" class="accent-[#52796f]" />
-              <span>通知單 (PDF 格式)</span>
+            <label class="p-2.5 border rounded-xl flex items-center gap-2 cursor-pointer transition" :class="modalFormat === 'notice' ? 'border-[#52796f] bg-[#52796f]/5 text-[#52796f] font-bold' : 'border-slate-200 text-slate-600'">
+              <input type="radio" v-model="modalFormat" value="notice" class="accent-[#52796f]" />
+              <span>個別成績通知單</span>
             </label>
-            <label class="p-2.5 border rounded-xl flex items-center gap-2 cursor-pointer transition" :class="modalFormat === 'xlsx' ? 'border-[#52796f] bg-[#52796f]/5 text-[#52796f] font-bold' : 'border-slate-200 text-slate-600'">
-              <input type="radio" v-model="modalFormat" value="xlsx" class="accent-[#52796f]" />
-              <span>成績清冊 (EXCEL 格式)</span>
+            <label class="p-2.5 border rounded-xl flex items-center gap-2 cursor-pointer transition" :class="modalFormat === 'roster' ? 'border-[#52796f] bg-[#52796f]/5 text-[#52796f] font-bold' : 'border-slate-200 text-slate-600'">
+              <input type="radio" v-model="modalFormat" value="roster" class="accent-[#52796f]" />
+              <span>班級成績清冊</span>
             </label>
           </div>
         </div>
@@ -682,6 +673,7 @@ import {
   getAnnualReportDownloadUrl
 } from '../data/annualReportData'
 import {
+  reportYears,
   reportTypes,
   paperGrades,
   isReportTypeAvailable,
@@ -751,7 +743,7 @@ function downloadSpecialReport(name) {
 // ----------------------------------------------------
 // TAB 2: 各級報表下載狀態與互動邏輯 (方案 A: 報表矩陣總覽)
 // ----------------------------------------------------
-const { activeYear: selectedReportYear, setYear: changeReportYear } = useAssessmentYear(annualReportYears)
+const { activeYear: selectedReportYear, setYear: changeReportYear } = useAssessmentYear(reportYears)
 const selectedReportMap = reactive(new Map())
 const isReportDownloading = ref(false)
 const reportDownloadProgress = reactive({ current: 0, total: 0 })
@@ -761,7 +753,7 @@ const isClassModalOpen = ref(false)
 const modalPaper = ref(null)
 const modalSelectedClass = ref('all')
 const modalSelectedSeat = ref('all')
-const modalFormat = ref('pdf')
+const modalFormat = ref('notice')
 
 const availableModalClasses = computed(() => {
   if (modalPaper.value?.grade === '3年級') {
@@ -774,15 +766,14 @@ function openClassFilterModal(paper) {
   modalPaper.value = paper
   modalSelectedClass.value = 'all'
   modalSelectedSeat.value = 'all'
-  modalFormat.value = 'pdf'
+  modalFormat.value = 'notice'
   isClassModalOpen.value = true
 }
 
 function executeModalClassDownload() {
   const cls = modalSelectedClass.value === 'all' ? '全學年班級' : modalSelectedClass.value
   const seat = modalSelectedSeat.value === 'all' ? '全班' : `${modalSelectedSeat.value}號`
-  const fmt = modalFormat.value.toUpperCase()
-  ElMessage.success(`開始下載【${selectedReportYear.value}年度 ${modalPaper.value?.label} 個人成績 - ${cls} (${seat})】(${fmt})`)
+  ElMessage.success(`開始下載【${selectedReportYear.value}年度 ${modalPaper.value?.label} 個人成績 - ${cls} (${seat})】`)
   isClassModalOpen.value = false
 }
 
@@ -798,7 +789,7 @@ function getReportItemObject(paper, rpt) {
     paperLabel: paper.label,
     reportKey: rpt.key,
     reportName: rpt.name,
-    name: `${selectedReportYear.value}年度_${paper.label}_${rpt.name}.${rpt.format === 'XLSX' ? 'xlsx' : 'pdf'}`,
+    name: `${selectedReportYear.value}年度_${paper.label}_${rpt.name}.pdf`,
     url: getReportDownloadUrl(selectedReportYear.value, paper.label, rpt.name)
   }
 }
@@ -903,8 +894,7 @@ function toggleSelectPaperRow(paperKey) {
 
 function downloadSingleReportFile(paper, rpt) {
   const url = getReportDownloadUrl(selectedReportYear.value, paper.label, rpt.name)
-  const ext = rpt.format === 'XLSX' ? 'xlsx' : 'pdf'
-  const filename = `${selectedReportYear.value}年度_${paper.label}_${rpt.name}.${ext}`
+  const filename = `${selectedReportYear.value}年度_${paper.label}_${rpt.name}.pdf`
   const link = document.createElement('a')
   link.href = url
   link.download = filename
@@ -916,7 +906,7 @@ function downloadSingleReportFile(paper, rpt) {
 }
 
 function downloadAllSchoolPackage() {
-  ElMessage.success(`已觸發打包【${selectedReportYear.value}年度 縣立中正國小 全校各級報表總包裹 (共${allAvailableReports.value.length}份)】ZIP`)
+  ElMessage.success(`已觸發打包【${selectedReportYear.value}年度 全校各級報表總包裹 (共${allAvailableReports.value.length}份)】`)
 }
 
 async function handleBatchReportDownload() {

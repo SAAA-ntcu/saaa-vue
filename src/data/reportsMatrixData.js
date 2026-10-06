@@ -1,32 +1,29 @@
+export const reportYears = ['115', '114', '113']
+
 export const reportTypes = [
   {
     key: 'item_accuracy',
     name: '試卷答對率',
-    format: 'PDF',
     desc: '全校各題平均答對率統計分析'
   },
   {
     key: 'item_response',
     name: '試卷作答反應',
-    format: 'XLSX',
     desc: '試題作答選項分佈與迷思診斷'
   },
   {
     key: 'class_accuracy',
     name: '各班答對率',
-    format: 'PDF',
     desc: '各班級答對率比較與群模對照'
   },
   {
     key: 'school_level',
     name: '各校等級比例',
-    format: 'PDF',
     desc: '精熟/基礎/待加強五標常模比例'
   },
   {
     key: 'individual_score',
     name: '個人成績',
-    format: 'PDF/ZIP',
     desc: '學生個人成績通知單與診斷報告'
   }
 ]
