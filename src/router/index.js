@@ -1,0 +1,48 @@
+import { createRouter, createWebHistory } from 'vue-router'
+
+const routes = [
+  {
+    path: '/',
+    name: 'News',
+    component: () => import('../views/NewsView.vue'),
+    meta: { title: '最新消息 - 縣市學生學習能力檢測' }
+  },
+  {
+    path: '/AssessmentFrames',
+    name: 'AssessmentFrames',
+    component: () => import('../views/AssessmentFramesView.vue'),
+    meta: { title: '評量架構 - 縣市學生學習能力檢測' }
+  },
+  {
+    path: '/ExamReleases',
+    name: 'ExamReleases',
+    component: () => import('../views/ExamReleasesView.vue'),
+    meta: { title: '試題公告 - 縣市學生學習能力檢測' }
+  },
+  {
+    path: '/logins',
+    name: 'Login',
+    component: () => import('../views/LoginView.vue'),
+    meta: { title: '系統登入 - 縣市學生學習能力檢測' }
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/'
+  }
+]
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+  scrollBehavior() {
+    return { top: 0 }
+  }
+})
+
+router.afterEach((to) => {
+  if (to.meta?.title) {
+    document.title = to.meta.title
+  }
+})
+
+export default router
