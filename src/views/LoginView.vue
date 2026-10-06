@@ -253,7 +253,7 @@ function fillTestPassword() {
   ElMessage.info('已填入測試密碼：saaa.ntcu')
 }
 
-import { useAuth } from '../composables/useAuth'
+import { useAuth, buildUsername } from '../composables/useAuth'
 
 const { login } = useAuth()
 
@@ -278,15 +278,27 @@ function handleSubmit() {
     return
   }
 
-  login({
-    role: form.role,
+  const userDisplayName = buildUsername({
+    city: form.city,
     school: form.school,
-    username: `${form.school}_${form.role === '校管理者' ? '校管' : form.role}`
+    role: form.role,
+    grade: needsGrade.value ? form.grade : '',
+    classroom: needsClass.value ? form.classroom : ''
   })
 
-  ElMessage.success(`登入成功！歡迎【${form.school}】${form.role}`)
+  login({
+    city: form.city,
+    area: form.area,
+    role: form.role,
+    school: form.school,
+    grade: form.grade,
+    classroom: form.classroom,
+    username: userDisplayName
+  })
+
+  ElMessage.success(`登入成功！歡迎【${userDisplayName}】`)
   
-  // 1.2 秒後跳轉回首頁
+  // 1 秒後跳轉回首頁
   setTimeout(() => {
     router.push('/')
   }, 1000)

@@ -1,14 +1,67 @@
 import { reactive, computed } from 'vue'
 
-// Read from localStorage or default to logged-in user state as shown in the screenshot
-const stored = localStorage.getItem('saaa_auth_state')
-const initial = stored ? JSON.parse(stored) : {
+export function buildUsername({
+  city = '測試市',
+  school = '測試國小',
+  role = '校管理者',
+  grade = '5',
+  classroom = '1'
+} = {}) {
+  const schoolPrefix = city ? `${city}立${school}` : school
+  let roleSuffix = role
+
+  if (role === '校管理者') {
+    roleSuffix = '校管'
+  } else if (role === '校長') {
+    roleSuffix = '校長'
+  } else if (role === '學年主任') {
+    roleSuffix = grade ? `${grade}年級主任` : '學年主任'
+  } else if (role === '導師') {
+    roleSuffix = (grade && classroom) ? `${grade}年${classroom}班導師` : '導師'
+  } else if (role === '科任教師') {
+    roleSuffix = (grade && classroom) ? `${grade}年${classroom}班科任` : '科任教師'
+  }
+
+  return `${schoolPrefix}_${roleSuffix}`
+}
+
+const defaultInitial = {
   isLoggedIn: true,
+  city: '測試市',
+  area: '測試區',
+  school: '測試國小',
   role: '校管理者',
-  school: '縣市立中正國小',
-  username: '縣市立中正國小_校管',
+  grade: '5',
+  classroom: '1',
+  username: '測試市立測試國小_校管',
   ip: '172.16.113.107',
   countdownSeconds: 3600
+}
+
+const stored = localStorage.getItem('saaa_auth_state')
+let initial = { ...defaultInitial }
+
+if (stored) {
+  try {
+    const parsed = JSON.parse(stored)
+    // Automatically migrate away from legacy demo text "中正國小" if present
+    if (!parsed.username || parsed.username.includes('中正國小')) {
+      parsed.city = '測試市'
+      parsed.area = '測試區'
+      parsed.school = '測試國小'
+      parsed.role = parsed.role || '校管理者'
+      parsed.username = buildUsername({
+        city: '測試市',
+        school: '測試國小',
+        role: parsed.role,
+        grade: '5',
+        classroom: '1'
+      })
+    }
+    initial = { ...defaultInitial, ...parsed }
+  } catch (e) {
+    initial = { ...defaultInitial }
+  }
 }
 
 const state = reactive(initial)
@@ -17,8 +70,12 @@ let timer = null
 function saveState() {
   localStorage.setItem('saaa_auth_state', JSON.stringify({
     isLoggedIn: state.isLoggedIn,
-    role: state.role,
+    city: state.city,
+    area: state.area,
     school: state.school,
+    role: state.role,
+    grade: state.grade,
+    classroom: state.classroom,
     username: state.username,
     ip: state.ip,
     countdownSeconds: state.countdownSeconds
@@ -51,13 +108,39 @@ export function useAuth() {
 
   function login(payload = {}) {
     state.isLoggedIn = true
+    state.city = payload.city || '測試市'
+    state.area = payload.area || (state.city === '測試市' ? '測試區' : '測試鄉')
+    state.school = payload.school || '測試國小'
     state.role = payload.role || '校管理者'
-    state.school = payload.school || '縣市立中正國小'
-    state.username = payload.username || `${state.school}_${state.role === '校管理者' ? '校管' : state.role}`
+    state.grade = payload.grade || '5'
+    state.classroom = payload.classroom || '1'
+    state.username = payload.username || buildUsername({
+      city: state.city,
+      school: state.school,
+      role: state.role,
+      grade: state.grade,
+      classroom: state.classroom
+    })
     state.ip = payload.ip || '172.16.113.107'
     state.countdownSeconds = 3600
     saveState()
     startTimer()
+  }
+
+  function switchRole(newRole, extra = {}) {
+    state.role = newRole
+    if (extra.city) state.city = extra.city
+    if (extra.school) state.school = extra.school
+    if (extra.grade) state.grade = extra.grade
+    if (extra.classroom) state.classroom = extra.classroom
+    state.username = buildUsername({
+      city: state.city,
+      school: state.school,
+      role: state.role,
+      grade: state.grade,
+      classroom: state.classroom
+    })
+    saveState()
   }
 
   function logout() {
@@ -78,6 +161,7 @@ export function useAuth() {
     state,
     formattedCountdown,
     login,
+    switchRole,
     logout,
     toggleLogin
   }

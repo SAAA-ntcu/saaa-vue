@@ -79,8 +79,44 @@
             <transition name="dropdown-fade">
               <div
                 v-if="isDropdownOpen"
-                class="absolute right-0 top-full mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 p-2 z-50 origin-top-right"
+                class="absolute right-0 top-full mt-2 w-60 bg-white rounded-2xl shadow-xl border border-slate-100 p-2.5 z-50 origin-top-right text-left"
               >
+                <!-- User Unit info -->
+                <div class="px-2.5 py-2 bg-slate-50 rounded-xl mb-2 border border-slate-100">
+                  <div class="text-[11px] text-slate-400 font-medium flex items-center justify-between">
+                    <span>單位與區域</span>
+                    <span class="text-[#52796f] font-bold">{{ state.city }} · {{ state.area }}</span>
+                  </div>
+                  <div class="text-xs font-bold text-slate-800 mt-1 truncate" :title="state.username">
+                    {{ state.username }}
+                  </div>
+                </div>
+
+                <!-- Quick Role Switcher section -->
+                <div class="mb-2 px-1">
+                  <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                    <span>切換測試身分</span>
+                    <span class="text-[10px] text-slate-500 font-semibold">{{ state.school }}</span>
+                  </div>
+                  <div class="grid grid-cols-2 gap-1">
+                    <button
+                      v-for="r in roleOptions"
+                      :key="r"
+                      type="button"
+                      @click="handleSwitchRole(r)"
+                      class="px-2 py-1.5 rounded-lg text-xs font-medium text-left transition cursor-pointer flex items-center justify-between"
+                      :class="state.role === r
+                        ? 'bg-[#edf2ee] text-[#354f52] font-bold border border-[#52796f]/30'
+                        : 'text-slate-600 hover:bg-slate-100 border border-transparent'"
+                    >
+                      <span class="truncate">{{ r }}</span>
+                      <span v-if="state.role === r" class="w-1.5 h-1.5 rounded-full bg-[#52796f] shrink-0"></span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="border-t border-slate-100 my-1.5"></div>
+
                 <!-- 更改密碼 -->
                 <router-link
                   to="/forgot-password?bWVtb2ZvcmdldHB3=TVRnek5qRTA="
@@ -162,9 +198,28 @@
                 {{ state.username }}
               </span>
             </div>
-            <div class="text-[11px] text-slate-400 font-medium space-y-0.5">
-              <div>IP: {{ state.ip }}</div>
+            <div class="text-[11px] text-slate-400 font-medium space-y-0.5 mb-2.5">
+              <div>單位: {{ state.city }} · {{ state.area }}</div>
               <div>剩餘時間: <span class="text-emerald-600 font-mono font-semibold">{{ formattedCountdown }}</span></div>
+            </div>
+
+            <!-- Role switcher in mobile -->
+            <div class="pt-2 border-t border-slate-200/60">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">切換測試身分</div>
+              <div class="flex flex-wrap gap-1">
+                <button
+                  v-for="r in roleOptions"
+                  :key="r"
+                  type="button"
+                  @click="handleSwitchRole(r)"
+                  class="px-2 py-1 rounded-md text-[11px] font-medium transition cursor-pointer"
+                  :class="state.role === r
+                    ? 'bg-[#52796f] text-white font-bold'
+                    : 'bg-white text-slate-600 border border-slate-200'"
+                >
+                  {{ r }}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -229,7 +284,14 @@ const isMobileMenuOpen = ref(false)
 const isDropdownOpen = ref(false)
 const profileDropdownRef = ref(null)
 
-const { state, formattedCountdown, logout } = useAuth()
+const { state, formattedCountdown, logout, switchRole } = useAuth()
+
+const roleOptions = ['校長', '校管理者', '學年主任', '導師', '科任教師']
+
+function handleSwitchRole(r) {
+  switchRole(r)
+  ElMessage.success(`已切換身分為：【${state.username}】`)
+}
 
 // Dynamic navigation items based on login status
 const currentNavItems = computed(() => {
