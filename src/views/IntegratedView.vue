@@ -549,170 +549,400 @@
     </div>
 
     <!-- ============================================== -->
-    <!-- MODAL 1: 新增 / 編輯教師帳號 (保留舊版完整欄位) -->
+    <!-- MODAL 1: 新增 / 編輯教師帳號 (新版雙頁籤極致 UX) -->
     <!-- ============================================== -->
     <el-dialog
       v-model="createDialogVisible"
-      :title="isEditMode ? (teacherForm.role === '校長' || teacherForm.role === '學年主任' ? `編輯${teacherForm.role}帳號資訊 (系統預設)` : '編輯教師帳號資訊') : '新增校內教師帳號'"
-      width="560px"
+      :title="isEditMode ? (teacherForm.role === '校長' || teacherForm.role === '學年主任' ? `編輯${teacherForm.role}帳號資訊 (系統預設)` : '編輯教師帳號與任課設定') : '新增校內教師帳號'"
+      width="780px"
       append-to-body
       destroy-on-close
       class="rounded-2xl overflow-hidden"
     >
-      <form @submit.prevent="saveTeacher" class="space-y-4 text-xs">
-        <!-- 權限身分 (校長與學年主任為系統預設帳號，無法手動選取) -->
-        <div>
-          <label class="block font-bold text-slate-700 mb-1.5">
-            權限身分 <span class="text-rose-500">*</span>
-          </label>
-
-          <!-- 編輯系統預設帳號時：固定顯示不可更改身分 -->
-          <div v-if="isEditMode && (teacherForm.role === '校長' || teacherForm.role === '學年主任')" class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-            <div class="flex items-center gap-2">
-              <span class="px-2.5 py-0.5 rounded-md text-[11px] font-bold" :class="getRoleBadgeClass(teacherForm.role)">
-                {{ teacherForm.role }}
-              </span>
-              <span class="text-[11px] font-bold text-[#52796f]">【系統預設帳號】</span>
-            </div>
-            <p class="text-[11px] text-slate-500 m-0 leading-normal">
-              此帳號為系統依學校編制預設之管理帳號，無法手動變更權限身分，任教年級與班級依規範自動留空。
-            </p>
+      <div class="space-y-4 text-xs">
+        <!-- 頂部導覽列與子頁籤切換 (整合 Screenshot 2 & 3 麵包屑精神) -->
+        <div class="flex items-center justify-between pb-2 border-b border-slate-200 flex-wrap gap-2">
+          <!-- 麵包屑導覽 -->
+          <div class="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
+            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-bold">校內名冊</span>
+            <span>&gt;</span>
+            <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-bold font-mono">115 年度</span>
+            <span>&gt;</span>
+            <span class="font-bold text-slate-800 truncate max-w-[140px]">{{ teacherForm.name || '新教師帳號' }}</span>
           </div>
 
-          <!-- 新增教師或編輯一般教師：僅供選擇「班級導師」、「科任教師」、「授課教師」 -->
-          <div v-else class="space-y-1.5">
-            <div class="bg-slate-50/70 border border-slate-200 rounded-xl p-3 space-y-2">
-              <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
-                <input type="radio" v-model="teacherForm.role" value="班級導師" class="text-[#52796f]" />
-                <span>班級導師 (擔任單一班級導師)</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
-                <input type="radio" v-model="teacherForm.role" value="科任教師" class="text-[#52796f]" />
-                <span>科任教師 (未擔任班導，僅教授特定學科)</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
-                <input type="radio" v-model="teacherForm.role" value="授課教師" class="text-[#52796f]" />
-                <span>授課教師 (兼任導師身分，亦教授其它班級特定學科)</span>
-              </label>
-            </div>
-            <p class="text-[11px] text-slate-400 m-0">
-              ※「校長」與「學年主任」為系統預設管理帳號，由系統依編制生成，無法在此手動選取或建立。
-            </p>
-          </div>
-        </div>
-
-        <!-- 教師姓名 & 使用者名稱 -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">
-              教師姓名 <span class="text-rose-500">*</span>
-            </label>
-            <input
-              v-model="teacherForm.name"
-              type="text"
-              required
-              placeholder="例：陳志豪"
-              class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
-            />
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">
-              使用者名稱 / 帳號 <span class="text-rose-500">*</span>
-            </label>
-            <input
-              v-model="teacherForm.username"
-              type="text"
-              required
-              placeholder="例：t_chen08"
-              class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
-            />
-          </div>
-        </div>
-
-        <!-- 授課年級 & 班級/科目 (校長與學年主任依規範自動留空) -->
-        <div v-if="teacherForm.role !== '校長' && teacherForm.role !== '學年主任'" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">授課年級</label>
-            <select
-              v-model="teacherForm.grade"
-              class="w-full h-9 px-2.5 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
+          <!-- 子頁籤按鈕 (基本帳號資料 vs 班級任課設定) -->
+          <div v-if="teacherForm.role !== '校長' && teacherForm.role !== '學年主任'" class="inline-flex p-1 bg-slate-100 rounded-xl gap-1">
+            <button
+              type="button"
+              @click="modalSubTab = 'basic'"
+              class="px-3 py-1 rounded-lg font-bold text-xs transition cursor-pointer"
+              :class="modalSubTab === 'basic' ? 'bg-white text-[#52796f] shadow-xs' : 'text-slate-600 hover:text-slate-800'"
             >
-              <option value="1">1 年級</option>
-              <option value="2">2 年級</option>
-              <option value="3">3 年級</option>
-              <option value="4">4 年級</option>
-              <option value="5">5 年級</option>
-              <option value="6">6 年級</option>
-            </select>
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">任教班級 / 科目說明</label>
-            <input
-              v-model="teacherForm.assignedClass"
-              type="text"
-              placeholder="例：五年1班 或 數學科任"
-              class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
-            />
-          </div>
-        </div>
-        <div v-else class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 text-[11px] flex items-center gap-1.5">
-          <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>【{{ teacherForm.role }}】身分無需設定任教年級與班級，依系統規範自動保持留空。</span>
-        </div>
-
-        <!-- 電子郵件信箱 -->
-        <div>
-          <label class="block font-bold text-slate-700 mb-1">
-            電子郵件信箱 <span class="text-rose-500">*</span>
-          </label>
-          <input
-            v-model="teacherForm.email"
-            type="email"
-            required
-            placeholder="例：teacher@school.edu.tw"
-            class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
-          />
-          <p class="text-[11px] text-slate-400 mt-1 m-0">新增或重設後，系統會自動發送通知信至此信箱。</p>
-        </div>
-
-        <!-- 帳號有效起訖日 -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">帳號有效起日</label>
-            <input
-              v-model="teacherForm.startDate"
-              type="date"
-              class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
-            />
-          </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">帳號有效迄日</label>
-            <input
-              v-model="teacherForm.endDate"
-              type="date"
-              class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
-            />
+              📋 基本帳號資料
+            </button>
+            <button
+              type="button"
+              @click="modalSubTab = 'classes'"
+              class="px-3 py-1 rounded-lg font-bold text-xs transition flex items-center gap-1.5 cursor-pointer"
+              :class="modalSubTab === 'classes' ? 'bg-white text-[#52796f] shadow-xs' : 'text-slate-600 hover:text-slate-800'"
+            >
+              <span>🏫 班級任課設定</span>
+              <span
+                v-if="teacherForm.role !== '班級導師'"
+                class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                :class="totalSelectedClassesCount > 0 ? 'bg-emerald-100 text-emerald-800 font-bold' : 'bg-slate-200 text-slate-600'"
+              >
+                {{ totalSelectedClassesCount }} 班
+              </span>
+            </button>
           </div>
         </div>
 
-        <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
-          <button
-            type="button"
-            @click="createDialogVisible = false"
-            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition cursor-pointer"
-          >
-            取消
-          </button>
-          <button
-            type="submit"
-            class="px-5 py-2 bg-[#52796f] hover:bg-[#354f52] text-white text-xs font-bold rounded-lg shadow-xs transition cursor-pointer active:scale-95"
-          >
-            {{ isEditMode ? '儲存變更' : '確認新增' }}
-          </button>
-        </div>
-      </form>
+        <form @submit.prevent="saveTeacher" class="space-y-4">
+          <!-- ============================================== -->
+          <!-- SUB-TAB 1: 基本資料 (Screenshot 3 現代化升級)    -->
+          <!-- ============================================== -->
+          <div v-show="modalSubTab === 'basic'" class="space-y-4">
+            <!-- 權限管理身分 -->
+            <div>
+              <label class="block font-bold text-slate-700 mb-1.5">
+                權限身分 <span class="text-rose-500">*</span>
+              </label>
+
+              <!-- 系統預設帳號 (校長/學年主任) -->
+              <div v-if="isEditMode && (teacherForm.role === '校長' || teacherForm.role === '學年主任')" class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="px-2.5 py-0.5 rounded-md text-[11px] font-bold" :class="getRoleBadgeClass(teacherForm.role)">
+                    {{ teacherForm.role }}
+                  </span>
+                  <span class="text-[11px] font-bold text-[#52796f]">【系統預設帳號】</span>
+                </div>
+                <p class="text-[11px] text-slate-500 m-0 leading-normal">
+                  此帳號為系統依學校編制預設之管理帳號，無法變更身分權限，任教年級與班級依規範自動留空。
+                </p>
+              </div>
+
+              <!-- 一般教師身分單選 (導師/科任/授課) -->
+              <div v-else class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <label
+                  class="p-2.5 border rounded-xl cursor-pointer transition flex flex-col justify-between"
+                  :class="teacherForm.role === '班級導師' ? 'border-[#52796f] bg-emerald-50/30 ring-1 ring-[#52796f]' : 'border-slate-200 bg-white hover:border-slate-300'"
+                >
+                  <div class="flex items-center gap-2 font-bold text-slate-800 mb-1">
+                    <input type="radio" v-model="teacherForm.role" value="班級導師" class="text-[#52796f]" />
+                    <span>班級導師</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 m-0 leading-tight">擔任單一班級導師，管轄本班所有測驗。</p>
+                </label>
+
+                <label
+                  class="p-2.5 border rounded-xl cursor-pointer transition flex flex-col justify-between"
+                  :class="teacherForm.role === '科任教師' ? 'border-[#52796f] bg-emerald-50/30 ring-1 ring-[#52796f]' : 'border-slate-200 bg-white hover:border-slate-300'"
+                >
+                  <div class="flex items-center gap-2 font-bold text-slate-800 mb-1">
+                    <input type="radio" v-model="teacherForm.role" value="科任教師" class="text-[#52796f]" />
+                    <span>科任教師</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 m-0 leading-tight">未擔任導師，專任跨班特定學科（如數學科任）。</p>
+                </label>
+
+                <label
+                  class="p-2.5 border rounded-xl cursor-pointer transition flex flex-col justify-between"
+                  :class="teacherForm.role === '授課教師' ? 'border-[#52796f] bg-emerald-50/30 ring-1 ring-[#52796f]' : 'border-slate-200 bg-white hover:border-slate-300'"
+                >
+                  <div class="flex items-center gap-2 font-bold text-slate-800 mb-1">
+                    <input type="radio" v-model="teacherForm.role" value="授課教師" class="text-[#52796f]" />
+                    <span>授課教師</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 m-0 leading-tight">兼任班級導師，同時教授其他班級特定學科。</p>
+                </label>
+              </div>
+            </div>
+
+            <!-- 教師姓名 & 使用者名稱 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">
+                  教師姓名 <span class="text-rose-500">*</span>
+                </label>
+                <input
+                  v-model="teacherForm.name"
+                  type="text"
+                  required
+                  placeholder="例：陳志豪"
+                  class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
+                />
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">
+                  使用者名稱 (登入管理專用碼) <span class="text-rose-500">*</span>
+                </label>
+                <input
+                  v-model="teacherForm.username"
+                  type="text"
+                  required
+                  placeholder="例：TAdmin_301001"
+                  class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f] font-mono"
+                />
+              </div>
+            </div>
+
+            <!-- 電子郵件信箱 -->
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">
+                電子郵件信箱 <span class="text-rose-500">*</span>
+              </label>
+              <input
+                v-model="teacherForm.email"
+                type="email"
+                required
+                placeholder="例：teacher@school.edu.tw"
+                class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
+              />
+              <p class="text-[11px] text-slate-400 mt-1 m-0">新增或重設後，系統會自動發送通知信至此信箱。</p>
+            </div>
+
+            <!-- 帳號有效起訖日 -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">帳號有效起日</label>
+                <input
+                  v-model="teacherForm.startDate"
+                  type="date"
+                  class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
+                />
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">帳號有效迄日</label>
+                <input
+                  v-model="teacherForm.endDate"
+                  type="date"
+                  class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
+                />
+              </div>
+            </div>
+
+            <!-- 導師班級設定 (針對班級導師、授課教師) -->
+            <div v-if="teacherForm.role === '班級導師' || teacherForm.role === '授課教師'" class="p-3 bg-sky-50/60 border border-sky-200 rounded-xl space-y-2">
+              <label class="block font-bold text-sky-900">
+                🏫 班級導師所屬班級設定
+              </label>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[11px] text-slate-600 mb-1 font-semibold">擔任年級</label>
+                  <select
+                    v-model="teacherForm.homeroomGrade"
+                    class="w-full h-9 px-2.5 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
+                  >
+                    <option value="1">1 年級</option>
+                    <option value="2">2 年級</option>
+                    <option value="3">3 年級</option>
+                    <option value="4">4 年級</option>
+                    <option value="5">5 年級</option>
+                    <option value="6">6 年級</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] text-slate-600 mb-1 font-semibold">擔任班級別</label>
+                  <select
+                    v-model="teacherForm.homeroomClass"
+                    class="w-full h-9 px-2.5 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
+                  >
+                    <option value="1">1 班</option>
+                    <option value="2">2 班</option>
+                    <option value="3">3 班</option>
+                    <option value="4">4 班</option>
+                    <option value="5">5 班</option>
+                    <option value="6">6 班</option>
+                    <option value="7">7 班</option>
+                    <option value="8">8 班</option>
+                  </select>
+                </div>
+              </div>
+              <p class="text-[11px] text-sky-700 m-0">
+                目前配置為：<strong>{{ teacherForm.homeroomGrade }} 年 {{ teacherForm.homeroomClass }} 班</strong> 導師（免設科任跨班矩陣）。
+              </p>
+            </div>
+
+            <!-- 科任 / 授課教師快捷引導卡片 -->
+            <div v-if="teacherForm.role === '科任教師' || teacherForm.role === '授課教師'" class="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl space-y-2.5">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <label class="block font-bold text-[#354f52]">
+                  📚 任課科目與班級配置
+                </label>
+                <button
+                  type="button"
+                  @click="modalSubTab = 'classes'"
+                  class="px-3 py-1 bg-[#52796f] hover:bg-[#354f52] text-white text-[11px] font-bold rounded-lg transition cursor-pointer flex items-center gap-1 shadow-2xs"
+                >
+                  前往詳細班級矩陣設定 (已選 {{ totalSelectedClassesCount }} 班) &rarr;
+                </button>
+              </div>
+              <div class="flex items-center gap-4 text-xs font-medium text-slate-700 flex-wrap">
+                <span>任課科目：</span>
+                <label v-for="sub in availableSubjects" :key="sub" class="inline-flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    :value="sub"
+                    v-model="teacherForm.selectedSubjects"
+                    class="rounded text-[#52796f]"
+                  />
+                  <span>{{ sub }}</span>
+                </label>
+              </div>
+              <div class="text-[11px] text-slate-500 flex items-center gap-3 flex-wrap">
+                <span>目前配置摘要：</span>
+                <span v-for="sub in availableSubjects" :key="sub" class="font-mono bg-white px-2 py-0.5 rounded border border-slate-200">
+                  {{ sub }}: <strong>{{ (teacherForm.classMatrix[sub] || []).length }}</strong> 班
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============================================== -->
+          <!-- SUB-TAB 2: 任課班級設定 (Screenshot 2 現代化升級) -->
+          <!-- ============================================== -->
+          <div v-show="modalSubTab === 'classes'" class="space-y-3.5">
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h4 class="font-bold text-slate-800 text-xs m-0">班級任課設定 (請依科目勾選教師可管轄之班級)</h4>
+                <p class="text-[11px] text-slate-500 m-0 mt-0.5">點選班級膠囊即可加入或移除，支援年級一鍵全選及跨科配置複製。</p>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  @click="copySubjectClasses(activeClassSubject, activeClassSubject === '國語文' ? '數學' : '國語文')"
+                  class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-[11px] font-semibold transition cursor-pointer"
+                  title="將目前科目選中的班級複製到其他科目"
+                >
+                  複製此配置至其他科目
+                </button>
+              </div>
+            </div>
+
+            <!-- 科目切換膠囊 (國語文 / 數學 / 英語文) -->
+            <div class="flex items-center gap-2 pb-1 border-b border-slate-200">
+              <button
+                v-for="sub in availableSubjects"
+                :key="sub"
+                type="button"
+                @click="activeClassSubject = sub"
+                class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                :class="activeClassSubject === sub ? 'bg-[#52796f] text-white shadow-xs' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'"
+              >
+                <span>{{ sub }}</span>
+                <span
+                  class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                  :class="activeClassSubject === sub ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'"
+                >
+                  {{ (teacherForm.classMatrix[sub] || []).length }} 班
+                </span>
+              </button>
+            </div>
+
+            <!-- 班級矩陣選擇區 (現代化膠囊按鈕代替密密麻麻小 Checkbox) -->
+            <div class="border border-slate-200 rounded-xl p-3 bg-white space-y-2.5 max-h-64 overflow-y-auto">
+              <div
+                v-for="gItem in gradeClassStructure"
+                :key="gItem.grade"
+                class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50/80 transition border border-slate-100"
+              >
+                <!-- 年級標籤與全選切換 -->
+                <div class="w-24 shrink-0 flex items-center gap-1.5">
+                  <span class="font-bold text-slate-700 text-xs">{{ gItem.label }}</span>
+                  <button
+                    type="button"
+                    @click="toggleGradeAll(activeClassSubject, gItem)"
+                    class="px-1.5 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer"
+                    :class="isGradeAllSelected(activeClassSubject, gItem) ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                  >
+                    {{ isGradeAllSelected(activeClassSubject, gItem) ? '已全選' : '全選' }}
+                  </button>
+                </div>
+
+                <!-- 班級按鈕膠囊 (Pills) -->
+                <div class="flex items-center gap-1.5 flex-wrap flex-1">
+                  <button
+                    v-for="cCode in gItem.classes"
+                    :key="cCode"
+                    type="button"
+                    @click="toggleClassSelection(activeClassSubject, cCode)"
+                    class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition cursor-pointer select-none"
+                    :class="isClassSelected(activeClassSubject, cCode)
+                      ? 'bg-[#52796f] text-white shadow-2xs scale-102'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200/70'"
+                  >
+                    {{ cCode }}
+                    <span v-if="isClassSelected(activeClassSubject, cCode)" class="ml-0.5 text-[10px]">✓</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 即時任課配置摘要看板 (Live Allocation Summary) -->
+            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs text-slate-600 flex-wrap gap-2">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-bold text-slate-700">目前【{{ activeClassSubject }}】配置：</span>
+                <span v-if="(teacherForm.classMatrix[activeClassSubject] || []).length === 0" class="text-slate-400">尚未勾選班級</span>
+                <div v-else class="flex items-center gap-1 flex-wrap">
+                  <span
+                    v-for="c in teacherForm.classMatrix[activeClassSubject]"
+                    :key="c"
+                    class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[11px] font-bold"
+                  >
+                    {{ c }}
+                  </span>
+                </div>
+              </div>
+              <div class="font-bold text-slate-700 shrink-0">
+                跨科總計：<strong class="text-[#52796f] font-mono text-sm">{{ totalSelectedClassesCount }}</strong> 班次
+              </div>
+            </div>
+          </div>
+
+          <!-- 底部控制按鈕 (單一統一儲存，防止分開存檔漏失) -->
+          <div class="pt-3 border-t border-slate-200 flex items-center justify-between gap-2">
+            <div>
+              <button
+                v-if="modalSubTab === 'classes'"
+                type="button"
+                @click="modalSubTab = 'basic'"
+                class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition cursor-pointer"
+              >
+                &larr; 返回基本資料
+              </button>
+              <button
+                v-else-if="teacherForm.role === '科任教師' || teacherForm.role === '授課教師'"
+                type="button"
+                @click="modalSubTab = 'classes'"
+                class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-[#52796f] text-xs font-bold rounded-lg transition cursor-pointer"
+              >
+                前往班級任課設定 &rarr;
+              </button>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button
+                type="button"
+                @click="createDialogVisible = false"
+                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition cursor-pointer"
+              >
+                取消
+              </button>
+              <button
+                type="submit"
+                class="px-5 py-2 bg-[#52796f] hover:bg-[#354f52] text-white text-xs font-bold rounded-lg shadow-xs transition cursor-pointer active:scale-95 flex items-center gap-1.5"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>{{ isEditMode ? '儲存變更' : '確認新增' }}</span>
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
     </el-dialog>
 
     <!-- ============================================== -->
@@ -1071,11 +1301,26 @@ function resetTeacherPw(name) {
 }
 
 // ==========================================
-// 彈窗 1：新增 / 編輯教師帳號
+// 彈窗 1：新增 / 編輯教師帳號 (極致雙頁籤 UX)
 // ==========================================
 const createDialogVisible = ref(false)
 const isEditMode = ref(false)
 const currentEditingId = ref(null)
+
+// 編輯彈窗子頁籤: 'basic' (基本資料) 或 'classes' (班級任課設定)
+const modalSubTab = ref('basic')
+const activeClassSubject = ref('國語文')
+
+// 支援科任/授課配置的三大測驗科目
+const availableSubjects = ['國語文', '數學', '英語文']
+
+// 班級任課數據庫結構 (符合 Screenshot 2 的 3~6 年級編制)
+const gradeClassStructure = [
+  { grade: 3, label: '3年級', classes: ['301', '302', '303', '304', '305', '306', '307', '308'] },
+  { grade: 4, label: '4年級', classes: ['401', '402', '403', '404', '405', '406', '407', '408'] },
+  { grade: 5, label: '5年級', classes: ['501', '502', '503', '504', '505', '506', '507', '508', '509'] },
+  { grade: 6, label: '6年級', classes: ['601', '602', '603', '604', '605', '606', '607', '608'] }
+]
 
 const teacherForm = reactive({
   role: '班級導師',
@@ -1085,12 +1330,84 @@ const teacherForm = reactive({
   assignedClass: '',
   email: '',
   startDate: '2026-10-06',
-  endDate: '2027-07-31'
+  endDate: '2027-07-31',
+  homeroomGrade: '3',
+  homeroomClass: '1',
+  selectedSubjects: ['國語文'],
+  classMatrix: {
+    國語文: ['301'],
+    數學: [],
+    英語文: []
+  }
 })
+
+// 計算所有科目累計被選取的班級次數
+const totalSelectedClassesCount = computed(() => {
+  let count = 0
+  availableSubjects.forEach(sub => {
+    count += (teacherForm.classMatrix[sub] || []).length
+  })
+  return count
+})
+
+function isClassSelected(sub, classCode) {
+  return (teacherForm.classMatrix[sub] || []).includes(classCode)
+}
+
+function toggleClassSelection(sub, classCode) {
+  if (!teacherForm.classMatrix[sub]) {
+    teacherForm.classMatrix[sub] = []
+  }
+  const arr = teacherForm.classMatrix[sub]
+  const idx = arr.indexOf(classCode)
+  if (idx > -1) {
+    arr.splice(idx, 1)
+  } else {
+    arr.push(classCode)
+    if (!teacherForm.selectedSubjects.includes(sub)) {
+      teacherForm.selectedSubjects.push(sub)
+    }
+  }
+}
+
+function isGradeAllSelected(sub, gradeItem) {
+  const arr = teacherForm.classMatrix[sub] || []
+  return gradeItem.classes.length > 0 && gradeItem.classes.every(c => arr.includes(c))
+}
+
+function toggleGradeAll(sub, gradeItem) {
+  if (!teacherForm.classMatrix[sub]) {
+    teacherForm.classMatrix[sub] = []
+  }
+  const arr = teacherForm.classMatrix[sub]
+  const allSelected = isGradeAllSelected(sub, gradeItem)
+  if (allSelected) {
+    teacherForm.classMatrix[sub] = arr.filter(c => !gradeItem.classes.includes(c))
+  } else {
+    gradeItem.classes.forEach(c => {
+      if (!arr.includes(c)) arr.push(c)
+    })
+    if (!teacherForm.selectedSubjects.includes(sub)) {
+      teacherForm.selectedSubjects.push(sub)
+    }
+  }
+}
+
+function copySubjectClasses(fromSub, toSub) {
+  if (fromSub === toSub) return
+  const fromArr = teacherForm.classMatrix[fromSub] || []
+  teacherForm.classMatrix[toSub] = [...fromArr]
+  if (fromArr.length > 0 && !teacherForm.selectedSubjects.includes(toSub)) {
+    teacherForm.selectedSubjects.push(toSub)
+  }
+  ElMessage.success(`已將【${fromSub}】的班級配置複製至【${toSub}】（共 ${fromArr.length} 班）`)
+}
 
 function openCreateTeacherModal() {
   isEditMode.value = false
   currentEditingId.value = null
+  modalSubTab.value = 'basic'
+  activeClassSubject.value = '國語文'
   teacherForm.role = '班級導師'
   teacherForm.name = ''
   teacherForm.username = ''
@@ -1099,12 +1416,22 @@ function openCreateTeacherModal() {
   teacherForm.email = ''
   teacherForm.startDate = '2026-10-06'
   teacherForm.endDate = '2027-07-31'
+  teacherForm.homeroomGrade = '3'
+  teacherForm.homeroomClass = '1'
+  teacherForm.selectedSubjects = ['國語文']
+  teacherForm.classMatrix = {
+    國語文: ['301'],
+    數學: [],
+    英語文: []
+  }
   createDialogVisible.value = true
 }
 
 function openEditTeacherModal(t) {
   isEditMode.value = true
   currentEditingId.value = t.id
+  modalSubTab.value = 'basic'
+  activeClassSubject.value = '國語文'
   teacherForm.role = t.role
   teacherForm.name = t.name
   teacherForm.username = t.username || t.adminCode
@@ -1112,7 +1439,46 @@ function openEditTeacherModal(t) {
   teacherForm.assignedClass = t.assignedClass || ''
   teacherForm.email = t.email
   teacherForm.startDate = '2026-10-06'
-  teacherForm.endDate = t.expiryDate.replace(/\//g, '-')
+  teacherForm.endDate = t.expiryDate ? t.expiryDate.replace(/\//g, '-') : '2027-07-31'
+
+  // 解析既有班級
+  if (t.role === '班級導師') {
+    const match = (t.assignedClass || '').match(/([一二三四五六1-6])年\s*([0-9]+)\s*班/)
+    if (match) {
+      const gMap = { '一': '1', '二': '2', '三': '3', '四': '4', '五': '5', '六': '6' }
+      teacherForm.homeroomGrade = gMap[match[1]] || match[1]
+      teacherForm.homeroomClass = match[2]
+    } else {
+      teacherForm.homeroomGrade = t.grade || '3'
+      teacherForm.homeroomClass = '1'
+    }
+    teacherForm.selectedSubjects = ['國語文']
+    teacherForm.classMatrix = { 國語文: [], 數學: [], 英語文: [] }
+  } else if (t.role === '科任教師') {
+    teacherForm.homeroomGrade = ''
+    teacherForm.homeroomClass = ''
+    teacherForm.selectedSubjects = t.assignedClass.includes('英語') ? ['英語文'] : ['數學']
+    teacherForm.classMatrix = {
+      國語文: [],
+      數學: t.grade === '4' ? ['401', '402', '403'] : ['501', '502'],
+      英語文: t.grade === '6' ? ['601', '602'] : []
+    }
+  } else if (t.role === '授課教師') {
+    teacherForm.homeroomGrade = '5'
+    teacherForm.homeroomClass = '2'
+    teacherForm.selectedSubjects = ['國語文']
+    teacherForm.classMatrix = {
+      國語文: ['502', '503', '504'],
+      數學: [],
+      英語文: []
+    }
+  } else {
+    teacherForm.homeroomGrade = ''
+    teacherForm.homeroomClass = ''
+    teacherForm.selectedSubjects = []
+    teacherForm.classMatrix = { 國語文: [], 數學: [], 英語文: [] }
+  }
+
   createDialogVisible.value = true
 }
 
@@ -1123,6 +1489,34 @@ function saveTeacher() {
   }
 
   const isSpecialRole = teacherForm.role === '校長' || teacherForm.role === '學年主任'
+  
+  let finalAssignedClass = ''
+  let finalGrade = ''
+
+  if (isSpecialRole) {
+    finalAssignedClass = ''
+    finalGrade = ''
+  } else if (teacherForm.role === '班級導師') {
+    finalGrade = teacherForm.homeroomGrade
+    const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[teacherForm.homeroomGrade] || teacherForm.homeroomGrade
+    finalAssignedClass = `${numChar}年 ${teacherForm.homeroomClass} 班`
+  } else if (teacherForm.role === '科任教師') {
+    const subs = []
+    availableSubjects.forEach(s => {
+      const cls = teacherForm.classMatrix[s] || []
+      if (cls.length > 0) {
+        subs.push(`${s}(${cls.length}班)`)
+      }
+    })
+    finalGrade = teacherForm.grade || '4'
+    const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[finalGrade] || finalGrade
+    finalAssignedClass = subs.length > 0 ? `${numChar}年級 (${subs.join(', ')})` : `${numChar}年級 (科任教師)`
+  } else if (teacherForm.role === '授課教師') {
+    const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[teacherForm.homeroomGrade] || teacherForm.homeroomGrade
+    const subCount = totalSelectedClassesCount.value
+    finalGrade = teacherForm.homeroomGrade
+    finalAssignedClass = `${numChar}年 ${teacherForm.homeroomClass} 班兼${teacherForm.selectedSubjects.join('、')}科任(${subCount}班)`
+  }
 
   if (isEditMode.value && currentEditingId.value) {
     const item = allTeacherList.value.find(t => t.id === currentEditingId.value)
@@ -1131,11 +1525,11 @@ function saveTeacher() {
       item.username = teacherForm.username
       item.adminCode = teacherForm.username
       item.role = teacherForm.role
-      item.grade = isSpecialRole ? '' : teacherForm.grade
-      item.assignedClass = isSpecialRole ? '' : (teacherForm.assignedClass || `${teacherForm.grade}年級`)
+      item.grade = finalGrade
+      item.assignedClass = finalAssignedClass
       item.email = teacherForm.email
       item.expiryDate = teacherForm.endDate.replace(/-/g, '/')
-      ElMessage.success(`已更新【${item.name}】教師帳號資訊！`)
+      ElMessage.success(`已更新【${item.name}】教師帳號與任課設定！`)
     }
   } else {
     allTeacherList.value.unshift({
@@ -1146,8 +1540,8 @@ function saveTeacher() {
       name: teacherForm.name,
       adminCode: teacherForm.username,
       role: teacherForm.role,
-      grade: isSpecialRole ? '' : teacherForm.grade,
-      assignedClass: isSpecialRole ? '' : (teacherForm.assignedClass || `${teacherForm.grade}年級`),
+      grade: finalGrade,
+      assignedClass: finalAssignedClass,
       email: teacherForm.email,
       expiryDate: teacherForm.endDate.replace(/-/g, '/')
     })
