@@ -39,7 +39,7 @@
           <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          年度：<strong class="font-bold font-mono">115</strong> 學年度
+          年度：<strong class="font-bold font-mono">115</strong> 年度
         </span>
         <span class="text-slate-600 font-medium">
           使用者名稱：<strong class="text-slate-800 font-bold font-mono">{{ state.username }}</strong>
@@ -54,7 +54,7 @@
       <!-- Top Action Bar -->
       <div class="flex items-center justify-between flex-wrap gap-3 pb-1">
         <div class="text-xs text-slate-500 font-medium">
-          {{ teacherFilters.year }} 學年度教師登入權限、身分群組與授課配置，支援即時篩選、彈窗新增與批次匯出。
+          {{ teacherFilters.year }} 年度教師登入權限、身分群組與授課配置，支援即時篩選、彈窗新增與批次匯出。
         </div>
         <div class="flex items-center gap-2 flex-wrap">
           <button
@@ -93,17 +93,17 @@
       <!-- Filter Bar (與缺考名單一致的現代卡片式篩選) -->
       <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-3.5 sm:p-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <!-- 學年度 -->
+          <!-- 年度 -->
           <div>
-            <label class="block text-[11px] font-bold text-slate-600 mb-1">學年度</label>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">年度</label>
             <select
               v-model="teacherFilters.year"
               @change="handleTeacherFilterChange"
               class="w-full h-9 px-2.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f] cursor-pointer"
             >
-              <option value="115">115 學年度</option>
-              <option value="114">114 學年度</option>
-              <option value="113">113 學年度</option>
+              <option value="115">115 年度</option>
+              <option value="114">114 年度</option>
+              <option value="113">113 年度</option>
             </select>
           </div>
 
@@ -364,7 +364,7 @@
         <!-- Top Action Bar -->
         <div class="flex items-center justify-between flex-wrap gap-3 pb-1">
           <div class="text-xs text-slate-500 font-medium">
-            115 學年度施測缺考學生名冊，可依照年級、班級篩選並匯出清冊存檔。
+            115 年度施測缺考學生名冊，可依照年級、班級篩選並匯出清冊存檔。
           </div>
           <button
             type="button"
@@ -378,20 +378,20 @@
           </button>
         </div>
 
-        <!-- Filter Controls (學年度、年級、班級、科目、關鍵字) -->
+        <!-- Filter Controls (年度、年級、班級、科目、關鍵字) -->
         <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-3.5 sm:p-4">
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            <!-- 學年度篩選 -->
+            <!-- 年度篩選 -->
             <div>
-              <label class="block text-[11px] font-bold text-slate-600 mb-1">學年度</label>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">年度</label>
               <select
                 v-model="absenteeFilters.year"
                 @change="handleFilterChange"
                 class="w-full h-9 px-2.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f] cursor-pointer"
               >
-                <option value="115">115 學年度</option>
-                <option value="114">114 學年度</option>
-                <option value="113">113 學年度</option>
+                <option value="115">115 年度</option>
+                <option value="114">114 年度</option>
+                <option value="113">113 年度</option>
               </select>
             </div>
 
@@ -961,7 +961,7 @@ function getRoleBadgeClass(role) {
 // 篩選後名單
 const filteredTeacherList = computed(() => {
   return allTeacherList.value.filter(t => {
-    // 學年度篩選
+    // 年度篩選
     if (teacherFilters.year && t.year && t.year !== teacherFilters.year) {
       return false
     }
