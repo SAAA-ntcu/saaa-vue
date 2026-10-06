@@ -26,6 +26,18 @@ const routes = [
     meta: { title: '系統登入 - 縣市學生學習能力檢測' }
   },
   {
+    path: '/scores',
+    name: 'Scores',
+    component: () => import('../views/ScoresView.vue'),
+    meta: { title: '成績專區 - 縣市學生學習能力檢測' }
+  },
+  {
+    path: '/integrated',
+    name: 'Integrated',
+    component: () => import('../views/IntegratedView.vue'),
+    meta: { title: '綜合專區 - 縣市學生學習能力檢測' }
+  },
+  {
     path: '/forgot-password',
     name: 'ForgotPassword',
     component: () => import('../views/ForgotPasswordView.vue'),
