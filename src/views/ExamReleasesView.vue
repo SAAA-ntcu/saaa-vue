@@ -10,21 +10,12 @@
 
     <!-- Year Selection & Batch Selection Controls Bar -->
     <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mb-5 shrink-0 px-1">
-      <!-- Year Selection Tabs -->
-      <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 whitespace-nowrap max-w-full">
-        <button
-          v-for="year in examYears"
-          :key="year"
-          type="button"
-          @click="changeYear(year)"
-          class="px-3 py-1.5 border rounded-lg transition transform active:scale-95 duration-150 font-medium text-xs md:text-sm cursor-pointer"
-          :class="selectedYear === year
-            ? 'bg-[#52796f] text-white border-[#52796f] shadow-xs'
-            : 'border-slate-300 text-slate-600 bg-white hover:border-[#52796f] hover:text-[#52796f]'"
-        >
-          {{ year }}年
-        </button>
-      </div>
+      <!-- Year Selection (Recent 3 Years Pills + Historical Dropdown) -->
+      <YearSelector
+        v-model="selectedYear"
+        :years="examYears"
+        @change="changeYear"
+      />
 
       <!-- Quick Action Buttons -->
       <div class="flex items-center gap-2 text-xs shrink-0">
@@ -177,6 +168,8 @@
 
 <script setup>
 import { ref, reactive, computed } from 'vue'
+import YearSelector from '../components/common/YearSelector.vue'
+import { useAssessmentYear } from '../composables/useAssessmentYear'
 import {
   examYears,
   examSubjects,
@@ -185,7 +178,7 @@ import {
 } from '../data/examData'
 import { downloadMultipleFiles } from '../utils/batchDownloader'
 
-const selectedYear = ref('115')
+const { activeYear: selectedYear, setYear: changeYear } = useAssessmentYear(examYears)
 const selectedMap = reactive(new Map())
 const isDownloading = ref(false)
 const downloadProgress = reactive({ current: 0, total: 0 })
@@ -283,9 +276,6 @@ function clearSelection() {
   selectedMap.clear()
 }
 
-function changeYear(year) {
-  selectedYear.value = year
-}
 
 const selectedCount = computed(() => selectedMap.size)
 

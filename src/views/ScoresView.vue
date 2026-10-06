@@ -205,21 +205,12 @@
 
       <!-- Year Selection & Batch Selection Controls Bar -->
       <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mb-5 shrink-0 px-1">
-        <!-- Year Selection Tabs -->
-        <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 whitespace-nowrap max-w-full">
-          <button
-            v-for="year in annualReportYears"
-            :key="year"
-            type="button"
-            @click="changeAnnualYear(year)"
-            class="px-3 py-1.5 border rounded-lg transition transform active:scale-95 duration-150 font-medium text-xs md:text-sm cursor-pointer"
-            :class="selectedAnnualYear === year
-              ? 'bg-[#52796f] text-white border-[#52796f] shadow-xs'
-              : 'border-slate-300 text-slate-600 bg-white hover:border-[#52796f] hover:text-[#52796f]'"
-          >
-            {{ year }}年
-          </button>
-        </div>
+        <!-- Year Selection (Recent 3 Years Pills + Historical Dropdown) -->
+        <YearSelector
+          v-model="selectedAnnualYear"
+          :years="annualReportYears"
+          @change="changeAnnualYear"
+        />
 
         <!-- Quick Action Buttons -->
         <div class="flex items-center gap-2 text-xs shrink-0">
@@ -413,6 +404,8 @@ import {
   getAnnualReportDownloadUrl
 } from '../data/annualReportData'
 import { downloadMultipleFiles } from '../utils/batchDownloader'
+import YearSelector from '../components/common/YearSelector.vue'
+import { useAssessmentYear } from '../composables/useAssessmentYear'
 
 const route = useRoute()
 const router = useRouter()
@@ -480,7 +473,7 @@ function downloadSpecialReport(name) {
 // ----------------------------------------------------
 // TAB 3: 年度成果報告狀態與互動邏輯 (對齊評量架構/試題公告)
 // ----------------------------------------------------
-const selectedAnnualYear = ref('115')
+const { activeYear: selectedAnnualYear, setYear: changeAnnualYear } = useAssessmentYear(annualReportYears)
 const selectedAnnualMap = reactive(new Map())
 const isAnnualDownloading = ref(false)
 const annualDownloadProgress = reactive({ current: 0, total: 0 })
@@ -602,9 +595,6 @@ function clearAnnualSelection() {
   selectedAnnualMap.clear()
 }
 
-function changeAnnualYear(year) {
-  selectedAnnualYear.value = year
-}
 
 function downloadSingleAnnualReport(year, gradeLabel, subject) {
   const url = getAnnualReportDownloadUrl(year, gradeLabel, subject)
