@@ -56,9 +56,12 @@
               <a
                 :href="getAssessmentDownloadUrl(selectedYear, grade.gradeName, subject.name)"
                 target="_blank"
-                class="inline-flex items-center space-x-1.5 py-1.5 px-2 rounded-lg text-slate-600 hover:text-[#52796f] hover:bg-slate-50 transition mx-auto no-underline"
+                class="inline-flex items-center space-x-1.5 py-1.5 px-2.5 rounded-lg text-slate-600 hover:text-[#52796f] hover:bg-slate-50 transition mx-auto no-underline group"
               >
-                <span class="text-base">✋</span>
+                <!-- Replaced ✋ with download arrow SVG -->
+                <svg class="w-4 h-4 text-slate-400 group-hover:text-[#52796f] transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
                 <span class="underline decoration-slate-300">下載</span>
               </a>
             </td>

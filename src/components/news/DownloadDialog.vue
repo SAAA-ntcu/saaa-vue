@@ -25,7 +25,10 @@
               target="_blank"
               class="flex items-start gap-2 text-sm sm:text-base font-semibold text-slate-700 hover:text-[#52796f] hover:underline tracking-tight break-all p-2 rounded-lg transition hover:bg-[#52796f]/10 w-full no-underline"
             >
-              <span class="text-base shrink-0">👋</span>
+              <!-- Replaced 👋 with document file SVG -->
+              <svg class="w-4 h-4 text-[#52796f] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
               <span class="text-left flex-1 leading-relaxed">{{ file.name }}</span>
             </a>
           </template>
@@ -42,7 +45,10 @@
               target="_blank"
               class="flex items-start gap-2 text-sm sm:text-base font-semibold text-slate-700 hover:text-[#52796f] hover:underline tracking-tight break-all p-2 rounded-lg transition hover:bg-[#52796f]/10 w-full no-underline"
             >
-              <span class="text-base shrink-0">👋</span>
+              <!-- Replaced 👋 with document file SVG -->
+              <svg class="w-4 h-4 text-[#52796f] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
               <span class="text-left flex-1 leading-relaxed">{{ file.name }}</span>
             </a>
           </template>
