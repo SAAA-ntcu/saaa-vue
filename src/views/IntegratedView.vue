@@ -271,9 +271,11 @@
                   </span>
                 </td>
 
-                <!-- 任教年級 / 班級 -->
+                <!-- 任教年級 / 班級 (校長與學年主任依規範留空) -->
                 <td class="py-3 px-4">
-                  <div class="font-medium text-slate-700">{{ t.assignedClass }}</div>
+                  <div class="font-medium text-slate-700">
+                    {{ (t.role === '校長' || t.role === '學年主任') ? '' : (t.assignedClass || '') }}
+                  </div>
                 </td>
 
                 <!-- 電子郵件信箱 -->
@@ -556,6 +558,14 @@
           </label>
           <div class="bg-slate-50/70 border border-slate-200 rounded-xl p-3 space-y-2">
             <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
+              <input type="radio" v-model="teacherForm.role" value="校長" class="text-[#52796f]" />
+              <span>校長 (全校業務統整，年級班級留空)</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
+              <input type="radio" v-model="teacherForm.role" value="學年主任" class="text-[#52796f]" />
+              <span>學年主任 (負責全學年年段施測與成績檢閱，年級班級留空)</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
               <input type="radio" v-model="teacherForm.role" value="班級導師" class="text-[#52796f]" />
               <span>班級導師 (擔任單一班級導師)</span>
             </label>
@@ -566,10 +576,6 @@
             <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
               <input type="radio" v-model="teacherForm.role" value="授課教師" class="text-[#52796f]" />
               <span>授課教師 (兼任導師身分，亦教授其它班級特定學科)</span>
-            </label>
-            <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700">
-              <input type="radio" v-model="teacherForm.role" value="學年主任" class="text-[#52796f]" />
-              <span>學年主任 (負責全學年年段施測與成績檢閱)</span>
             </label>
           </div>
         </div>
@@ -602,8 +608,8 @@
           </div>
         </div>
 
-        <!-- 授課年級 & 班級/科目 -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- 授課年級 & 班級/科目 (校長與學年主任依規範自動留空) -->
+        <div v-if="teacherForm.role !== '校長' && teacherForm.role !== '學年主任'" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block font-bold text-slate-700 mb-1">授課年級</label>
             <select
@@ -627,6 +633,12 @@
               class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
             />
           </div>
+        </div>
+        <div v-else class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 text-[11px] flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>【{{ teacherForm.role }}】身分無需設定任教年級與班級，依系統規範自動保持留空。</span>
         </div>
 
         <!-- 電子郵件信箱 -->
@@ -812,8 +824,8 @@ const allTeacherList = ref([
     name: `${state.school}_校長`,
     adminCode: 'PAdmin_054628',
     role: '校長',
-    grade: 'all',
-    assignedClass: '全校業務統整',
+    grade: '',
+    assignedClass: '',
     email: 'principal@ntcu.edu.tw',
     expiryDate: '2027/07/31'
   },
@@ -825,8 +837,8 @@ const allTeacherList = ref([
     name: '陳○廷',
     adminCode: 'DAdmin_014628',
     role: '學年主任',
-    grade: '1',
-    assignedClass: '一年級全年級',
+    grade: '',
+    assignedClass: '',
     email: 'grade1@ntcu.edu.tw',
     expiryDate: '2027/07/31'
   },
@@ -838,8 +850,8 @@ const allTeacherList = ref([
     name: '林○萱',
     adminCode: 'DAdmin_024628',
     role: '學年主任',
-    grade: '2',
-    assignedClass: '二年級全年級',
+    grade: '',
+    assignedClass: '',
     email: 'grade2@ntcu.edu.tw',
     expiryDate: '2027/07/31'
   },
@@ -851,8 +863,8 @@ const allTeacherList = ref([
     name: '張○恩',
     adminCode: 'DAdmin_034628',
     role: '學年主任',
-    grade: '3',
-    assignedClass: '三年級全年級',
+    grade: '',
+    assignedClass: '',
     email: 'grade3@ntcu.edu.tw',
     expiryDate: '2027/07/31'
   },
@@ -958,7 +970,7 @@ const filteredTeacherList = computed(() => {
       return false
     }
     // 授課年級篩選
-    if (teacherFilters.grade !== 'all' && t.grade !== teacherFilters.grade && t.grade !== 'all') {
+    if (teacherFilters.grade !== 'all' && t.grade !== teacherFilters.grade) {
       return false
     }
     // 關鍵字搜尋 (支援搜尋 使用者名稱、姓名、管理碼、信箱、班級)
@@ -1075,8 +1087,8 @@ function openEditTeacherModal(t) {
   teacherForm.role = t.role
   teacherForm.name = t.name
   teacherForm.username = t.username || t.adminCode
-  teacherForm.grade = t.grade !== 'all' ? t.grade : '3'
-  teacherForm.assignedClass = t.assignedClass
+  teacherForm.grade = t.grade || '3'
+  teacherForm.assignedClass = t.assignedClass || ''
   teacherForm.email = t.email
   teacherForm.startDate = '2026-10-06'
   teacherForm.endDate = t.expiryDate.replace(/\//g, '-')
@@ -1089,6 +1101,8 @@ function saveTeacher() {
     return
   }
 
+  const isSpecialRole = teacherForm.role === '校長' || teacherForm.role === '學年主任'
+
   if (isEditMode.value && currentEditingId.value) {
     const item = allTeacherList.value.find(t => t.id === currentEditingId.value)
     if (item) {
@@ -1096,8 +1110,8 @@ function saveTeacher() {
       item.username = teacherForm.username
       item.adminCode = teacherForm.username
       item.role = teacherForm.role
-      item.grade = teacherForm.grade
-      item.assignedClass = teacherForm.assignedClass || `${teacherForm.grade}年級`
+      item.grade = isSpecialRole ? '' : teacherForm.grade
+      item.assignedClass = isSpecialRole ? '' : (teacherForm.assignedClass || `${teacherForm.grade}年級`)
       item.email = teacherForm.email
       item.expiryDate = teacherForm.endDate.replace(/-/g, '/')
       ElMessage.success(`已更新【${item.name}】教師帳號資訊！`)
@@ -1111,8 +1125,8 @@ function saveTeacher() {
       name: teacherForm.name,
       adminCode: teacherForm.username,
       role: teacherForm.role,
-      grade: teacherForm.grade,
-      assignedClass: teacherForm.assignedClass || `${teacherForm.grade}年級`,
+      grade: isSpecialRole ? '' : teacherForm.grade,
+      assignedClass: isSpecialRole ? '' : (teacherForm.assignedClass || `${teacherForm.grade}年級`),
       email: teacherForm.email,
       expiryDate: teacherForm.endDate.replace(/-/g, '/')
     })
