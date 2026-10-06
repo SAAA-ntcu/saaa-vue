@@ -418,7 +418,7 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- VIEW 2: 缺考名單下載 (Screenshot 5)        -->
+    <!-- VIEW 2: 缺考名單下載 (上一版表格版)        -->
     <!-- ========================================== -->
     <div v-else-if="mainTab === 'absentee'" class="border border-slate-200/90 rounded-2xl overflow-hidden shadow-xs bg-white">
       <!-- Card Header -->
@@ -428,47 +428,48 @@
         </h3>
       </div>
 
-      <!-- Card Body matching Screenshot 5 -->
-      <div class="p-6 md:p-8">
-        <div class="flex flex-col sm:flex-row items-center gap-4 max-w-xl">
-          <!-- 年度 Select -->
-          <div class="w-full sm:w-44">
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5">年度</label>
-            <select
-              v-model="absenteeYear"
-              class="w-full h-10 px-3 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-xl outline-none focus:border-[#52796f] cursor-pointer"
-            >
-              <option value="115">115</option>
-              <option value="114">114</option>
-              <option value="113">113</option>
-            </select>
+      <div class="p-4 sm:p-6 space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-3 pb-2">
+          <div class="text-xs text-slate-500 font-medium">
+            115學年度施測缺考學生名冊，可匯出提供下載存檔使用。
           </div>
+          <button
+            type="button"
+            @click="exportAbsentee"
+            class="px-4 py-2 bg-[#52796f] hover:bg-[#354f52] text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            匯出缺考學生清冊 (Excel)
+          </button>
+        </div>
 
-          <!-- 學校 Select -->
-          <div class="w-full sm:flex-1">
-            <label class="block text-xs font-semibold text-slate-600 mb-1.5">學校</label>
-            <select
-              v-model="absenteeSchool"
-              class="w-full h-10 px-3 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-xl outline-none focus:border-[#52796f] cursor-pointer"
-            >
-              <option :value="state.school">{{ state.school }}</option>
-              <option value="測試市立測試國小">測試市立測試國小</option>
-              <option value="測試縣立測試國小">測試縣立測試國小</option>
-            </select>
-          </div>
-
-          <!-- 下載 Button -->
-          <div class="w-full sm:w-auto pt-0 sm:pt-5.5">
-            <button
-              type="button"
-              @click="downloadAbsenteeFile"
-              class="w-full sm:w-auto h-10 px-8 bg-[#52796f] hover:bg-[#354f52] text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer active:scale-95 flex items-center justify-center gap-1.5"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              下載
-            </button>
+        <!-- Absentee Table -->
+        <div class="border border-slate-200 rounded-xl overflow-hidden shadow-2xs bg-white">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
+                  <th class="py-3 px-4">年級班級</th>
+                  <th class="py-3 px-4">座號</th>
+                  <th class="py-3 px-4">學生姓名</th>
+                  <th class="py-3 px-4">缺考科目</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                <tr v-for="st in absenteeList" :key="st.id" class="hover:bg-slate-50/60 transition">
+                  <td class="py-3 px-4 font-bold text-slate-800">{{ st.class }}</td>
+                  <td class="py-3 px-4 font-mono text-slate-500">{{ st.seatNo }}</td>
+                  <td class="py-3 px-4 font-bold text-slate-800">{{ st.name }}</td>
+                  <td class="py-3 px-4">
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                      {{ st.subject }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -704,12 +705,15 @@ function uploadBatch() {
 }
 
 // ==========================================
-// 4. 缺考名單下載 (Screenshot 5)
+// 4. 缺考名單下載 (上一版表格版)
 // ==========================================
-const absenteeYear = ref('115')
-const absenteeSchool = ref(state.school)
+const absenteeList = ref([
+  { id: 1, class: '五年1班', seatNo: '07', name: '林○宇', subject: '數學' },
+  { id: 2, class: '五年2班', seatNo: '15', name: '張○萱', subject: '英語文' },
+  { id: 3, class: '六年1班', seatNo: '22', name: '陳○翔', subject: '國語文' }
+])
 
-function downloadAbsenteeFile() {
-  ElMessage.success(`已開始下載【${absenteeYear.value} 年度 ${absenteeSchool.value} 缺考名單】EXCEL 檔案`)
+function exportAbsentee() {
+  ElMessage.success('已開始匯出全校缺考學生清冊 (Excel)')
 }
 </script>
