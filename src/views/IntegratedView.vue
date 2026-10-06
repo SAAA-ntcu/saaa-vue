@@ -418,7 +418,7 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- VIEW 2: 缺考名單下載 (上一版表格版)        -->
+    <!-- VIEW 2: 缺考名單下載 (年級/班級篩選表格版)   -->
     <!-- ========================================== -->
     <div v-else-if="mainTab === 'absentee'" class="border border-slate-200/90 rounded-2xl overflow-hidden shadow-xs bg-white">
       <!-- Card Header -->
@@ -429,20 +429,95 @@
       </div>
 
       <div class="p-4 sm:p-6 space-y-4">
-        <div class="flex items-center justify-between flex-wrap gap-3 pb-2">
+        <!-- Top Action Bar -->
+        <div class="flex items-center justify-between flex-wrap gap-3 pb-1">
           <div class="text-xs text-slate-500 font-medium">
-            115學年度施測缺考學生名冊，可匯出提供下載存檔使用。
+            115 學年度施測缺考學生名冊，可依照年級、班級篩選並匯出清冊存檔。
           </div>
           <button
             type="button"
             @click="exportAbsentee"
-            class="px-4 py-2 bg-[#52796f] hover:bg-[#354f52] text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer"
+            class="px-4 py-2 bg-[#52796f] hover:bg-[#354f52] text-white rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
             匯出缺考學生清冊 (Excel)
           </button>
+        </div>
+
+        <!-- Filter Controls (年級、班級、科目、關鍵字) -->
+        <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-3.5 sm:p-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <!-- 年級篩選 -->
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">施測年級</label>
+              <select
+                v-model="absenteeFilters.grade"
+                @change="handleFilterChange"
+                class="w-full h-9 px-2.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f] cursor-pointer"
+              >
+                <option value="all">全部年級</option>
+                <option value="3">三年級</option>
+                <option value="4">四年級</option>
+                <option value="5">五年級</option>
+                <option value="6">六年級</option>
+              </select>
+            </div>
+
+            <!-- 班級篩選 -->
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">班級</label>
+              <select
+                v-model="absenteeFilters.classroom"
+                @change="handleFilterChange"
+                class="w-full h-9 px-2.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f] cursor-pointer"
+              >
+                <option value="all">全部班級</option>
+                <option value="1">1 班</option>
+                <option value="2">2 班</option>
+                <option value="3">3 班</option>
+                <option value="4">4 班</option>
+              </select>
+            </div>
+
+            <!-- 科目篩選 -->
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">缺考科目</label>
+              <select
+                v-model="absenteeFilters.subject"
+                @change="handleFilterChange"
+                class="w-full h-9 px-2.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f] cursor-pointer"
+              >
+                <option value="all">全部科目</option>
+                <option value="國語文">國語文</option>
+                <option value="數學">數學</option>
+                <option value="英語文">英語文</option>
+              </select>
+            </div>
+
+            <!-- 關鍵字搜尋 & 重設 -->
+            <div>
+              <label class="block text-[11px] font-bold text-slate-600 mb-1">學生搜尋</label>
+              <div class="flex items-center gap-1.5">
+                <input
+                  v-model="absenteeFilters.keyword"
+                  @input="handleFilterChange"
+                  type="text"
+                  placeholder="姓名或座號"
+                  class="w-full h-9 px-2.5 text-xs bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
+                />
+                <button
+                  type="button"
+                  @click="resetAbsenteeFilters"
+                  class="h-9 px-3 bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-xs font-semibold whitespace-nowrap cursor-pointer transition"
+                  title="清除所有條件"
+                >
+                  重設
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Absentee Table -->
@@ -452,25 +527,60 @@
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
                   <th class="py-3 px-4">年級班級</th>
-                  <th class="py-3 px-4">座號</th>
+                  <th class="py-3 px-4 text-center">座號</th>
                   <th class="py-3 px-4">學生姓名</th>
                   <th class="py-3 px-4">缺考科目</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-                <tr v-for="st in absenteeList" :key="st.id" class="hover:bg-slate-50/60 transition">
+                <tr
+                  v-for="st in paginatedAbsenteeList"
+                  :key="st.id"
+                  class="hover:bg-slate-50/70 transition"
+                >
                   <td class="py-3 px-4 font-bold text-slate-800">{{ st.class }}</td>
-                  <td class="py-3 px-4 font-mono text-slate-500">{{ st.seatNo }}</td>
+                  <td class="py-3 px-4 text-center font-mono text-slate-500">{{ st.seatNo }}</td>
                   <td class="py-3 px-4 font-bold text-slate-800">{{ st.name }}</td>
                   <td class="py-3 px-4">
-                    <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                    <span
+                      class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold"
+                      :class="st.subject === '國語文' ? 'bg-amber-50 text-amber-700 border border-amber-200' : st.subject === '數學' ? 'bg-sky-50 text-sky-700 border border-sky-200' : 'bg-rose-50 text-rose-700 border border-rose-200'"
+                    >
                       {{ st.subject }}
                     </span>
+                  </td>
+                </tr>
+
+                <!-- Empty state if no matched items -->
+                <tr v-if="filteredAbsenteeList.length === 0">
+                  <td colspan="4" class="py-12 text-center text-slate-400">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                      </svg>
+                    </div>
+                    <span>查無符合篩選條件的缺考學生</span>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
+        </div>
+
+        <!-- Bottom Pagination & Counts -->
+        <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
+          <div class="text-xs text-slate-500 font-medium">
+            全校缺考學生共 <span class="font-bold text-slate-800">{{ allAbsenteeList.length }}</span> 人，符合篩選條件：<span class="font-bold text-[#52796f]">{{ filteredAbsenteeList.length }}</span> 人
+          </div>
+          <el-pagination
+            v-if="filteredAbsenteeList.length > absenteePageSize"
+            v-model:current-page="absenteeCurrentPage"
+            :page-size="absenteePageSize"
+            :total="filteredAbsenteeList.length"
+            layout="prev, pager, next"
+            background
+            size="small"
+          />
         </div>
       </div>
     </div>
@@ -705,15 +815,95 @@ function uploadBatch() {
 }
 
 // ==========================================
-// 4. 缺考名單下載 (上一版表格版)
+// 4. 缺考名單下載 (年級、班級、科目篩選與分頁)
 // ==========================================
-const absenteeList = ref([
-  { id: 1, class: '五年1班', seatNo: '07', name: '林○宇', subject: '數學' },
-  { id: 2, class: '五年2班', seatNo: '15', name: '張○萱', subject: '英語文' },
-  { id: 3, class: '六年1班', seatNo: '22', name: '陳○翔', subject: '國語文' }
+const absenteeFilters = reactive({
+  grade: 'all',
+  classroom: 'all',
+  subject: 'all',
+  keyword: ''
+})
+
+const absenteeCurrentPage = ref(1)
+const absenteePageSize = ref(8)
+
+const allAbsenteeList = ref([
+  // 三年級
+  { id: 1, grade: '3', classroom: '1', class: '三年1班', seatNo: '04', name: '王○晴', subject: '國語文' },
+  { id: 2, grade: '3', classroom: '1', class: '三年1班', seatNo: '12', name: '李○哲', subject: '數學' },
+  { id: 3, grade: '3', classroom: '2', class: '三年2班', seatNo: '09', name: '張○恩', subject: '英語文' },
+  { id: 4, grade: '3', classroom: '3', class: '三年3班', seatNo: '18', name: '林○辰', subject: '數學' },
+  
+  // 四年級
+  { id: 5, grade: '4', classroom: '1', class: '四年1班', seatNo: '02', name: '黃○宏', subject: '國語文' },
+  { id: 6, grade: '4', classroom: '1', class: '四年1班', seatNo: '15', name: '許○婷', subject: '英語文' },
+  { id: 7, grade: '4', classroom: '2', class: '四年2班', seatNo: '11', name: '蔡○安', subject: '數學' },
+  { id: 8, grade: '4', classroom: '3', class: '四年3班', seatNo: '23', name: '劉○廷', subject: '英語文' },
+  { id: 9, grade: '4', classroom: '4', class: '四年4班', seatNo: '06', name: '范○宇', subject: '國語文' },
+
+  // 五年級
+  { id: 10, grade: '5', classroom: '1', class: '五年1班', seatNo: '07', name: '林○宇', subject: '數學' },
+  { id: 11, grade: '5', classroom: '1', class: '五年1班', seatNo: '21', name: '鄭○凱', subject: '國語文' },
+  { id: 12, grade: '5', classroom: '2', class: '五年2班', seatNo: '15', name: '張○萱', subject: '英語文' },
+  { id: 13, grade: '5', classroom: '2', class: '五年2班', seatNo: '26', name: '吳○嘉', subject: '數學' },
+  { id: 14, grade: '5', classroom: '3', class: '五年3班', seatNo: '08', name: '趙○芬', subject: '國語文' },
+
+  // 六年級
+  { id: 15, grade: '6', classroom: '1', class: '六年1班', seatNo: '05', name: '周○廷', subject: '數學' },
+  { id: 16, grade: '6', classroom: '1', class: '六年1班', seatNo: '22', name: '陳○翔', subject: '國語文' },
+  { id: 17, grade: '6', classroom: '2', class: '六年2班', seatNo: '14', name: '謝○睿', subject: '英語文' },
+  { id: 18, grade: '6', classroom: '3', class: '六年3班', seatNo: '19', name: '楊○萱', subject: '國語文' },
+  { id: 19, grade: '6', classroom: '3', class: '六年3班', seatNo: '27', name: '郭○豪', subject: '數學' }
 ])
 
+const filteredAbsenteeList = computed(() => {
+  return allAbsenteeList.value.filter(item => {
+    // Grade filter
+    if (absenteeFilters.grade !== 'all' && item.grade !== absenteeFilters.grade) {
+      return false
+    }
+    // Classroom filter
+    if (absenteeFilters.classroom !== 'all' && item.classroom !== absenteeFilters.classroom) {
+      return false
+    }
+    // Subject filter
+    if (absenteeFilters.subject !== 'all' && item.subject !== absenteeFilters.subject) {
+      return false
+    }
+    // Keyword search (name or seat number or class)
+    if (absenteeFilters.keyword.trim()) {
+      const kw = absenteeFilters.keyword.trim().toLowerCase()
+      const matchName = item.name.toLowerCase().includes(kw)
+      const matchSeat = item.seatNo.includes(kw)
+      const matchClass = item.class.toLowerCase().includes(kw)
+      if (!matchName && !matchSeat && !matchClass) {
+        return false
+      }
+    }
+    return true
+  })
+})
+
+const paginatedAbsenteeList = computed(() => {
+  const start = (absenteeCurrentPage.value - 1) * absenteePageSize.value
+  return filteredAbsenteeList.value.slice(start, start + absenteePageSize.value)
+})
+
+function handleFilterChange() {
+  absenteeCurrentPage.value = 1
+}
+
+function resetAbsenteeFilters() {
+  absenteeFilters.grade = 'all'
+  absenteeFilters.classroom = 'all'
+  absenteeFilters.subject = 'all'
+  absenteeFilters.keyword = ''
+  absenteeCurrentPage.value = 1
+  ElMessage.info('已重設篩選條件')
+}
+
 function exportAbsentee() {
-  ElMessage.success('已開始匯出全校缺考學生清冊 (Excel)')
+  const count = filteredAbsenteeList.value.length
+  ElMessage.success(`已開始匯出符合條件之【${count} 位缺考學生名冊】EXCEL 檔案`)
 }
 </script>
