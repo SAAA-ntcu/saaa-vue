@@ -464,7 +464,7 @@
               </div>
 
               <!-- 右側：總答對率數值診斷艙 (7 Cols) -->
-              <div class="lg:col-span-7 space-y-4">
+              <div class="lg:col-span-7 space-y-4 flex flex-col justify-center">
                 <div class="flex items-center justify-between flex-wrap gap-2">
                   <div class="flex items-center gap-2">
                     <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-[#52796f] text-white">
@@ -482,17 +482,8 @@
                   </span>
                 </div>
 
-                <div class="flex items-baseline gap-3">
-                  <span class="text-4xl sm:text-5xl font-mono font-black text-slate-900 tracking-tight">
-                    {{ overallStat.classVal }}.0%
-                  </span>
-                  <span class="text-xs text-slate-500">
-                    高於全國均標 ({{ overallStat.national }}%) · 全縣均標 ({{ overallStat.county }}%)
-                  </span>
-                </div>
-
                 <!-- 4 欄獨立彩色數值艙 (零文字重疊) -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
                   <div class="p-2.5 rounded-xl bg-purple-50/70 border border-purple-200/60 flex flex-col items-center">
                     <span class="text-xs font-bold text-purple-900 flex items-center gap-1">
                       <span class="w-1.5 h-1.5 rounded-full bg-[#9333ea]"></span>
@@ -533,10 +524,6 @@
                     </span>
                   </div>
                 </div>
-
-                <p class="text-xs text-slate-500 m-0 leading-relaxed">
-                  本班在全體學力常模中位居前段，下方展開 10 大向度的獨立同心得分環，最內層綠色實測環越長、超過橘色學校環即代表達標勝出。
-                </p>
               </div>
 
             </div>
