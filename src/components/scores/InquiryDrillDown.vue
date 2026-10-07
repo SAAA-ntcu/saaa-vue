@@ -546,21 +546,10 @@
                 :key="item.name"
                 class="bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-2xs hover:shadow-md hover:border-[#52796f] transition-all flex flex-col justify-between"
               >
-                <!-- 卡片頂部：標題與 89% -4% -->
-                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-                  <div class="flex items-center gap-1.5 min-w-0">
-                    <span class="w-2.5 h-2.5 rounded-full shrink-0" :class="item.classVal >= item.school ? 'bg-emerald-500' : 'bg-rose-500'"></span>
-                    <strong class="text-sm font-bold text-slate-800 truncate">{{ item.name }}</strong>
-                  </div>
-                  <div class="flex items-center gap-1.5 shrink-0">
-                    <span class="font-mono font-black text-sm text-slate-900">{{ item.classVal }}%</span>
-                    <span
-                      class="px-1.5 py-0.5 rounded text-xs font-bold font-mono"
-                      :class="item.classVal >= item.school ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
-                    >
-                      {{ item.classVal >= item.school ? '+' : '' }}{{ item.classVal - item.school }}%
-                    </span>
-                  </div>
+                <!-- 卡片頂部：向度名稱 -->
+                <div class="flex items-center gap-1.5 pb-2 border-b border-slate-100">
+                  <span class="w-2.5 h-2.5 rounded-full shrink-0" :class="item.classVal >= item.school ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                  <strong class="text-sm font-bold text-slate-800 truncate">{{ item.name }}</strong>
                 </div>
 
                 <!-- 圓形同心得分環 SVG (半徑 68, 56, 44, 32) -->
