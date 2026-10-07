@@ -456,147 +456,328 @@
 
       <!-- Chart Section -->
       <div class="p-5 border-b border-slate-100 relative">
-        <div class="flex items-center justify-between mb-4">
-          <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-            <svg class="w-4 h-4 text-[#52796f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
-            校級答對率圖
-          </h4>
-          <div class="flex items-center gap-4 text-xs font-medium">
-            <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-[#52796f]"></span>學校</div>
-            <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-[#e07a5f]"></span>縣市</div>
-            <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-slate-300" style="border-top: 2px dashed #94a3b8"></span>整體</div>
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+          <div class="flex items-center gap-2">
+            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2 m-0">
+              <svg class="w-4 h-4 text-[#52796f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+              校級答對率分析 · 3 重常模對照 (學校 ‧ 縣市 ‧ 整體)
+            </h4>
           </div>
-        </div>
 
-        <div class="w-full overflow-x-auto scrollbar-thin py-2" @mouseleave="hoveredPoint = null">
-          <div class="min-w-[720px] relative px-1">
-            <svg :viewBox="`0 0 ${chartWidth} ${chartHeight}`" class="w-full h-auto overflow-visible">
-              <!-- Y Axis labels -->
-              <g class="text-[10px] fill-slate-400 font-mono">
-                <text :x="chartPadding.left - 10" :y="chartPadding.top + 4" text-anchor="end">100%</text>
-                <text :x="chartPadding.left - 10" :y="(chartHeight - chartPadding.bottom + chartPadding.top) / 2 + 4" text-anchor="end">50%</text>
-                <text :x="chartPadding.left - 10" :y="chartHeight - chartPadding.bottom + 4" text-anchor="end">0%</text>
-              </g>
-              
-              <!-- Grid lines -->
-              <g class="stroke-slate-100" stroke-width="1" stroke-dasharray="4 4">
-                <line :x1="chartPadding.left" :y1="chartPadding.top" :x2="chartWidth - chartPadding.right" :y2="chartPadding.top" />
-                <line :x1="chartPadding.left" :y1="(chartHeight - chartPadding.bottom + chartPadding.top) / 2" :x2="chartWidth - chartPadding.right" :y2="(chartHeight - chartPadding.bottom + chartPadding.top) / 2" />
-                <line :x1="chartPadding.left" :y1="chartHeight - chartPadding.bottom" :x2="chartWidth - chartPadding.right" :y2="chartHeight - chartPadding.bottom" stroke-dasharray="none" class="stroke-slate-200" />
-              </g>
+          <!-- Controls: Sort + View Switcher -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <!-- 點軌圖專屬排序 (僅在 dumbbell 模式顯示) -->
+            <div v-if="analysisViewMode === 'dumbbell'" class="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
+              <button
+                type="button"
+                @click="setDumbbellSort('id')"
+                class="px-2.5 py-1 rounded-md transition cursor-pointer"
+                :class="dumbbellSortMode === 'id' ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
+              >
+                題號 1~30
+              </button>
+              <button
+                type="button"
+                @click="setDumbbellSort('lag-asc')"
+                class="px-2.5 py-1 rounded-md transition cursor-pointer flex items-center gap-1"
+                :class="dumbbellSortMode === 'lag-asc' ? 'bg-[#52796f] text-white shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
+              >
+                <span>⚠️ 落後最多優先</span>
+              </button>
+            </div>
 
-              <!-- Overall Path -->
-              <path :d="chartPaths.overall" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 4" />
-              <!-- County Path -->
-              <path :d="chartPaths.county" fill="none" stroke="#e07a5f" stroke-width="2" />
-              <!-- School Path -->
-              <path :d="chartPaths.school" fill="none" stroke="#52796f" stroke-width="2.5" />
-
-              <!-- Hover interaction area per point -->
-              <g v-for="p in chartPoints" :key="'area-'+p.data.qNum">
-                <rect 
-                  :x="p.x - ((chartWidth - chartPadding.left - chartPadding.right) / Math.max(1, chartPoints.length - 1)) / 2" 
-                  :y="chartPadding.top" 
-                  :width="(chartWidth - chartPadding.left - chartPadding.right) / Math.max(1, chartPoints.length - 1)" 
-                  :height="chartHeight - chartPadding.top - chartPadding.bottom" 
-                  fill="transparent" 
-                  class="cursor-pointer"
-                  @mouseover="hoveredPoint = p"
-                />
-              </g>
-
-              <!-- Points and Indicators -->
-              <g v-for="p in chartPoints" :key="'pt-'+p.data.qNum">
-                <!-- X Axis labels -->
-                <text :x="p.x" :y="chartHeight - 12" text-anchor="middle" class="text-[10px] fill-slate-500 font-mono">{{ p.data.qNum }}</text>
-                
-                <!-- Highlight weak questions on X axis -->
-                <circle v-if="p.isWeak" :cx="p.x" :cy="chartHeight - 26" r="3" fill="#e07a5f" />
-
-                <!-- Hover state styling -->
-                <g v-if="hoveredPoint && hoveredPoint.data.qNum === p.data.qNum">
-                  <!-- Vertical guideline -->
-                  <line :x1="p.x" :y1="chartPadding.top" :x2="p.x" :y2="chartHeight - chartPadding.bottom" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3 3" />
-                  
-                  <!-- Hovered Points -->
-                  <circle :cx="p.x" :cy="p.overallY" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2" />
-                  <circle :cx="p.x" :cy="p.countyY" r="4" fill="#fff" stroke="#e07a5f" stroke-width="2" />
-                  <circle :cx="p.x" :cy="p.schoolY" r="5" fill="#fff" stroke="#52796f" stroke-width="2.5" />
-                </g>
-                <g v-else>
-                  <!-- Normal Points -->
-                  <circle :cx="p.x" :cy="p.schoolY" r="3" fill="#52796f" />
-                </g>
-              </g>
-            </svg>
-            
-            <!-- Tooltip (自動防切邊：上下自適應翻轉、左右安全邊界錨定) -->
-            <div
-              v-if="hoveredPoint && tooltipConfig"
-              class="absolute z-30 bg-slate-900/95 backdrop-blur-sm text-white px-3.5 py-2.5 rounded-xl shadow-2xl border border-slate-700/80 text-xs pointer-events-none transition-all duration-150 min-w-[170px]"
-              :class="[
-                tooltipConfig.isUpperHalf ? 'mt-3.5 translate-y-0' : '-mt-3.5 -translate-y-full',
-                tooltipConfig.horizontalAlign === 'left' ? 'translate-x-[-15%]' : tooltipConfig.horizontalAlign === 'right' ? 'translate-x-[-85%]' : '-translate-x-1/2'
-              ]"
-              :style="{
-                left: `${tooltipConfig.xPercent}%`,
-                top: `${tooltipConfig.yPercent}%`
-              }"
-            >
-              <!-- 題號標題 -->
-              <div class="mb-1.5 border-b border-slate-700/80 pb-1.5 font-bold text-emerald-300">
-                第 {{ hoveredPoint.data.qNum }} 題
-              </div>
-
-              <!-- 答對率指標矩陣 -->
-              <div class="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-[11px]">
-                <div class="flex justify-between items-center text-slate-300">
-                  <span>學校:</span>
-                  <span class="font-bold text-emerald-400">{{ hoveredPoint.data.schoolAcc }}%</span>
-                </div>
-                <div class="flex justify-between items-center text-slate-300">
-                  <span>縣市:</span>
-                  <span class="text-amber-200">{{ hoveredPoint.data.countyAcc }}%</span>
-                </div>
-                <div class="flex justify-between items-center text-slate-400">
-                  <span>整體:</span>
-                  <span>{{ hoveredPoint.data.overallAcc }}%</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-slate-400">落差:</span>
-                  <span
-                    class="font-bold"
-                    :class="Number(hoveredPoint.data.schoolAcc) - Number(hoveredPoint.data.countyAcc) < 0 ? 'text-rose-400' : 'text-emerald-400'"
-                  >
-                    {{ (Number(hoveredPoint.data.schoolAcc) - Number(hoveredPoint.data.countyAcc)) > 0 ? '+' : '' }}{{ (Number(hoveredPoint.data.schoolAcc) - Number(hoveredPoint.data.countyAcc)).toFixed(1) }}%
-                  </span>
-                </div>
-              </div>
-
-              <!-- 指示箭頭 (在上/在下自動反轉) -->
-              <div
-                v-if="tooltipConfig.isUpperHalf"
-                class="absolute -top-1.5 w-0 h-0 border-x-[6px] border-x-transparent border-b-[6px] border-b-slate-900"
-                :class="{
-                  'left-1/2 -translate-x-1/2': tooltipConfig.horizontalAlign === 'center',
-                  'left-5': tooltipConfig.horizontalAlign === 'left',
-                  'right-5': tooltipConfig.horizontalAlign === 'right'
-                }"
-              ></div>
-              <div
-                v-else
-                class="absolute -bottom-1.5 w-0 h-0 border-x-[6px] border-x-transparent border-t-[6px] border-t-slate-900"
-                :class="{
-                  'left-1/2 -translate-x-1/2': tooltipConfig.horizontalAlign === 'center',
-                  'left-5': tooltipConfig.horizontalAlign === 'left',
-                  'right-5': tooltipConfig.horizontalAlign === 'right'
-                }"
-              ></div>
+            <!-- 視圖切換器 -->
+            <div class="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-semibold">
+              <button
+                type="button"
+                @click="setAnalysisView('dumbbell')"
+                class="px-2.5 py-1 rounded-md transition cursor-pointer"
+                :class="analysisViewMode === 'dumbbell' ? 'bg-[#52796f] text-white shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
+              >
+                三元點軌圖 ⭐
+              </button>
+              <button
+                type="button"
+                @click="setAnalysisView('line')"
+                class="px-2.5 py-1 rounded-md transition cursor-pointer"
+                :class="analysisViewMode === 'line' ? 'bg-[#52796f] text-white shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
+              >
+                傳統折線
+              </button>
             </div>
           </div>
         </div>
-        <div class="mt-2 text-center text-[11px] text-slate-400">
-          <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#e07a5f]"></span> 題號上方的紅點表示該題本校答對率顯著低於縣市平均 (相差 > 10%)</span>
+
+        <!-- 方案 1: 三元點軌區間圖 (Trio Dumbbell Track) -->
+        <div v-if="analysisViewMode === 'dumbbell'" class="space-y-3">
+          <!-- 圖例與說明標籤 -->
+          <div class="flex items-center justify-between text-xs flex-wrap gap-2 pb-2 border-b border-slate-100">
+            <div class="flex items-center gap-3.5 flex-wrap font-medium">
+              <span class="flex items-center gap-1.5 font-bold text-slate-800">
+                <span class="w-3 h-3 rounded-full bg-[#52796f] ring-2 ring-emerald-200"></span>
+                本校實測
+              </span>
+              <span class="flex items-center gap-1.5 font-bold text-[#e07a5f]">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#e07a5f]"></span>
+                縣市平均
+              </span>
+              <span class="flex items-center gap-1.5 font-bold text-slate-500">
+                <span class="w-2.5 h-2.5 rotate-45 bg-slate-400"></span>
+                整體(全國)平均
+              </span>
+              <span class="flex items-center gap-1.5 text-rose-600 font-bold text-[11px]">
+                <span class="w-2 h-2 rounded-full bg-rose-600 ring-2 ring-rose-200"></span>
+                落後縣市 &gt; 10% 警示
+              </span>
+            </div>
+            <span class="text-[11px] text-slate-400">每題水平軸包含三變項座標點與離散跨距線</span>
+          </div>
+
+          <!-- 0% ~ 100% 刻度尺頭 -->
+          <div class="grid grid-cols-[68px_1fr_210px] gap-3 items-center text-[10px] text-slate-400 px-3 font-mono">
+            <div>題號</div>
+            <div class="flex justify-between px-1">
+              <span>0%</span>
+              <span>25%</span>
+              <span>50%</span>
+              <span>75%</span>
+              <span>100%</span>
+            </div>
+            <div class="text-right">三變項完整數值 (校 / 縣 / 全 / 落差)</div>
+          </div>
+
+          <!-- 30 題點軌滾動容器 (可流暢捲動，字體精緻) -->
+          <div class="space-y-1.5 max-h-[560px] overflow-y-auto pr-1 scrollbar-thin">
+            <div
+              v-for="item in dumbbellItems"
+              :key="'db-'+item.qNum"
+              class="grid grid-cols-[68px_1fr_210px] gap-3 items-center py-1.5 px-3 rounded-xl hover:bg-slate-50/90 border border-slate-100/60 hover:border-slate-200 transition-colors text-xs"
+              :class="item.isWeak ? 'bg-rose-50/25' : ''"
+            >
+              <!-- 題號 & 警示標籤 -->
+              <div class="font-mono font-bold text-slate-700 flex items-center gap-1 min-w-0">
+                <span>Q{{ item.qNum }}</span>
+                <span
+                  v-if="item.isWeak"
+                  class="px-1.5 py-0.2 rounded bg-rose-600 text-white font-black text-[9px] scale-90 origin-left shrink-0"
+                >
+                  ⚠️落後
+                </span>
+              </div>
+
+              <!-- 0% ~ 100% 軌道與 3 標記點 -->
+              <div class="relative h-6 bg-slate-100/90 rounded-lg flex items-center px-1 overflow-visible">
+                <!-- 刻度參考格線 (25%, 50%, 75%) -->
+                <div class="absolute left-1/4 top-0 bottom-0 w-px bg-slate-200/90 pointer-events-none"></div>
+                <div class="absolute left-2/4 top-0 bottom-0 w-px bg-slate-200/90 pointer-events-none"></div>
+                <div class="absolute left-3/4 top-0 bottom-0 w-px bg-slate-200/90 pointer-events-none"></div>
+
+                <!-- 跨距背景膠囊條 (Min to Max) -->
+                <div
+                  class="absolute h-1.5 rounded-full transition-all duration-300"
+                  :class="item.isWeak ? 'bg-rose-200/90' : 'bg-slate-300'"
+                  :style="{
+                    left: `${item.minVal}%`,
+                    width: `${item.spanWidth}%`
+                  }"
+                ></div>
+
+                <!-- 變項 3：整體 (菱形 灰色) -->
+                <div
+                  class="absolute w-2.5 h-2.5 rotate-45 bg-slate-400 border border-white -translate-x-1/2 z-10 shadow-2xs cursor-pointer hover:scale-125 transition-transform"
+                  :style="{ left: `${item.overall}%` }"
+                  :title="`第 ${item.qNum} 題 整體(全國)平均: ${item.overall}%`"
+                ></div>
+
+                <!-- 變項 2：縣市 (橙色圓點) -->
+                <div
+                  class="absolute w-3.5 h-3.5 rounded-full bg-[#e07a5f] border-2 border-white -translate-x-1/2 z-20 shadow-xs cursor-pointer hover:scale-125 transition-transform"
+                  :style="{ left: `${item.county}%` }"
+                  :title="`第 ${item.qNum} 題 縣市平均: ${item.county}%`"
+                ></div>
+
+                <!-- 變項 1：本校 (大圓 綠/紅) -->
+                <div
+                  class="absolute w-4.5 h-4.5 rounded-full border-2 border-white -translate-x-1/2 z-30 shadow-sm cursor-pointer hover:scale-125 transition-transform flex items-center justify-center"
+                  :class="[
+                    item.isWeak
+                      ? 'bg-rose-600 ring-2 ring-rose-200'
+                      : item.diffCounty >= 0
+                        ? 'bg-[#52796f] ring-2 ring-emerald-200'
+                        : 'bg-rose-500 ring-2 ring-rose-200'
+                  ]"
+                  :style="{ left: `${item.school}%` }"
+                  :title="`第 ${item.qNum} 題 本校實測: ${item.school}% (落差: ${item.diffCounty >= 0 ? '+' : ''}${item.diffCounty}%)`"
+                ></div>
+              </div>
+
+              <!-- 右側三變項完整數值組 -->
+              <div class="flex items-center justify-end gap-2 text-[11px] font-mono shrink-0">
+                <span
+                  class="font-bold"
+                  :class="item.diffCounty >= 0 ? 'text-emerald-700 font-black' : (item.isWeak ? 'text-rose-600 font-black' : 'text-rose-500 font-bold')"
+                >
+                  校 {{ item.school }}%
+                </span>
+                <span class="text-[#e07a5f] font-semibold">縣 {{ item.county }}%</span>
+                <span class="text-slate-400 font-medium">全 {{ item.overall }}%</span>
+                <span
+                  class="px-1.5 py-0.5 rounded text-[10px] font-bold"
+                  :class="item.diffCounty >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'"
+                >
+                  {{ item.diffCounty >= 0 ? '+' : '' }}{{ item.diffCounty }}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100 flex-wrap gap-2">
+            <span>💡 綠點高於橙點代表本校領先；點選上方「⚠️ 落後最多優先」可一鍵抓出急需備課補救題目</span>
+            <span>滑鼠移至圓點可檢視精準百分比標籤</span>
+          </div>
+        </div>
+
+        <!-- 方案保留：傳統折線圖 (可隨時切回) -->
+        <div v-else class="space-y-3">
+          <div class="flex items-center justify-between text-xs font-medium pb-2 border-b border-slate-100">
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-[#52796f]"></span>學校</div>
+              <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-[#e07a5f]"></span>縣市</div>
+              <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-slate-300" style="border-top: 2px dashed #94a3b8"></span>整體</div>
+            </div>
+            <span class="text-[11px] text-slate-400">傳統 3 折線視圖</span>
+          </div>
+
+          <div class="w-full overflow-x-auto scrollbar-thin py-2" @mouseleave="hoveredPoint = null">
+            <div class="min-w-[720px] relative px-1">
+              <svg :viewBox="`0 0 ${chartWidth} ${chartHeight}`" class="w-full h-auto overflow-visible">
+                <!-- Y Axis labels -->
+                <g class="text-[10px] fill-slate-400 font-mono">
+                  <text :x="chartPadding.left - 10" :y="chartPadding.top + 4" text-anchor="end">100%</text>
+                  <text :x="chartPadding.left - 10" :y="(chartHeight - chartPadding.bottom + chartPadding.top) / 2 + 4" text-anchor="end">50%</text>
+                  <text :x="chartPadding.left - 10" :y="chartHeight - chartPadding.bottom + 4" text-anchor="end">0%</text>
+                </g>
+                
+                <!-- Grid lines -->
+                <g class="stroke-slate-100" stroke-width="1" stroke-dasharray="4 4">
+                  <line :x1="chartPadding.left" :y1="chartPadding.top" :x2="chartWidth - chartPadding.right" :y2="chartPadding.top" />
+                  <line :x1="chartPadding.left" :y1="(chartHeight - chartPadding.bottom + chartPadding.top) / 2" :x2="chartWidth - chartPadding.right" :y2="(chartHeight - chartPadding.bottom + chartPadding.top) / 2" />
+                  <line :x1="chartPadding.left" :y1="chartHeight - chartPadding.bottom" :x2="chartWidth - chartPadding.right" :y2="chartHeight - chartPadding.bottom" stroke-dasharray="none" class="stroke-slate-200" />
+                </g>
+
+                <!-- Overall Path -->
+                <path :d="chartPaths.overall" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 4" />
+                <!-- County Path -->
+                <path :d="chartPaths.county" fill="none" stroke="#e07a5f" stroke-width="2" />
+                <!-- School Path -->
+                <path :d="chartPaths.school" fill="none" stroke="#52796f" stroke-width="2.5" />
+
+                <!-- Hover interaction area per point -->
+                <g v-for="p in chartPoints" :key="'area-'+p.data.qNum">
+                  <rect 
+                    :x="p.x - ((chartWidth - chartPadding.left - chartPadding.right) / Math.max(1, chartPoints.length - 1)) / 2" 
+                    :y="chartPadding.top" 
+                    :width="(chartWidth - chartPadding.left - chartPadding.right) / Math.max(1, chartPoints.length - 1)" 
+                    :height="chartHeight - chartPadding.top - chartPadding.bottom" 
+                    fill="transparent" 
+                    class="cursor-pointer"
+                    @mouseover="hoveredPoint = p"
+                  />
+                </g>
+
+                <!-- Points and Indicators -->
+                <g v-for="p in chartPoints" :key="'pt-'+p.data.qNum">
+                  <!-- X Axis labels -->
+                  <text :x="p.x" :y="chartHeight - 12" text-anchor="middle" class="text-[10px] fill-slate-500 font-mono">{{ p.data.qNum }}</text>
+                  
+                  <!-- Highlight weak questions on X axis -->
+                  <circle v-if="p.isWeak" :cx="p.x" :cy="chartHeight - 26" r="3" fill="#e07a5f" />
+
+                  <!-- Hover state styling -->
+                  <g v-if="hoveredPoint && hoveredPoint.data.qNum === p.data.qNum">
+                    <!-- Vertical guideline -->
+                    <line :x1="p.x" :y1="chartPadding.top" :x2="p.x" :y2="chartHeight - chartPadding.bottom" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3 3" />
+                    
+                    <!-- Hovered Points -->
+                    <circle :cx="p.x" :cy="p.overallY" r="4" fill="#fff" stroke="#94a3b8" stroke-width="2" />
+                    <circle :cx="p.x" :cy="p.countyY" r="4" fill="#fff" stroke="#e07a5f" stroke-width="2" />
+                    <circle :cx="p.x" :cy="p.schoolY" r="5" fill="#fff" stroke="#52796f" stroke-width="2.5" />
+                  </g>
+                  <g v-else>
+                    <!-- Normal Points -->
+                    <circle :cx="p.x" :cy="p.schoolY" r="3" fill="#52796f" />
+                  </g>
+                </g>
+              </svg>
+              
+              <!-- Tooltip (自動防切邊：上下自適應翻轉、左右安全邊界錨定) -->
+              <div
+                v-if="hoveredPoint && tooltipConfig"
+                class="absolute z-30 bg-slate-900/95 backdrop-blur-sm text-white px-3.5 py-2.5 rounded-xl shadow-2xl border border-slate-700/80 text-xs pointer-events-none transition-all duration-150 min-w-[170px]"
+                :class="[
+                  tooltipConfig.isUpperHalf ? 'mt-3.5 translate-y-0' : '-mt-3.5 -translate-y-full',
+                  tooltipConfig.horizontalAlign === 'left' ? 'translate-x-[-15%]' : tooltipConfig.horizontalAlign === 'right' ? 'translate-x-[-85%]' : '-translate-x-1/2'
+                ]"
+                :style="{
+                  left: `${tooltipConfig.xPercent}%`,
+                  top: `${tooltipConfig.yPercent}%`
+                }"
+              >
+                <!-- 題號標題 -->
+                <div class="mb-1.5 border-b border-slate-700/80 pb-1.5 font-bold text-emerald-300">
+                  第 {{ hoveredPoint.data.qNum }} 題
+                </div>
+
+                <!-- 答對率指標矩陣 -->
+                <div class="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-[11px]">
+                  <div class="flex justify-between items-center text-slate-300">
+                    <span>學校:</span>
+                    <span class="font-bold text-emerald-400">{{ hoveredPoint.data.schoolAcc }}%</span>
+                  </div>
+                  <div class="flex justify-between items-center text-slate-300">
+                    <span>縣市:</span>
+                    <span class="text-amber-200">{{ hoveredPoint.data.countyAcc }}%</span>
+                  </div>
+                  <div class="flex justify-between items-center text-slate-400">
+                    <span>整體:</span>
+                    <span>{{ hoveredPoint.data.overallAcc }}%</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-slate-400">落差:</span>
+                    <span
+                      class="font-bold"
+                      :class="Number(hoveredPoint.data.schoolAcc) - Number(hoveredPoint.data.countyAcc) < 0 ? 'text-rose-400' : 'text-emerald-400'"
+                    >
+                      {{ (Number(hoveredPoint.data.schoolAcc) - Number(hoveredPoint.data.countyAcc)) > 0 ? '+' : '' }}{{ (Number(hoveredPoint.data.schoolAcc) - Number(hoveredPoint.data.countyAcc)).toFixed(1) }}%
+                    </span>
+                  </div>
+                </div>
+
+                <!-- 指示箭頭 -->
+                <div
+                  v-if="tooltipConfig.isUpperHalf"
+                  class="absolute -top-1.5 w-0 h-0 border-x-[6px] border-x-transparent border-b-[6px] border-b-slate-900"
+                  :class="{
+                    'left-1/2 -translate-x-1/2': tooltipConfig.horizontalAlign === 'center',
+                    'left-5': tooltipConfig.horizontalAlign === 'left',
+                    'right-5': tooltipConfig.horizontalAlign === 'right'
+                  }"
+                ></div>
+                <div
+                  v-else
+                  class="absolute -bottom-1.5 w-0 h-0 border-x-[6px] border-x-transparent border-t-[6px] border-t-slate-900"
+                  :class="{
+                    'left-1/2 -translate-x-1/2': tooltipConfig.horizontalAlign === 'center',
+                    'left-5': tooltipConfig.horizontalAlign === 'left',
+                    'right-5': tooltipConfig.horizontalAlign === 'right'
+                  }"
+                ></div>
+              </div>
+            </div>
+          </div>
+          <div class="mt-2 text-center text-[11px] text-slate-400">
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#e07a5f]"></span> 題號上方的紅點表示該題本校答對率顯著低於縣市平均 (相差 > 10%)</span>
+          </div>
         </div>
       </div>
 
@@ -1143,6 +1324,52 @@ function sortBy(key) {
     sortOrder.value = key === 'qNum' ? 'asc' : 'desc'; 
   }
 }
+
+// ----------------------------------------------------
+// 方案 1: 三元點軌區間圖 (Trio Dumbbell Track) 控制邏輯
+// ----------------------------------------------------
+const analysisViewMode = ref('dumbbell')
+const dumbbellSortMode = ref('id')
+
+function setDumbbellSort(mode) {
+  dumbbellSortMode.value = mode
+}
+
+function setAnalysisView(mode) {
+  analysisViewMode.value = mode
+}
+
+const dumbbellItems = computed(() => {
+  const list = analysisData.value.map((d) => {
+    const school = Number(d.schoolAcc)
+    const county = Number(d.countyAcc)
+    const overall = Number(d.overallAcc)
+    const diffCounty = Number((school - county).toFixed(1))
+    const diffOverall = Number((school - overall).toFixed(1))
+    const isWeak = diffCounty <= -10
+    const minVal = Math.min(school, county, overall)
+    const maxVal = Math.max(school, county, overall)
+    return {
+      ...d,
+      school,
+      county,
+      overall,
+      diffCounty,
+      diffOverall,
+      isWeak,
+      minVal,
+      maxVal,
+      spanWidth: Math.max(2, maxVal - minVal)
+    }
+  })
+
+  if (dumbbellSortMode.value === 'lag-asc') {
+    return list.sort((a, b) => a.diffCounty - b.diffCounty)
+  } else if (dumbbellSortMode.value === 'lead-desc') {
+    return list.sort((a, b) => b.diffCounty - a.diffCounty)
+  }
+  return list.sort((a, b) => a.qNum - b.qNum)
+})
 
 const hoveredPoint = ref(null)
 
