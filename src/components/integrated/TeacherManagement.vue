@@ -69,6 +69,7 @@
               <option value="學年主任">學年主任</option>
               <option value="班級導師">班級導師</option>
               <option value="科任教師">科任教師</option>
+              <option value="專科兼導師">專科兼導師</option>
             </select>
           </div>
 
@@ -821,7 +822,7 @@
               <span class="text-slate-500">範例：國文科任教師同時教授三年 2 班、四年 1 班，預設「授課教師設定」填寫科目與年級。</span>
             </p>
             <p class="m-0">
-              <span class="font-bold text-slate-800">3. 科兼導師：</span>兼任班級導師，亦教授其它班級特定學科教學之教師（如：國文科兼導師、英文科兼導師）。
+              <span class="font-bold text-slate-800">3. 專科兼導師：</span>國中端專科教師兼任班級導師，亦教授其它班級特定學科教學之教師（如：國文科兼導師、英文科兼導師、數學科兼導師）。
             </p>
           </div>
         </div>
@@ -1108,8 +1109,9 @@ function formatRoleName(teacherOrRole) {
     return role.replace('國語科', '國文科').replace('英語科', '英文科')
   }
 
-  // 2. 判斷是否為「教授多班 又當導師」
-  const isDualRole = role === '導師兼科任' ||
+  // 2. 判斷是否為「教授多班 又當導師（國中端統稱專科兼導師）」
+  const isDualRole = role === '專科兼導師' ||
+                     role === '導師兼科任' ||
                      role === '授課教師' ||
                      (t && t.isHomeroom && t.isSubject) ||
                      (t && t.assignedClass && t.assignedClass.includes('班兼【'))
@@ -1140,8 +1142,8 @@ function formatRoleName(teacherOrRole) {
       }
     }
 
-    const shortSub = normalizeSubjectShortName(detectedSubject) || '國文'
-    return `${shortSub}科兼導師`
+    const shortSub = normalizeSubjectShortName(detectedSubject)
+    return shortSub ? `${shortSub}科兼導師` : '專科兼導師'
   }
 
   return role
@@ -1154,7 +1156,7 @@ function getRoleBadgeClass(teacherOrRole) {
   if (role === '學年主任') return 'bg-amber-50 text-amber-800 border border-amber-200'
   if (role === '班級導師') return 'bg-sky-50 text-sky-800 border border-sky-200'
   if (role === '科任教師') return 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-  if (role === '導師兼科任' || role === '授課教師' || role.includes('兼導師')) {
+  if (role === '專科兼導師' || role === '導師兼科任' || role === '授課教師' || role.includes('兼導師')) {
     return 'bg-indigo-50 text-indigo-800 border border-indigo-200'
   }
   return 'bg-slate-100 text-slate-700 border border-slate-200'
@@ -1165,10 +1167,28 @@ const filteredTeacherList = computed(() => {
   return allTeacherList.value.filter(t => {
     // 身分群組篩選
     if (teacherFilters.role !== 'all') {
-      if (teacherFilters.role === '班級導師') {
-        if (!t.role?.includes('導師') && !formatRoleName(t).includes('導師')) return false
+      if (teacherFilters.role === '專科兼導師') {
+        const r = t.role || ''
+        const f = formatRoleName(t)
+        if (!r.includes('兼導師') && !f.includes('兼導師') && r !== '專科兼導師' && r !== '導師兼科任') {
+          return false
+        }
+      } else if (teacherFilters.role === '班級導師') {
+        const r = t.role || ''
+        const f = formatRoleName(t)
+        // 專科兼導師獨立成類，若篩選純班級導師則排除專科兼導師
+        if (r.includes('兼導師') || f.includes('兼導師') || r === '專科兼導師' || r === '導師兼科任') {
+          return false
+        }
+        if (!r.includes('導師') && !f.includes('導師')) return false
       } else if (teacherFilters.role === '科任教師') {
-        if (!t.role?.includes('科任') && !formatRoleName(t).includes('科任')) return false
+        const r = t.role || ''
+        const f = formatRoleName(t)
+        // 篩選純科任教師時排除專科兼導師
+        if (r.includes('兼導師') || f.includes('兼導師') || r === '專科兼導師' || r === '導師兼科任') {
+          return false
+        }
+        if (!r.includes('科任') && !f.includes('科任')) return false
       } else {
         if (t.role !== teacherFilters.role && !t.role?.includes(teacherFilters.role)) return false
       }
@@ -1370,7 +1390,7 @@ const liveAllocationSummary = computed(() => {
   } else if (!teacherForm.isHomeroom && teacherForm.isSubject) {
     return `專任科任教師（${subDesc}）`
   } else if (teacherForm.isHomeroom && teacherForm.isSubject) {
-    return `${numChar}年 ${c} 班 導師 兼任【${subDesc}】`
+    return `${numChar}年 ${c} 班 專科兼導師【${subDesc}】`
   } else {
     return '尚未配置任何班級（請至少開啟「擔任班級導師」或「任課班級設定」）'
   }
@@ -1526,9 +1546,9 @@ function openEditTeacherModal(t) {
     }
     teacherForm.classMatrix[sub] = [`${g}01`, `${g}02`, `${g}03`]
   } else {
-    // 導師兼科任 或 {subject}科兼導師
+    // 專科兼導師 或 {subject}科兼導師
     teacherForm.isSystemPreset = false
-    teacherForm.role = '導師兼科任'
+    teacherForm.role = '專科兼導師'
     teacherForm.isHomeroom = true
     teacherForm.homeroomGrade = t.grade || '3'
     teacherForm.homeroomClass = t.assignedClass ? (t.assignedClass.match(/\d+/) ? t.assignedClass.match(/\d+/)[0] : '1') : '1'
@@ -1701,7 +1721,9 @@ async function saveInlineEdits() {
     } else if (t.role === '科任教師') {
       newAssignedClass = `${numChar}年級 (科任)`
     } else {
-      newAssignedClass = `${numChar}年 ${t.editClass} 班 (導師兼科任)`
+      const dualMatch = t.assignedClass?.match(/(兼【[^】]+】)/)
+      const dualPart = dualMatch ? dualMatch[1] : ''
+      newAssignedClass = `${numChar}年 ${t.editClass} 班${dualPart || ' (專科兼導師)'}`
     }
     return {
       id: t.id,
@@ -1721,7 +1743,9 @@ async function saveInlineEdits() {
     } else if (t.role === '科任教師') {
       t.assignedClass = `${numChar}年級 (科任)`
     } else {
-      t.assignedClass = `${numChar}年 ${t.editClass} 班 (導師兼科任)`
+      const dualMatch = t.assignedClass?.match(/(兼【[^】]+】)/)
+      const dualPart = dualMatch ? dualMatch[1] : ''
+      t.assignedClass = `${numChar}年 ${t.editClass} 班${dualPart || ' (專科兼導師)'}`
     }
     t.isDirty = false
   })
@@ -1908,7 +1932,7 @@ const rolloverPreviewList = computed(() => {
     let status = ''
 
     if (rolloverStrategy.value === 'smart') {
-      if (t.role === '班級導師' || t.role === '導師兼科任') {
+      if (t.role === '班級導師' || t.role === '專科兼導師' || t.role?.includes('兼導師')) {
         const currG = parseInt(t.grade) || 3
         if (currG >= 6) {
           after = '（未分配 · 待重新指派）'
