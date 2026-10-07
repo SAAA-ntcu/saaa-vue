@@ -256,7 +256,7 @@
                 <th class="py-3 px-4">組別身分</th>
                 <th class="py-3 px-4">任教年級 / 班級</th>
                 <th class="py-3 px-4">電子郵件信箱</th>
-                <th class="py-3 px-4 text-center">有效期限 / 狀態</th>
+                <th class="py-3 px-4 text-center">帳號狀態</th>
                 <th class="py-3 px-4 text-center">操作</th>
               </tr>
             </thead>
@@ -341,10 +341,9 @@
                   </a>
                 </td>
 
-                <!-- 有效期限 / 狀態 (Switch 啟用/停用) -->
+                <!-- 帳號狀態 (Switch 啟用/停用) -->
                 <td class="py-3 px-4 text-center">
-                  <div class="font-mono text-slate-500 text-[11px]">{{ t.expiryDate }}</div>
-                  <div class="flex items-center justify-center gap-1.5 mt-1">
+                  <div class="flex items-center justify-center gap-1.5">
                     <el-switch
                       v-model="t.isActive"
                       size="small"
@@ -764,25 +763,6 @@
               <p class="text-[11px] text-slate-400 mt-1 m-0">新增或重設後，系統會自動發送通知信至此信箱。</p>
             </div>
 
-            <!-- 帳號有效起訖日 -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label class="block font-bold text-slate-700 mb-1">帳號有效起日</label>
-                <input
-                  v-model="teacherForm.startDate"
-                  type="date"
-                  class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
-                />
-              </div>
-              <div>
-                <label class="block font-bold text-slate-700 mb-1">帳號有效迄日</label>
-                <input
-                  v-model="teacherForm.endDate"
-                  type="date"
-                  class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
-                />
-              </div>
-            </div>
 
             <!-- 帳號啟用狀態 -->
             <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
