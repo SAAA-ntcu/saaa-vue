@@ -364,112 +364,102 @@
             </p>
           </div>
 
-          <!-- 右側標籤與多指針圖例 -->
+          <!-- 右側標籤與多層得分環圖例 -->
           <div class="flex items-center gap-3 text-xs flex-wrap font-medium">
             <div class="flex items-center gap-1.5">
               <span class="w-2.5 h-2.5 rounded-full bg-[#9333ea]"></span>
-              <span class="text-slate-600">總參與平均</span>
+              <span class="text-slate-600">總參與平均 (外環)</span>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="w-2.5 h-2.5 rounded-full bg-[#2563eb]"></span>
-              <span class="text-slate-600">縣市平均</span>
+              <span class="text-slate-600">縣市平均 (中外環)</span>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></span>
-              <span class="text-slate-600">學校平均</span>
+              <span class="text-slate-600">學校平均 (中內環)</span>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="w-2.5 h-2.5 rounded-full bg-[#84cc16]"></span>
-              <span class="text-slate-800 font-bold">班級實測 (主指針)</span>
+              <span class="text-slate-800 font-bold">班級實測 (主環)</span>
             </div>
           </div>
         </div>
 
-        <!-- 多指針時鐘儀表盤全景呈現：頂部總答對率 + 下方 10 大向度多指針時鐘儀表盤全景牆 -->
+        <!-- 多層同心得分環全景呈現：頂部總答對率主環 + 下方 10 大向度同心得分環卡片矩陣 -->
         <div class="space-y-6 pt-2">
           
-          <!-- 1. 頂部核心橫幅：【全科總答對率 · 多指針時鐘主儀表盤】 -->
+          <!-- 1. 頂部核心橫幅：【全科總答對率 · 多層同心得分主環】 -->
           <div class="bg-gradient-to-br from-slate-50 via-white to-slate-50/80 border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-xs">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
               
-              <!-- 左側：270 度多指針大儀表盤 (5 Cols) -->
-              <div class="lg:col-span-5 flex flex-col items-center justify-center p-3 bg-white rounded-xl border border-slate-100 shadow-2xs">
-                <div class="w-full max-w-[320px] aspect-[16/11] relative flex items-center justify-center">
-                  <svg class="w-full h-full overflow-visible" viewBox="0 0 320 220">
-                    <defs>
-                      <filter id="hub-shadow-hero" x="-30%" y="-30%" width="160%" height="160%">
-                        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.25"/>
-                      </filter>
-                    </defs>
+              <!-- 左側：同心得分大環 (5 Cols) -->
+              <div class="lg:col-span-5 flex flex-col items-center justify-center p-4 bg-white rounded-xl border border-slate-100 shadow-2xs">
+                <div class="w-full max-w-[280px] aspect-square relative flex items-center justify-center">
+                  <svg class="w-full h-full transform -rotate-90 overflow-visible" viewBox="0 0 240 240">
+                    <!-- 背景淺灰導引底軌 -->
+                    <circle cx="120" cy="120" r="100" fill="none" stroke="#f1f5f9" stroke-width="12" />
+                    <circle cx="120" cy="120" r="84" fill="none" stroke="#f1f5f9" stroke-width="12" />
+                    <circle cx="120" cy="120" r="68" fill="none" stroke="#f1f5f9" stroke-width="12" />
+                    <circle cx="120" cy="120" r="52" fill="none" stroke="#f1f5f9" stroke-width="13" />
 
-                    <!-- 外圈分段彩弧 (0-5% 墨灰、5-60% 萊姆綠、60-85% 皇家藍、85-100% 淺灰) -->
-                    <path :d="getDialArc(0, 5, 160, 135, 95)" fill="none" stroke="#334155" stroke-width="7" stroke-linecap="round" />
-                    <path :d="getDialArc(5, 60, 160, 135, 95)" fill="none" stroke="#84cc16" stroke-width="7" />
-                    <path :d="getDialArc(60, 85, 160, 135, 95)" fill="none" stroke="#2563eb" stroke-width="7" />
-                    <path :d="getDialArc(85, 100, 160, 135, 95)" fill="none" stroke="#e2e8f0" stroke-width="7" stroke-linecap="round" />
-
-                    <!-- 內部刻度數字 (每 20%) -->
-                    <g v-for="p in [0, 20, 40, 60, 80, 100]" :key="'hero-tick-' + p">
-                      <line
-                        :x1="160 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 86"
-                        :y1="135 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 86"
-                        :x2="160 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 94"
-                        :y2="135 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 94"
-                        stroke="#64748b"
-                        stroke-width="1.8"
-                      />
-                      <text
-                        :x="160 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 75"
-                        :y="135 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 75 + 3"
-                        font-size="9"
-                        font-family="monospace"
-                        font-weight="bold"
-                        fill="#64748b"
-                        text-anchor="middle"
-                      >
-                        {{ p }}
-                      </text>
-                    </g>
-
-                    <!-- 四根同心指針 (中心 160, 135) -->
-                    <!-- 總參與 (Purple) -->
-                    <line
-                      x1="160" y1="135" x2="160" y2="68"
-                      stroke="#9333ea" stroke-width="2.5" stroke-linecap="round"
-                      class="transition-all duration-500 ease-out opacity-80"
-                      :style="{ transform: `rotate(${getNeedleRotation(overallStat.national)}deg)`, transformOrigin: '160px 135px' }"
-                    />
-                    <!-- 縣市 (Royal Blue) -->
-                    <line
-                      x1="160" y1="135" x2="160" y2="61"
-                      stroke="#2563eb" stroke-width="3" stroke-linecap="round"
-                      class="transition-all duration-500 ease-out opacity-85"
-                      :style="{ transform: `rotate(${getNeedleRotation(overallStat.county)}deg)`, transformOrigin: '160px 135px' }"
-                    />
-                    <!-- 學校 (Amber) -->
-                    <line
-                      x1="160" y1="135" x2="160" y2="53"
-                      stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round"
-                      class="transition-all duration-500 ease-out"
-                      :style="{ transform: `rotate(${getNeedleRotation(overallStat.school)}deg)`, transformOrigin: '160px 135px' }"
-                    />
-                    <!-- 班級實測主指針 (Lime Green) -->
-                    <line
-                      x1="160" y1="135" x2="160" y2="44"
-                      stroke="#84cc16" stroke-width="4.5" stroke-linecap="round"
-                      class="transition-all duration-500 ease-out drop-shadow-md"
-                      :style="{ transform: `rotate(${getNeedleRotation(overallStat.classVal)}deg)`, transformOrigin: '160px 135px' }"
+                    <!-- 外環 1：總參與 (Purple) -->
+                    <circle
+                      cx="120" cy="120" r="100"
+                      fill="none" stroke="#9333ea" stroke-width="12" stroke-linecap="round"
+                      :stroke-dasharray="getRingCirc(100)"
+                      :stroke-dashoffset="getRingOffset(100, overallStat.national)"
+                      class="transition-all duration-700 ease-out opacity-85"
                     />
 
-                    <!-- 金色軸心 -->
-                    <circle cx="160" cy="135" r="11" fill="#fbbf24" stroke="#ffffff" stroke-width="2.5" filter="url(#hub-shadow-hero)" />
-                    <circle cx="160" cy="135" r="3.5" fill="#d97706" />
+                    <!-- 環 2：縣市 (Royal Blue) -->
+                    <circle
+                      cx="120" cy="120" r="84"
+                      fill="none" stroke="#2563eb" stroke-width="12" stroke-linecap="round"
+                      :stroke-dasharray="getRingCirc(84)"
+                      :stroke-dashoffset="getRingOffset(84, overallStat.county)"
+                      class="transition-all duration-700 ease-out opacity-90"
+                    />
 
-                    <!-- 底部中央標籤 -->
-                    <text x="160" y="212" font-size="11" font-weight="bold" fill="#64748b" text-anchor="middle">
-                      全科總答對率 · 鐘面指針
-                    </text>
+                    <!-- 環 3：學校 (Amber) -->
+                    <circle
+                      cx="120" cy="120" r="68"
+                      fill="none" stroke="#f59e0b" stroke-width="12" stroke-linecap="round"
+                      :stroke-dasharray="getRingCirc(68)"
+                      :stroke-dashoffset="getRingOffset(68, overallStat.school)"
+                      class="transition-all duration-700 ease-out"
+                    />
+
+                    <!-- 最內環 4：本班實測 (Lime Green 加粗主環) -->
+                    <circle
+                      cx="120" cy="120" r="52"
+                      fill="none" stroke="#84cc16" stroke-width="14" stroke-linecap="round"
+                      :stroke-dasharray="getRingCirc(52)"
+                      :stroke-dashoffset="getRingOffset(52, overallStat.classVal)"
+                      class="transition-all duration-700 ease-out drop-shadow-sm"
+                    />
                   </svg>
+
+                  <!-- 圓心中央層疊文字 (仿使用者參考圖) -->
+                  <div class="absolute inset-0 flex flex-col items-center justify-center text-center select-none pointer-events-none">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">本班實測</span>
+                    <span class="text-4xl font-mono font-black text-slate-900 tracking-tight my-0.5">
+                      {{ overallStat.classVal }}%
+                    </span>
+                    <span
+                      class="px-2 py-0.5 rounded-full text-xs font-mono font-bold"
+                      :class="overallStat.classVal >= overallStat.school ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
+                    >
+                      {{ overallStat.classVal >= overallStat.school ? '+' : '' }}{{ overallStat.classVal - overallStat.school }}%
+                    </span>
+                  </div>
+                </div>
+
+                <!-- 環形圖例小標籤 -->
+                <div class="flex items-center gap-3 text-xs font-medium mt-3 flex-wrap justify-center">
+                  <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#9333ea]"></span>總參與 {{ overallStat.national }}%</span>
+                  <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#2563eb]"></span>縣市 {{ overallStat.county }}%</span>
+                  <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#f59e0b]"></span>學校 {{ overallStat.school }}%</span>
+                  <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#84cc16]"></span>本班 {{ overallStat.classVal }}%</span>
                 </div>
               </div>
 
@@ -478,7 +468,7 @@
                 <div class="flex items-center justify-between flex-wrap gap-2">
                   <div class="flex items-center gap-2">
                     <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-[#52796f] text-white">
-                      🌟 全科總答對率
+                      🌟 全科總答對率 · 同心得分環
                     </span>
                     <span class="text-xs text-slate-500 font-medium">
                       {{ state.school }} {{ inquiryState.classObj }} 班 綜合指標
@@ -504,7 +494,7 @@
                 <!-- 4 欄獨立彩色數值艙 (零文字重疊) -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
                   <div class="p-2.5 rounded-xl bg-purple-50/70 border border-purple-200/60 flex flex-col items-center">
-                    <span class="text-[10px] font-bold text-purple-900 flex items-center gap-1">
+                    <span class="text-xs font-bold text-purple-900 flex items-center gap-1">
                       <span class="w-1.5 h-1.5 rounded-full bg-[#9333ea]"></span>
                       總參與平均
                     </span>
@@ -514,7 +504,7 @@
                   </div>
 
                   <div class="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200/60 flex flex-col items-center">
-                    <span class="text-[10px] font-bold text-blue-900 flex items-center gap-1">
+                    <span class="text-xs font-bold text-blue-900 flex items-center gap-1">
                       <span class="w-1.5 h-1.5 rounded-full bg-[#2563eb]"></span>
                       縣市平均
                     </span>
@@ -524,7 +514,7 @@
                   </div>
 
                   <div class="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/60 flex flex-col items-center">
-                    <span class="text-[10px] font-bold text-amber-900 flex items-center gap-1">
+                    <span class="text-xs font-bold text-amber-900 flex items-center gap-1">
                       <span class="w-1.5 h-1.5 rounded-full bg-[#f59e0b]"></span>
                       學校平均
                     </span>
@@ -534,7 +524,7 @@
                   </div>
 
                   <div class="p-2.5 rounded-xl bg-lime-50 border border-lime-300 shadow-2xs flex flex-col items-center">
-                    <span class="text-[10px] font-bold text-lime-900 flex items-center gap-1">
+                    <span class="text-xs font-bold text-lime-900 flex items-center gap-1">
                       <span class="w-1.5 h-1.5 rounded-full bg-[#84cc16]"></span>
                       {{ inquiryState.classObj }} 班實測
                     </span>
@@ -545,21 +535,21 @@
                 </div>
 
                 <p class="text-xs text-slate-500 m-0 leading-relaxed">
-                  本班在全體學力常模中位居前段，下方展開 10 大向度的獨立多指針時鐘儀表盤，綠色主指針越過橘色學校刻度即代表達標勝出。
+                  本班在全體學力常模中位居前段，下方展開 10 大向度的獨立同心得分環，最內層綠色實測環越長、超過橘色學校環即代表達標勝出。
                 </p>
               </div>
 
             </div>
           </div>
 
-          <!-- 2. 各評量向度 · 多指針時鐘儀表盤矩陣 (共 10 項，統一整齊排列) -->
+          <!-- 2. 各評量向度 · 同心得分環卡片矩陣 (共 10 項，統一整齊排列) -->
           <div class="space-y-3">
             <div class="flex items-center justify-between border-b border-slate-200 pb-2">
               <div class="flex items-center gap-2">
                 <span class="w-2.5 h-5 rounded-full bg-[#52796f]"></span>
-                <h4 class="text-sm sm:text-base font-bold text-slate-800 m-0">各評量向度 · 多指針時鐘儀表盤（共 {{ dimensionStats.length }} 項）</h4>
+                <h4 class="text-sm sm:text-base font-bold text-slate-800 m-0">各評量向度 · 同心得分環矩陣（共 {{ dimensionStats.length }} 項）</h4>
               </div>
-              <span class="text-xs text-slate-400 font-medium">每向度獨立 4 指針鐘面 · 即時常模比對</span>
+              <span class="text-xs text-slate-400 font-medium">每向度獨立 4 層同心進度環 · 即時常模比對</span>
             </div>
 
             <!-- 統一網格整齊排列 (整齊 5 欄排列，行動端響應自適應) -->
@@ -586,80 +576,59 @@
                   </div>
                 </div>
 
-                <!-- 270 度多指針鐘面 SVG (文字刻度加大，中心 120, 110, 半徑 70) -->
-                <div class="w-full aspect-[16/11] relative flex items-center justify-center my-1.5">
-                  <svg class="w-full h-full overflow-visible" viewBox="0 0 240 185">
-                    <!-- 外圈分段彩弧 (0-5% 墨灰、5-60% 萊姆綠、60-85% 皇家藍、85-100% 淺灰) -->
-                    <path :d="getDialArc(0, 5, 120, 110, 70)" fill="none" stroke="#334155" stroke-width="6.5" stroke-linecap="round" />
-                    <path :d="getDialArc(5, 60, 120, 110, 70)" fill="none" stroke="#84cc16" stroke-width="6.5" />
-                    <path :d="getDialArc(60, 85, 120, 110, 70)" fill="none" stroke="#2563eb" stroke-width="6.5" />
-                    <path :d="getDialArc(85, 100, 120, 110, 70)" fill="none" stroke="#e2e8f0" stroke-width="6.5" stroke-linecap="round" />
+                <!-- 圓形同心得分環 SVG (半徑 68, 56, 44, 32) -->
+                <div class="w-full aspect-square relative flex items-center justify-center my-2">
+                  <svg class="w-full h-full transform -rotate-90 overflow-visible" viewBox="0 0 160 160">
+                    <!-- 淺灰導引底軌 -->
+                    <circle cx="80" cy="80" r="68" fill="none" stroke="#f1f5f9" stroke-width="7" />
+                    <circle cx="80" cy="80" r="56" fill="none" stroke="#f1f5f9" stroke-width="7" />
+                    <circle cx="80" cy="80" r="44" fill="none" stroke="#f1f5f9" stroke-width="7" />
+                    <circle cx="80" cy="80" r="32" fill="none" stroke="#f1f5f9" stroke-width="8" />
 
-                    <!-- 內部刻度線與放大的刻度數字 (每 20%) -->
-                    <g v-for="p in [0, 20, 40, 60, 80, 100]" :key="'dim-tick-' + p">
-                      <line
-                        :x1="120 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 62"
-                        :y1="110 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 62"
-                        :x2="120 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 69"
-                        :y2="110 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 69"
-                        stroke="#64748b"
-                        stroke-width="1.8"
-                      />
-                      <text
-                        :x="120 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 50"
-                        :y="110 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 50 + 4"
-                        font-size="12"
-                        font-family="monospace"
-                        font-weight="bold"
-                        fill="#475569"
-                        text-anchor="middle"
-                      >
-                        {{ p }}
-                      </text>
-                    </g>
-
-                    <!-- 4 根同心指針 -->
-                    <!-- 總參與 (Purple) -->
-                    <line
-                      x1="120" y1="110" x2="120" y2="58"
-                      stroke="#9333ea" stroke-width="2.5" stroke-linecap="round"
-                      class="transition-all duration-500 ease-out opacity-85"
-                      :style="{ transform: `rotate(${getNeedleRotation(item.national)}deg)`, transformOrigin: '120px 110px' }"
-                    />
-                    <!-- 縣市 (Royal Blue) -->
-                    <line
-                      x1="120" y1="110" x2="120" y2="52"
-                      stroke="#2563eb" stroke-width="3" stroke-linecap="round"
-                      class="transition-all duration-500 ease-out opacity-90"
-                      :style="{ transform: `rotate(${getNeedleRotation(item.county)}deg)`, transformOrigin: '120px 110px' }"
-                    />
-                    <!-- 學校 (Amber) -->
-                    <line
-                      x1="120" y1="110" x2="120" y2="46"
-                      stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round"
-                      class="transition-all duration-500 ease-out"
-                      :style="{ transform: `rotate(${getNeedleRotation(item.school)}deg)`, transformOrigin: '120px 110px' }"
-                    />
-                    <!-- 班級實測主指針 (Lime Green) -->
-                    <line
-                      x1="120" y1="110" x2="120" y2="38"
-                      stroke="#84cc16" stroke-width="4.5" stroke-linecap="round"
-                      class="transition-all duration-500 ease-out drop-shadow-sm"
-                      :style="{ transform: `rotate(${getNeedleRotation(item.classVal)}deg)`, transformOrigin: '120px 110px' }"
+                    <!-- 外環 1：總參與 (Purple) -->
+                    <circle
+                      cx="80" cy="80" r="68"
+                      fill="none" stroke="#9333ea" stroke-width="7" stroke-linecap="round"
+                      :stroke-dasharray="getRingCirc(68)"
+                      :stroke-dashoffset="getRingOffset(68, item.national)"
+                      class="opacity-80 transition-all duration-700"
                     />
 
-                    <!-- 金色軸心 -->
-                    <circle cx="120" cy="110" r="8.5" fill="#fbbf24" stroke="#ffffff" stroke-width="2" />
-                    <circle cx="120" cy="110" r="3" fill="#d97706" />
+                    <!-- 環 2：縣市 (Royal Blue) -->
+                    <circle
+                      cx="80" cy="80" r="56"
+                      fill="none" stroke="#2563eb" stroke-width="7" stroke-linecap="round"
+                      :stroke-dasharray="getRingCirc(56)"
+                      :stroke-dashoffset="getRingOffset(56, item.county)"
+                      class="opacity-85 transition-all duration-700"
+                    />
 
-                    <!-- 指針下方中央：醒目大字班級實測數值 -->
-                    <text x="120" y="148" font-size="16" font-family="monospace" font-weight="900" fill="#0f172a" text-anchor="middle">
-                      {{ item.classVal }}%
-                    </text>
-                    <text x="120" y="165" font-size="11" font-weight="bold" fill="#64748b" text-anchor="middle">
-                      班級實測
-                    </text>
+                    <!-- 環 3：學校 (Amber) -->
+                    <circle
+                      cx="80" cy="80" r="44"
+                      fill="none" stroke="#f59e0b" stroke-width="7" stroke-linecap="round"
+                      :stroke-dasharray="getRingCirc(44)"
+                      :stroke-dashoffset="getRingOffset(44, item.school)"
+                      class="transition-all duration-700"
+                    />
+
+                    <!-- 最內環 4：本班實測 (Lime Green 加粗主環) -->
+                    <circle
+                      cx="80" cy="80" r="32"
+                      fill="none" stroke="#84cc16" stroke-width="8.5" stroke-linecap="round"
+                      :stroke-dasharray="getRingCirc(32)"
+                      :stroke-dashoffset="getRingOffset(32, item.classVal)"
+                      class="drop-shadow-sm transition-all duration-700"
+                    />
                   </svg>
+
+                  <!-- 圓心正中央醒目大字 -->
+                  <div class="absolute inset-0 flex flex-col items-center justify-center text-center select-none pointer-events-none">
+                    <span class="text-xl font-mono font-black text-slate-900 leading-none">
+                      {{ item.classVal }}%
+                    </span>
+                    <span class="text-[10px] font-bold text-slate-400 mt-0.5">班級</span>
+                  </div>
                 </div>
 
                 <!-- 卡片底部：4 欄數值艙 (零碰撞排版，字體加大清晰) -->
@@ -1124,19 +1093,11 @@ const classDimensions = computed(() => {
 const overallStat = computed(() => classDimensions.value[0] || { name: '總答對率', national: 70, county: 72, school: 77, classVal: 75 })
 const dimensionStats = computed(() => classDimensions.value.slice(1))
 
-// 儀表盤角度計算 (0% = 135 deg, 100% = 405 deg)
-const pctToDialDeg = (pct) => 135 + (pct || 0) * 2.7
-const getNeedleRotation = (pct) => pctToDialDeg(pct) - 270
-
-// 儀表盤外圈分段圓弧生成
-const getDialArc = (p1, p2, cx = 120, cy = 110, r = 70) => {
-  const deg1 = pctToDialDeg(p1), deg2 = pctToDialDeg(p2)
-  const rad1 = deg1 * Math.PI / 180, rad2 = deg2 * Math.PI / 180
-  const x1 = cx + Math.cos(rad1) * r, y1 = cy + Math.sin(rad1) * r
-  const x2 = cx + Math.cos(rad2) * r, y2 = cy + Math.sin(rad2) * r
-  const delta = (p2 - p1) * 2.7
-  const largeArc = delta > 180 ? 1 : 0
-  return `M ${x1.toFixed(1)} ${y1.toFixed(1)} A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(1)} ${y2.toFixed(1)}`
+// 同心得分環圓周長與偏移量計算 (半徑 r，百分比 pct)
+const getRingCirc = (r) => (2 * Math.PI * r).toFixed(1)
+const getRingOffset = (r, pct) => {
+  const circ = 2 * Math.PI * r
+  return (circ * (1 - Math.min(100, Math.max(0, pct || 0)) / 100)).toFixed(1)
 }
 
 // 各班學生名冊 (動態隨選定之班級計算)
