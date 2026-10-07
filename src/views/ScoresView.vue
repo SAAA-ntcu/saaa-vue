@@ -543,10 +543,9 @@
                 top: `${tooltipConfig.yPercent}%`
               }"
             >
-              <!-- 題號與評量主題標題 -->
-              <div class="flex items-center justify-between gap-2 mb-1.5 border-b border-slate-700/80 pb-1.5">
-                <span class="font-bold text-emerald-300">第 {{ hoveredPoint.data.qNum }} 題</span>
-                <span class="text-[10px] text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded">{{ hoveredPoint.data.topic }}</span>
+              <!-- 題號標題 -->
+              <div class="mb-1.5 border-b border-slate-700/80 pb-1.5 font-bold text-emerald-300">
+                第 {{ hoveredPoint.data.qNum }} 題
               </div>
 
               <!-- 答對率指標矩陣 -->
@@ -608,10 +607,9 @@
           <table class="w-full text-left border-collapse text-xs">
             <thead>
               <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
-                <th class="py-2.5 px-4 cursor-pointer hover:bg-slate-100 select-none w-16" @click="sortBy('qNum')">
+                <th class="py-2.5 px-4 cursor-pointer hover:bg-slate-100 select-none w-20" @click="sortBy('qNum')">
                   <div class="flex items-center gap-1">題號 <span v-if="sortKey==='qNum'" class="text-[10px]">{{ sortOrder==='asc'?'▲':'▼' }}</span></div>
                 </th>
-                <th class="py-2.5 px-4">測驗主題</th>
                 <th class="py-2.5 px-4 text-center cursor-pointer hover:bg-slate-100 select-none" @click="sortBy('schoolAcc')">
                   <div class="flex items-center justify-center gap-1">學校答對率 <span v-if="sortKey==='schoolAcc'" class="text-[10px]">{{ sortOrder==='asc'?'▲':'▼' }}</span></div>
                 </th>
@@ -628,8 +626,7 @@
             </thead>
             <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
               <tr v-for="d in sortedAnalysisData" :key="d.qNum" class="hover:bg-slate-50/60 transition" :class="{'bg-rose-50/30': (Number(d.schoolAcc) - Number(d.countyAcc)) <= -10}">
-                <td class="py-2 px-4 font-mono text-slate-500">{{ d.qNum }}</td>
-                <td class="py-2 px-4 text-slate-600">{{ d.topic }}</td>
+                <td class="py-2 px-4 font-mono text-slate-500 font-bold">{{ d.qNum }}</td>
                 <td class="py-2 px-4 text-center font-mono font-bold text-[#52796f]">{{ d.schoolAcc }}%</td>
                 <td class="py-2 px-4 text-center font-mono hidden sm:table-cell">{{ d.countyAcc }}%</td>
                 <td class="py-2 px-4 text-center font-mono hidden md:table-cell text-slate-400">{{ d.overallAcc }}%</td>
@@ -1099,8 +1096,7 @@ const analysisData = ref(Array.from({ length: 30 }, (_, i) => {
       qNum,
       overallAcc: overallAcc.toFixed(1),
       countyAcc: countyAcc.toFixed(1),
-      schoolAcc: Math.max(0, countyAcc - 15 - Math.random() * 10).toFixed(1), 
-      topic: ['字詞認讀', '文意推論', '結構分析'][i % 3]
+      schoolAcc: Math.max(0, countyAcc - 15 - Math.random() * 10).toFixed(1)
     }
   }
 
@@ -1108,8 +1104,7 @@ const analysisData = ref(Array.from({ length: 30 }, (_, i) => {
     qNum,
     overallAcc: Math.min(100, Math.max(0, overallAcc)).toFixed(1),
     countyAcc: Math.min(100, Math.max(0, countyAcc)).toFixed(1),
-    schoolAcc: Math.min(100, Math.max(0, schoolAcc)).toFixed(1),
-    topic: ['字詞認讀', '文意推論', '結構分析', '寫作技巧'][i % 4]
+    schoolAcc: Math.min(100, Math.max(0, schoolAcc)).toFixed(1)
   }
 }))
 
