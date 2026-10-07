@@ -233,6 +233,7 @@
                     type="checkbox"
                     v-model="t.selected"
                     class="cursor-pointer rounded border-slate-300"
+                    :title="(t.role === '校長' || t.role === '學年主任') ? '行政管理身分（不參與班級指派）' : '勾選此位教師'"
                   />
                 </td>
                 
@@ -845,9 +846,21 @@
           <span class="text-base">💡</span>
           <div>
             <strong class="font-bold">兩階段操作流程：</strong>
-            已選取 <span class="font-mono font-bold text-emerald-800">{{ batchAllocList.length }}</span> 位教師。
+            已納入 <span class="font-mono font-bold text-emerald-800">{{ batchAllocList.length }}</span> 位授課教師進行排班配置。
             第一步先統一指定目標學年，第二步可個別改班或使用「⚡ 依序流水號自動填入」，內建即時衝突防呆，杜絕重複撞班！
           </div>
+        </div>
+
+        <!-- 行政身分排除提示 (校長、學年主任不參與班級指派) -->
+        <div
+          v-if="batchAllocExcludedCount > 0"
+          class="p-2.5 bg-amber-50/80 border border-amber-300 rounded-xl text-xs text-amber-900 flex items-center justify-between"
+        >
+          <div class="flex items-center gap-1.5 font-medium">
+            <span>ℹ️</span>
+            <span>已自動為您排除 <strong>{{ batchAllocExcludedCount }}</strong> 位行政管理人員（校長 / 學年主任），依規範不納入班級排班指派。</span>
+          </div>
+          <span class="text-[11px] text-amber-700 font-bold">行政身分保護</span>
         </div>
 
         <!-- 第一步：統一指定任教年級 -->
@@ -1642,6 +1655,7 @@ async function saveInlineEdits() {
 const batchAllocationDialogVisible = ref(false)
 const batchTargetGrade = ref('4')
 const batchAllocList = ref([])
+const batchAllocExcludedCount = ref(0)
 const isSavingBatchAllocation = ref(false)
 
 function openBatchAllocationModal() {
@@ -1651,12 +1665,25 @@ function openBatchAllocationModal() {
     return
   }
 
-  // 自動根據已選的第一位教師的年級預設，若無則預設 '4'
-  const firstWithGrade = selected.find(t => t.grade && t.grade !== 'all')
+  // 業務核心規則：校長與學年主任為校級行政身分，不得進行班級指派！
+  const eligibleTeachers = selected.filter(t => t.role !== '校長' && t.role !== '學年主任')
+  batchAllocExcludedCount.value = selected.length - eligibleTeachers.length
+
+  if (eligibleTeachers.length === 0) {
+    ElMessage.warning('【校長】與【學年主任】屬於校級行政管理身分，無需亦不得指派至特定班級！請勾選一般授課教師。')
+    return
+  }
+
+  if (batchAllocExcludedCount.value > 0) {
+    ElMessage.info(`已為您自動排除 ${batchAllocExcludedCount.value} 位行政管理人員（校長 / 學年主任），僅為其餘 ${eligibleTeachers.length} 位授課教師進行排班指派。`)
+  }
+
+  // 自動根據合資格教師中已選的第一位教師的年級預設，若無則預設 '4'
+  const firstWithGrade = eligibleTeachers.find(t => t.grade && t.grade !== 'all')
   batchTargetGrade.value = firstWithGrade ? String(firstWithGrade.grade) : '4'
 
-  // 初始化教師清單與預設流水號班級
-  batchAllocList.value = selected.map((t, idx) => {
+  // 初始化教師清單與預設流水號班級 (嚴格只納入合資格的授課教師)
+  batchAllocList.value = eligibleTeachers.map((t, idx) => {
     // 嘗試解析原班級
     let classNum = '0'
     const cMatch = t.assignedClass?.match(/(\d+)[\s*]班/)
@@ -1724,7 +1751,14 @@ async function saveBatchAllocation() {
     const numCharMap = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }
     const chineseGrade = numCharMap[batchTargetGrade.value] || batchTargetGrade.value
 
-    const updates = batchAllocList.value.map(item => {
+    const updates = []
+    batchAllocList.value.forEach(item => {
+      // 絕對防呆：若為校長或學年主任則跳過，確保絕對不指派班級
+      const originalTeacher = allTeacherList.value.find(t => t.id === item.id)
+      if (originalTeacher && (originalTeacher.role === '校長' || originalTeacher.role === '學年主任')) {
+        return
+      }
+
       let newAssignedClass = ''
       let newRole = item.role
 
@@ -1738,14 +1772,14 @@ async function saveBatchAllocation() {
         }
       }
 
-      return {
+      updates.push({
         id: item.id,
         data: {
           grade: batchTargetGrade.value,
           assignedClass: newAssignedClass,
           role: newRole
         }
-      }
+      })
     })
 
     // 呼叫後端/Service批次更新
@@ -1762,8 +1796,9 @@ async function saveBatchAllocation() {
       }
     })
 
-    batchAllocationDialogVisible.value = false
+    // 清除選取狀態
     cancelSelectAll()
+    batchAllocationDialogVisible.value = false
     ElMessage.success(`🎉 已成功完成 ${updates.length} 位教師之 ${batchTargetGrade.value} 年級班級配置！`)
   } catch (err) {
     ElMessage.error('儲存失敗：' + (err.message || '系統發生錯誤'))
