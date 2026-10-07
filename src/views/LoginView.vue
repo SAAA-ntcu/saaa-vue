@@ -7,11 +7,21 @@
 
       <!-- Card Header -->
       <div class="px-8 pt-6 pb-2 text-center">
-        <img
-          :src="logoHorizontal"
-          alt="縣市學生學習能力檢測 Students' Academic Attainment Assessment"
-          class="h-12 sm:h-14 mx-auto mb-3 object-contain"
-        />
+        <div class="inline-flex items-center justify-center gap-3 sm:gap-3.5 mb-3">
+          <img
+            :src="logoIcon"
+            alt="SAAA Logo"
+            class="h-11 sm:h-13 w-auto object-contain shrink-0"
+          />
+          <div class="text-left">
+            <h2 class="text-lg sm:text-xl font-black text-[#203b46] tracking-wide m-0 leading-tight">
+              縣市學生學習能力檢測
+            </h2>
+            <p class="text-[9px] sm:text-[10px] text-[#5f7f6f] uppercase tracking-wider font-bold m-0 mt-0.5 font-sans">
+              Students' Academic Attainment Assessment
+            </p>
+          </div>
+        </div>
         <h3 class="text-xl font-bold text-slate-800 tracking-wider m-0">歡迎登入系統</h3>
         <p class="text-xs text-slate-400 mt-1 mb-0">請選擇您的單位與身分以開始檢測</p>
       </div>
@@ -261,7 +271,7 @@ import { reactive, ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import LoginQaDialog from '../components/common/LoginQaDialog.vue'
-import logoHorizontal from '@/assets/logo/saaa-logo-horizontal.svg'
+import logoIcon from '@/assets/logo/saaa-logo-icon.svg'
 
 const router = useRouter()
 const route = useRoute()

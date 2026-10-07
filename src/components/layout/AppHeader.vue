@@ -3,12 +3,22 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
       <div class="flex items-center justify-between h-16 lg:h-20 relative z-10">
         <!-- Logo and Site Title -->
-        <router-link to="/" class="flex items-center pointer-events-auto no-underline group shrink-0 py-1" title="縣市學生學習能力檢測 - 回首頁">
+        <router-link to="/" class="flex items-center space-x-2.5 sm:space-x-3 pointer-events-auto no-underline group shrink-0 py-1" title="縣市學生學習能力檢測 - 回首頁">
+          <!-- 官方標誌彩色圖示 -->
           <img
-            :src="logoHeader"
-            alt="縣市學生學習能力檢測 Students' Academic Attainment Assessment"
-            class="h-10 sm:h-12 lg:h-14 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]"
+            :src="logoIcon"
+            alt="SAAA Logo"
+            class="h-9 sm:h-11 lg:h-12 w-auto object-contain shrink-0 group-hover:scale-105 transition-transform duration-200"
           />
+          <!-- 向量文字排版（純文字呈現，文字清晰銳利不模糊） -->
+          <div class="flex flex-col justify-center">
+            <h1 class="text-base sm:text-lg lg:text-xl font-black text-[#203b46] tracking-wide group-hover:text-[#52796f] transition-colors leading-tight m-0 select-none">
+              縣市學生學習能力檢測
+            </h1>
+            <p class="text-[9px] sm:text-[10px] text-[#5f7f6f] uppercase tracking-wider font-bold m-0 mt-0.5 select-none font-sans">
+              Students' Academic Attainment Assessment
+            </p>
+          </div>
         </router-link>
 
         <!-- Desktop Navigation & User Section -->
@@ -238,12 +248,16 @@
         <div class="absolute right-0 top-0 bottom-0 w-[85%] max-w-sm bg-white shadow-2xl p-6 flex flex-col overflow-y-auto">
           <!-- Drawer Header -->
           <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
-            <router-link to="/" @click="isMobileMenuOpen = false" class="flex items-center no-underline" title="回首頁">
+            <router-link to="/" @click="isMobileMenuOpen = false" class="flex items-center gap-2.5 no-underline" title="回首頁">
               <img
-                :src="logoHeader"
-                alt="縣市學生學習能力檢測"
-                class="h-8 w-auto object-contain"
+                :src="logoIcon"
+                alt="SAAA Logo"
+                class="h-8 w-auto object-contain shrink-0"
               />
+              <div class="flex flex-col">
+                <span class="text-xs font-black text-[#203b46] leading-tight">縣市學生學習能力檢測</span>
+                <span class="text-[8px] text-[#5f7f6f] uppercase font-bold tracking-wider font-sans">Students' Assessment</span>
+              </div>
             </router-link>
             <button
               type="button"
@@ -411,7 +425,7 @@ import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAuth } from '../../composables/useAuth'
-import logoHeader from '@/assets/logo/saaa-logo-header.svg'
+import logoIcon from '@/assets/logo/saaa-logo-icon.svg'
 
 const route = useRoute()
 const router = useRouter()
