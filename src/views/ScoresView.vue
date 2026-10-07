@@ -468,14 +468,14 @@
           </div>
         </div>
 
-        <div class="w-full overflow-x-auto scrollbar-none" @mouseleave="hoveredPoint = null">
-          <div class="min-w-[600px] relative">
+        <div class="w-full overflow-x-auto scrollbar-thin py-2" @mouseleave="hoveredPoint = null">
+          <div class="min-w-[720px] relative px-1">
             <svg :viewBox="`0 0 ${chartWidth} ${chartHeight}`" class="w-full h-auto overflow-visible">
               <!-- Y Axis labels -->
               <g class="text-[10px] fill-slate-400 font-mono">
-                <text x="30" :y="chartPadding.top + 4" text-anchor="end">100%</text>
-                <text x="30" :y="(chartHeight - chartPadding.bottom + chartPadding.top) / 2 + 4" text-anchor="end">50%</text>
-                <text x="30" :y="chartHeight - chartPadding.bottom + 4" text-anchor="end">0%</text>
+                <text :x="chartPadding.left - 10" :y="chartPadding.top + 4" text-anchor="end">100%</text>
+                <text :x="chartPadding.left - 10" :y="(chartHeight - chartPadding.bottom + chartPadding.top) / 2 + 4" text-anchor="end">50%</text>
+                <text :x="chartPadding.left - 10" :y="chartHeight - chartPadding.bottom + 4" text-anchor="end">0%</text>
               </g>
               
               <!-- Grid lines -->
@@ -508,10 +508,10 @@
               <!-- Points and Indicators -->
               <g v-for="p in chartPoints" :key="'pt-'+p.data.qNum">
                 <!-- X Axis labels -->
-                <text :x="p.x" :y="chartHeight - 10" text-anchor="middle" class="text-[10px] fill-slate-500 font-mono">{{ p.data.qNum }}</text>
+                <text :x="p.x" :y="chartHeight - 12" text-anchor="middle" class="text-[10px] fill-slate-500 font-mono">{{ p.data.qNum }}</text>
                 
                 <!-- Highlight weak questions on X axis -->
-                <circle v-if="p.isWeak" :cx="p.x" :cy="chartHeight - 22" r="3" fill="#e07a5f" />
+                <circle v-if="p.isWeak" :cx="p.x" :cy="chartHeight - 26" r="3" fill="#e07a5f" />
 
                 <!-- Hover state styling -->
                 <g v-if="hoveredPoint && hoveredPoint.data.qNum === p.data.qNum">
@@ -530,21 +530,69 @@
               </g>
             </svg>
             
-            <!-- Tooltip -->
-            <div v-if="hoveredPoint" class="absolute z-10 bg-slate-800 text-white p-2.5 rounded-lg shadow-xl text-xs pointer-events-none transform -translate-x-1/2 -translate-y-full" 
-                 :style="{ left: `${(hoveredPoint.x / chartWidth) * 100}%`, top: `${(hoveredPoint.schoolY / chartHeight) * 100}%`, marginTop: '-12px' }">
-              <div class="font-bold mb-1 border-b border-slate-600 pb-1">第 {{ hoveredPoint.data.qNum }} 題</div>
-              <div class="grid grid-cols-2 gap-x-3 gap-y-1">
-                <span class="text-slate-300">學校:</span> <span class="font-mono text-[#a8d5c8] font-bold">{{ hoveredPoint.data.schoolAcc }}%</span>
-                <span class="text-slate-300">縣市:</span> <span class="font-mono">{{ hoveredPoint.data.countyAcc }}%</span>
-                <span class="text-slate-300">整體:</span> <span class="font-mono">{{ hoveredPoint.data.overallAcc }}%</span>
-                <span class="text-slate-300">落差:</span> 
-                <span class="font-mono font-bold" :class="Number(hoveredPoint.data.schoolAcc) - Number(hoveredPoint.data.countyAcc) < 0 ? 'text-[#e07a5f]' : 'text-[#a8d5c8]'">
-                  {{ (Number(hoveredPoint.data.schoolAcc) - Number(hoveredPoint.data.countyAcc)) > 0 ? '+' : '' }}{{ (Number(hoveredPoint.data.schoolAcc) - Number(hoveredPoint.data.countyAcc)).toFixed(1) }}%
-                </span>
+            <!-- Tooltip (自動防切邊：上下自適應翻轉、左右安全邊界錨定) -->
+            <div
+              v-if="hoveredPoint && tooltipConfig"
+              class="absolute z-30 bg-slate-900/95 backdrop-blur-sm text-white px-3.5 py-2.5 rounded-xl shadow-2xl border border-slate-700/80 text-xs pointer-events-none transition-all duration-150 min-w-[170px]"
+              :class="[
+                tooltipConfig.isUpperHalf ? 'mt-3.5 translate-y-0' : '-mt-3.5 -translate-y-full',
+                tooltipConfig.horizontalAlign === 'left' ? 'translate-x-[-15%]' : tooltipConfig.horizontalAlign === 'right' ? 'translate-x-[-85%]' : '-translate-x-1/2'
+              ]"
+              :style="{
+                left: `${tooltipConfig.xPercent}%`,
+                top: `${tooltipConfig.yPercent}%`
+              }"
+            >
+              <!-- 題號與評量主題標題 -->
+              <div class="flex items-center justify-between gap-2 mb-1.5 border-b border-slate-700/80 pb-1.5">
+                <span class="font-bold text-emerald-300">第 {{ hoveredPoint.data.qNum }} 題</span>
+                <span class="text-[10px] text-slate-300 bg-slate-800 px-1.5 py-0.5 rounded">{{ hoveredPoint.data.topic }}</span>
               </div>
-              <!-- Small arrow -->
-              <div class="absolute left-1/2 bottom-0 transform -translate-x-1/2 translate-y-full border-4 border-transparent border-t-slate-800"></div>
+
+              <!-- 答對率指標矩陣 -->
+              <div class="grid grid-cols-2 gap-x-3 gap-y-1 font-mono text-[11px]">
+                <div class="flex justify-between items-center text-slate-300">
+                  <span>學校:</span>
+                  <span class="font-bold text-emerald-400">{{ hoveredPoint.data.schoolAcc }}%</span>
+                </div>
+                <div class="flex justify-between items-center text-slate-300">
+                  <span>縣市:</span>
+                  <span class="text-amber-200">{{ hoveredPoint.data.countyAcc }}%</span>
+                </div>
+                <div class="flex justify-between items-center text-slate-400">
+                  <span>整體:</span>
+                  <span>{{ hoveredPoint.data.overallAcc }}%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-400">落差:</span>
+                  <span
+                    class="font-bold"
+                    :class="Number(hoveredPoint.data.schoolAcc) - Number(hoveredPoint.data.countyAcc) < 0 ? 'text-rose-400' : 'text-emerald-400'"
+                  >
+                    {{ (Number(hoveredPoint.data.schoolAcc) - Number(hoveredPoint.data.countyAcc)) > 0 ? '+' : '' }}{{ (Number(hoveredPoint.data.schoolAcc) - Number(hoveredPoint.data.countyAcc)).toFixed(1) }}%
+                  </span>
+                </div>
+              </div>
+
+              <!-- 指示箭頭 (在上/在下自動反轉) -->
+              <div
+                v-if="tooltipConfig.isUpperHalf"
+                class="absolute -top-1.5 w-0 h-0 border-x-[6px] border-x-transparent border-b-[6px] border-b-slate-900"
+                :class="{
+                  'left-1/2 -translate-x-1/2': tooltipConfig.horizontalAlign === 'center',
+                  'left-5': tooltipConfig.horizontalAlign === 'left',
+                  'right-5': tooltipConfig.horizontalAlign === 'right'
+                }"
+              ></div>
+              <div
+                v-else
+                class="absolute -bottom-1.5 w-0 h-0 border-x-[6px] border-x-transparent border-t-[6px] border-t-slate-900"
+                :class="{
+                  'left-1/2 -translate-x-1/2': tooltipConfig.horizontalAlign === 'center',
+                  'left-5': tooltipConfig.horizontalAlign === 'left',
+                  'right-5': tooltipConfig.horizontalAlign === 'right'
+                }"
+              ></div>
             </div>
           </div>
         </div>
@@ -1098,9 +1146,9 @@ function sortBy(key) {
 
 const hoveredPoint = ref(null)
 
-const chartWidth = 800;
-const chartHeight = 260;
-const chartPadding = { top: 20, right: 20, bottom: 30, left: 40 };
+const chartWidth = 860;
+const chartHeight = 290;
+const chartPadding = { top: 35, right: 35, bottom: 45, left: 55 };
 
 const chartPoints = computed(() => {
   const data = analysisData.value;
@@ -1123,6 +1171,29 @@ const chartPoints = computed(() => {
       isWeak: (Number(d.schoolAcc) - Number(d.countyAcc)) <= -10
     };
   });
+});
+
+const tooltipConfig = computed(() => {
+  if (!hoveredPoint.value) return null;
+  const p = hoveredPoint.value;
+  
+  // 當點位於上半部 (schoolY <= 140，即答對率 >= 50%)，將提示框翻轉到點的下方顯示，防止頂部被切邊
+  const isUpperHalf = p.schoolY <= 140;
+  
+  // 左右邊界安全錨定，防止最左題(Q1~Q3)或最右題(Q28~Q30)溢出容器被裁切
+  let horizontalAlign = 'center';
+  if (p.x < 150) {
+    horizontalAlign = 'left';
+  } else if (p.x > chartWidth - 150) {
+    horizontalAlign = 'right';
+  }
+  
+  return {
+    isUpperHalf,
+    horizontalAlign,
+    xPercent: (p.x / chartWidth) * 100,
+    yPercent: (p.schoolY / chartHeight) * 100
+  };
 });
 
 const chartPaths = computed(() => {
