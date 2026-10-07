@@ -57,6 +57,30 @@
           </select>
         </div>
 
+        <!-- 班級選擇器 (校長、校管理者、科任等可切換各班或學校總覽；導師鎖定專屬班級) -->
+        <div class="flex items-center gap-1.5 text-xs">
+          <label class="font-bold text-slate-500">班級</label>
+          <select
+            :value="classSelectValue"
+            @change="handleClassSelectChange($event.target.value)"
+            :disabled="isHomeroomTeacher"
+            class="h-9 px-2.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 outline-none focus:border-[#52796f] cursor-pointer disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+            :title="isHomeroomTeacher ? '導師身分僅限檢視任教班級' : '選擇指定班級進行向度診斷或檢視全校總覽'"
+          >
+            <!-- 學校總覽選項 (非導師可選) -->
+            <option v-if="!isHomeroomTeacher" value="all">
+              全校各班 (學校總覽)
+            </option>
+            <option
+              v-for="cls in availableClasses"
+              :key="cls.value"
+              :value="cls.value"
+            >
+              {{ cls.label }}
+            </option>
+          </select>
+        </div>
+
         <div class="flex items-center gap-1.5 text-xs">
           <label class="font-bold text-slate-500">科目</label>
           <select
@@ -232,7 +256,7 @@
       <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs">
         <div class="flex items-center justify-between flex-wrap gap-3 mb-4 pb-3 border-b border-slate-100">
           <div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
               <button
                 v-if="!isHomeroomTeacher"
                 type="button"
@@ -245,10 +269,37 @@
                 <span>返回各班比較</span>
               </button>
               <h3 class="text-base font-bold text-slate-800 m-0">
-                班級成績統計 · {{ state.school }} {{ inquiryState.classObj }} 班答對率向度分析
+                班級成績統計 · {{ state.school }}
+                <span class="text-[#52796f] font-black">{{ inquiryState.classObj }} 班</span>
+                答對率向度分析
               </h3>
             </div>
-            <p class="text-xs text-slate-400 mt-1 m-0">
+
+            <!-- 校長、校管理者快捷切換班級按鈕群 (Class Switcher Pills) -->
+            <div v-if="!isHomeroomTeacher" class="flex items-center gap-2 mt-2.5 flex-wrap">
+              <span class="text-xs font-bold text-slate-500 flex items-center gap-1">
+                <svg class="w-3.5 h-3.5 text-[#52796f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                切換班級：
+              </span>
+              <div class="flex items-center gap-1 bg-slate-100/90 p-0.5 rounded-lg border border-slate-200/70 flex-wrap">
+                <button
+                  v-for="cls in availableClasses"
+                  :key="'pill-' + cls.value"
+                  type="button"
+                  @click="drillToClass(cls.value)"
+                  class="px-2 py-0.5 rounded-md text-xs font-bold transition cursor-pointer"
+                  :class="inquiryState.classObj === cls.value
+                    ? 'bg-[#52796f] text-white shadow-2xs'
+                    : 'text-slate-600 hover:bg-white hover:text-slate-900'"
+                >
+                  {{ cls.value }} 班
+                </button>
+              </div>
+            </div>
+
+            <p class="text-xs text-slate-400 mt-1.5 m-0">
               包含全校、縣市與總參與平均對照，可快速鎖定本班需補救加強之關鍵向度。
             </p>
           </div>
@@ -706,44 +757,110 @@ const schoolAvg = 93
 const countyAvg = 86
 const nationalAvg = 84
 
-// Mock Class List for Chart 2
-const classStats = [
-  { name: '301', rate: 95 },
-  { name: '302', rate: 91 },
-  { name: '303', rate: 84 },
-  { name: '304', rate: 95 },
-  { name: '305', rate: 95 },
-  { name: '306', rate: 84 },
-  { name: '307', rate: 96 },
-  { name: '308', rate: 96 }
-]
+// 各年級動態班級列表 (Chart 2 及班級切換共用)
+const classStats = computed(() => {
+  const g = inquiryState.grade || '3'
+  const rates = [95, 91, 84, 95, 95, 84, 96, 96]
+  return Array.from({ length: 8 }, (_, i) => ({
+    name: `${g}0${i + 1}`,
+    rate: rates[i % rates.length]
+  }))
+})
 
-// Mock Dimension Data for Chart 3 (班級成績統計)
-const classDimensions = [
-  { name: '總答對率', national: 70, county: 72, school: 77, classVal: 76 },
-  { name: '形音知識', national: 84, county: 86, school: 93, classVal: 95 },
-  { name: '字詞知識', national: 62, county: 63, school: 68, classVal: 73 },
-  { name: '語法知識', national: 78, county: 79, school: 83, classVal: 82 },
-  { name: '修辭知識', national: 65, county: 65, school: 67, classVal: 63 },
-  { name: '章法知識', national: 49, county: 48, school: 54, classVal: 54 },
-  { name: '文體知識', national: 65, county: 65, school: 72, classVal: 68 },
-  { name: '字詞理解', national: 73, county: 74, school: 80, classVal: 75 },
-  { name: '句子理解', national: 83, county: 84, school: 89, classVal: 93 },
-  { name: '段落理解', national: 71, county: 73, school: 77, classVal: 79 },
-  { name: '篇章理解', national: 63, county: 66, school: 73, classVal: 71 }
-]
+// 可選定之班級選單 (校長、校管、學年主任可選全校各班；導師僅能選擇其任教班級)
+const availableClasses = computed(() => {
+  if (isHomeroomTeacher.value) {
+    return [{ value: inquiryState.classObj, label: `${inquiryState.classObj} 班` }]
+  }
+  const g = inquiryState.grade || '3'
+  return Array.from({ length: 8 }, (_, i) => {
+    const code = `${g}0${i + 1}`
+    return {
+      value: code,
+      label: `${code} 班`
+    }
+  })
+})
 
-// Mock Students in the Selected Class
-const studentList = [
-  { seat: '01', name: '陳小明', rate: 33, prCounty: 4, prNation: 5, weak: '篇章理解' },
-  { seat: '02', name: '林志豪', rate: 78, prCounty: 65, prNation: 68, weak: null },
-  { seat: '03', name: '張雅晴', rate: 92, prCounty: 94, prNation: 95, weak: null },
-  { seat: '04', name: '李佳穎', rate: 55, prCounty: 32, prNation: 35, weak: '章法知識' },
-  { seat: '05', name: '王宗憲', rate: 85, prCounty: 80, prNation: 82, weak: null },
-  { seat: '06', name: '黃冠宇', rate: 46, prCounty: 18, prNation: 21, weak: '語法知識' },
-  { seat: '07', name: '趙子涵', rate: 98, prCounty: 99, prNation: 99, weak: null },
-  { seat: '08', name: '孫佩珊', rate: 88, prCounty: 85, prNation: 87, weak: null }
-]
+// 頂部下拉選單的當前綁定值 ('all' 代表學校總覽，或各班代碼如 '306')
+const classSelectValue = computed(() => {
+  if (isHomeroomTeacher.value) {
+    return inquiryState.classObj
+  }
+  if (inquiryState.level === 'school') {
+    return 'all'
+  }
+  return inquiryState.classObj
+})
+
+function handleClassSelectChange(val) {
+  if (isHomeroomTeacher.value) return
+  if (val === 'all') {
+    inquiryState.level = 'school'
+  } else {
+    inquiryState.classObj = val
+    inquiryState.level = 'class'
+  }
+}
+
+// 當年級變更時，若選定的班級代碼不屬於該年級，自動調整至新的一班
+watch(() => inquiryState.grade, (newGrade) => {
+  if (!isHomeroomTeacher.value && inquiryState.classObj) {
+    const classNum = inquiryState.classObj.slice(-2) || '01'
+    inquiryState.classObj = `${newGrade}${classNum}`
+  }
+})
+
+// 當切換選定班級時，若學生抽屜開啟中，自動切換至新班級的第 1 位學生
+watch(() => inquiryState.classObj, () => {
+  if (studentDrawerVisible.value && studentList.value.length > 0) {
+    activeStudent.value = studentList.value[0]
+  }
+})
+
+// 各班向度統計數據 (動態隨選定之班級計算)
+const classDimensions = computed(() => {
+  const cNum = parseInt(inquiryState.classObj?.slice(-2) || '1', 10)
+  return [
+    { name: '總答對率', national: 70, county: 72, school: 77, classVal: Math.min(100, Math.max(50, 76 + ((cNum * 7) % 15) - 7)) },
+    { name: '形音知識', national: 84, county: 86, school: 93, classVal: Math.min(100, Math.max(50, 95 - ((cNum * 5) % 12))) },
+    { name: '字詞知識', national: 62, county: 63, school: 68, classVal: Math.min(100, Math.max(50, 73 + ((cNum * 3) % 10))) },
+    { name: '語法知識', national: 78, county: 79, school: 83, classVal: Math.min(100, Math.max(50, 82 - ((cNum * 4) % 10))) },
+    { name: '修辭知識', national: 65, county: 65, school: 67, classVal: Math.min(100, Math.max(50, 63 + ((cNum * 6) % 12))) },
+    { name: '章法知識', national: 49, county: 48, school: 54, classVal: Math.min(100, Math.max(40, 54 - ((cNum * 2) % 8))) },
+    { name: '文體知識', national: 65, county: 65, school: 72, classVal: Math.min(100, Math.max(50, 68 + ((cNum * 5) % 10))) },
+    { name: '字詞理解', national: 73, county: 74, school: 80, classVal: Math.min(100, Math.max(50, 75 - ((cNum * 3) % 8))) },
+    { name: '句子理解', national: 83, county: 84, school: 89, classVal: Math.min(100, Math.max(50, 93 - ((cNum * 4) % 10))) },
+    { name: '段落理解', national: 71, county: 73, school: 77, classVal: Math.min(100, Math.max(50, 79 + ((cNum * 2) % 9))) },
+    { name: '篇章理解', national: 63, county: 66, school: 73, classVal: Math.min(100, Math.max(50, 71 - ((cNum * 5) % 10))) }
+  ]
+})
+
+// 各班學生名冊 (動態隨選定之班級計算)
+const studentList = computed(() => {
+  const cNum = parseInt(inquiryState.classObj?.slice(-2) || '1', 10)
+  const lastNames = ['陳', '林', '黃', '張', '李', '王', '吳', '劉', '蔡', '楊']
+  const firstNames = ['小明', '志豪', '雅晴', '佳穎', '宗憲', '冠宇', '子涵', '佩珊']
+  const weaks = ['篇章理解', null, null, '章法知識', null, '語法知識', null, null]
+
+  return Array.from({ length: 8 }, (_, i) => {
+    const seat = String(i + 1).padStart(2, '0')
+    const nameIdx = (i + cNum) % lastNames.length
+    const name = `${lastNames[nameIdx]}${firstNames[i % firstNames.length]}`
+    const rate = Math.min(99, Math.max(33, 75 + ((i * 17 + cNum * 13) % 45) - 20))
+    const prCounty = Math.min(99, Math.max(4, rate - 2 + (i % 5)))
+    const prNation = Math.min(99, Math.max(5, rate + (cNum % 3)))
+    const weak = rate < 60 ? (weaks[i] || '篇章理解') : null
+    return {
+      seat,
+      name,
+      rate,
+      prCounty,
+      prNation,
+      weak
+    }
+  })
+})
 
 // Mock Breakdown table for the active student (對應圖一清單)
 const studentBreakdown = [
@@ -823,10 +940,10 @@ function openStudentDrawer(st) {
 
 function switchStudent(offset) {
   if (!activeStudent.value) return
-  const curIdx = studentList.findIndex(s => s.seat === activeStudent.value.seat)
+  const curIdx = studentList.value.findIndex(s => s.seat === activeStudent.value.seat)
   const nextIdx = curIdx + offset
-  if (nextIdx >= 0 && nextIdx < studentList.length) {
-    activeStudent.value = studentList[nextIdx]
+  if (nextIdx >= 0 && nextIdx < studentList.value.length) {
+    activeStudent.value = studentList.value[nextIdx]
     scrollToTop()
   }
 }
