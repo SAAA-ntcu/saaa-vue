@@ -151,8 +151,8 @@
 
         <!-- 互動棒棒糖點圖 (Lollipop Chart + 基準帶，聚焦 70% ~ 100%) -->
         <div class="w-full overflow-x-auto scrollbar-none py-2">
-          <div class="min-w-[700px] h-72 relative">
-            <svg class="w-full h-full overflow-visible" viewBox="0 0 760 260">
+          <div class="min-w-[700px] h-64 relative">
+            <svg class="w-full h-full overflow-visible" viewBox="0 0 760 250">
               <!-- 背景基準區間帶 (Reference Bands) -->
               <!-- 1. 校均以上優質表現區間 (≥ 93%) -->
               <rect
@@ -236,7 +236,7 @@
               <g
                 v-for="(cls, idx) in classStats"
                 :key="cls.name"
-                class="cursor-pointer group"
+                class="cursor-pointer"
                 @click="drillToClass(cls.name)"
               >
                 <!-- 桿身 (Stem) -->
@@ -245,19 +245,9 @@
                   :y1="getRateY(70)"
                   :x2="85 + idx * 72"
                   :y2="getRateY(cls.rate)"
-                  class="stroke-slate-300 group-hover:stroke-[#52796f] transition-colors"
+                  class="stroke-slate-300"
                   stroke-width="2.5"
                   stroke-linecap="round"
-                />
-
-                <!-- 當前選定班級光環 (Active Ring) -->
-                <circle
-                  v-if="inquiryState.classObj === cls.name"
-                  :cx="85 + idx * 72"
-                  :cy="getRateY(cls.rate)"
-                  r="18"
-                  class="fill-blue-100/70 stroke-blue-400"
-                  stroke-width="2"
                 />
 
                 <!-- 圓點本體 (Circle Head) -->
@@ -265,10 +255,10 @@
                   :cx="85 + idx * 72"
                   :cy="getRateY(cls.rate)"
                   r="14"
-                  class="transition-transform group-hover:scale-110 shadow-sm"
+                  class="shadow-sm"
                   :class="inquiryState.classObj === cls.name
                     ? 'fill-[#274c77] stroke-white stroke-2'
-                    : 'fill-[#52796f] group-hover:fill-[#3e5c54] stroke-white stroke-2'"
+                    : 'fill-[#52796f] stroke-white stroke-2'"
                 />
 
                 <!-- 圓心百分比數字 -->
@@ -286,23 +276,12 @@
                   :x="85 + idx * 72"
                   y="235"
                   text-anchor="middle"
-                  class="text-xs font-bold transition-colors select-none"
+                  class="text-xs font-bold select-none"
                   :class="inquiryState.classObj === cls.name
-                    ? 'fill-blue-800 font-black'
-                    : 'fill-slate-600 group-hover:fill-[#52796f]'"
+                    ? 'fill-[#274c77] font-black'
+                    : 'fill-slate-600'"
                 >
                   {{ cls.name }}班
-                </text>
-
-                <!-- 當前選定班級標籤標示 -->
-                <text
-                  v-if="inquiryState.classObj === cls.name"
-                  :x="85 + idx * 72"
-                  y="250"
-                  text-anchor="middle"
-                  class="text-[10px] font-bold fill-blue-600 select-none"
-                >
-                  (目前選定)
                 </text>
               </g>
             </svg>
