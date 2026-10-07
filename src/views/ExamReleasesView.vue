@@ -382,7 +382,8 @@ import { examService } from '../services/examService'
 import {
   examYears,
   examSubjects,
-  examGradesHeader
+  examGradesHeader,
+  getExamDownloadUrl
 } from '../data/examData'
 import { downloadMultipleFiles } from '../utils/batchDownloader'
 

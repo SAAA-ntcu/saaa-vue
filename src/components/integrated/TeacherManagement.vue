@@ -1315,6 +1315,10 @@ async function batchResetTeacherPw() {
   ElMessage.success(`已重設所選 ${selected.length} 位教師密碼，並發送臨時密碼通知信！`)
 }
 
+function resetTeacherPw(name) {
+  ElMessage.success(`已重設【${name}】教師密碼，已發送臨時密碼至其註冊信箱！`)
+}
+
 // ==========================================
 // 彈窗 1：新增 / 編輯教師帳號 (雙開關正交架構)
 // ==========================================
