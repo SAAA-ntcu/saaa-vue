@@ -124,107 +124,202 @@
               </h3>
             </div>
             <p class="text-xs text-slate-400 mt-1 m-0">
-              {{ state.school }} {{ inquiryState.grade }}年級 {{ inquiryState.subject }} · 所對準向度：<strong class="text-slate-700">{{ inquiryState.dimension }}</strong>（點擊任一長條即可直接進入該班診斷）
+              {{ state.school }} {{ inquiryState.grade }}年級 {{ inquiryState.subject }} · 所對準向度：<strong class="text-slate-700">{{ inquiryState.dimension }}</strong>（點選任一班級圓點即可直接進入該班向度診斷）
             </p>
           </div>
 
-          <!-- 圖例 (圖二參考線) -->
+          <!-- 圖例 (棒棒糖圓點與參考基準帶) -->
           <div class="flex items-center gap-3 text-xs flex-wrap font-medium">
             <div class="flex items-center gap-1.5">
-              <span class="w-3.5 h-3.5 rounded bg-[#6096ba]/80"></span>
+              <span class="w-3 h-3 rounded-full bg-[#52796f]"></span>
               <span class="text-slate-600">各班平均(%)</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <span class="w-4 h-0.5 border-t-2 border-dashed border-[#e76f51]"></span>
-              <span class="text-[#e76f51] font-bold">校平均 ({{ schoolAvg }}%)</span>
+              <span class="w-3.5 h-2 rounded bg-emerald-100 border border-emerald-300"></span>
+              <span class="text-emerald-700 font-bold">校平均 ({{ schoolAvg }}%)</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <span class="w-4 h-0.5 border-t-2 border-dashed border-[#2a9d8f]"></span>
-              <span class="text-[#2a9d8f] font-bold">縣市平均 ({{ countyAvg }}%)</span>
+              <span class="w-3.5 h-2 rounded bg-teal-50 border border-teal-300"></span>
+              <span class="text-teal-700 font-bold">縣市平均 ({{ countyAvg }}%)</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <span class="w-4 h-0.5 border-t-2 border-dashed border-[#f72585]"></span>
-              <span class="text-[#f72585] font-bold">總參與平均 ({{ nationalAvg }}%)</span>
+              <span class="w-3.5 h-0.5 border-t-2 border-dashed border-slate-400"></span>
+              <span class="text-slate-500 font-medium">總參與 ({{ nationalAvg }}%)</span>
             </div>
           </div>
         </div>
 
-        <!-- 互動柱狀圖 (純 SVG 繪製，無外部依賴且支援點擊下鑽) -->
+        <!-- 互動棒棒糖點圖 (Lollipop Chart + 基準帶，聚焦 70% ~ 100%) -->
         <div class="w-full overflow-x-auto scrollbar-none py-2">
           <div class="min-w-[700px] h-72 relative">
             <svg class="w-full h-full overflow-visible" viewBox="0 0 760 260">
-              <!-- Y 軸刻度線 (0% ~ 100%) -->
-              <g class="text-[10px] fill-slate-400 font-mono">
-                <text x="35" y="25" text-anchor="end">100%</text>
-                <text x="35" y="75" text-anchor="end">75%</text>
-                <text x="35" y="125" text-anchor="end">50%</text>
-                <text x="35" y="175" text-anchor="end">25%</text>
-                <text x="35" y="225" text-anchor="end">0%</text>
+              <!-- 背景基準區間帶 (Reference Bands) -->
+              <!-- 1. 校均以上優質表現區間 (≥ 93%) -->
+              <rect
+                x="50"
+                :y="getRateY(100)"
+                width="675"
+                :height="getRateY(schoolAvg) - getRateY(100)"
+                fill="#f0fdf4"
+                rx="6"
+              />
+              <!-- 2. 縣市平均 ~ 校平均常模區間 (86% ~ 93%) -->
+              <rect
+                x="50"
+                :y="getRateY(schoolAvg)"
+                width="675"
+                :height="getRateY(countyAvg) - getRateY(schoolAvg)"
+                fill="#f8fafc"
+                rx="4"
+              />
+
+              <!-- Y 軸刻度線 (70% ~ 100%) -->
+              <g class="text-[10px] fill-slate-400 font-mono" text-anchor="end">
+                <text x="42" :y="getRateY(100) + 4">100%</text>
+                <text x="42" :y="getRateY(90) + 4">90%</text>
+                <text x="42" :y="getRateY(80) + 4">80%</text>
+                <text x="42" :y="getRateY(70) + 4">70%</text>
               </g>
 
               <!-- 網格背景線 -->
               <g stroke="#f1f5f9" stroke-width="1">
-                <line x1="45" y1="20" x2="740" y2="20" />
-                <line x1="45" y1="70" x2="740" y2="70" />
-                <line x1="45" y1="120" x2="740" y2="120" />
-                <line x1="45" y1="170" x2="740" y2="170" />
-                <line x1="45" y1="220" x2="740" y2="220" stroke="#cbd5e1" stroke-width="1.5" />
+                <line x1="50" :y1="getRateY(100)" x2="725" :y2="getRateY(100)" stroke-dasharray="2 4" />
+                <line x1="50" :y1="getRateY(90)" x2="725" :y2="getRateY(90)" stroke-dasharray="2 4" />
+                <line x1="50" :y1="getRateY(80)" x2="725" :y2="getRateY(80)" stroke-dasharray="2 4" />
+                <line x1="50" :y1="getRateY(70)" x2="725" :y2="getRateY(70)" stroke="#cbd5e1" stroke-width="1.5" />
               </g>
 
-              <!-- 3條水平參考基準線 (對應圖二) -->
-              <!-- 校平均線 (Orange) -->
-              <line x1="45" :y1="220 - (schoolAvg * 2)" x2="740" :y2="220 - (schoolAvg * 2)" stroke="#e76f51" stroke-width="2" stroke-dasharray="6 4" />
-              <!-- 縣市平均線 (Green) -->
-              <line x1="45" :y1="220 - (countyAvg * 2)" x2="740" :y2="220 - (countyAvg * 2)" stroke="#2a9d8f" stroke-width="2" stroke-dasharray="6 4" />
-              <!-- 總參與平均線 (Pink) -->
-              <line x1="45" :y1="220 - (nationalAvg * 2)" x2="740" :y2="220 - (nationalAvg * 2)" stroke="#f72585" stroke-width="2" stroke-dasharray="6 4" />
+              <!-- 水平參考基準線與標籤 -->
+              <!-- 校平均線 (Emerald) -->
+              <line
+                x1="50"
+                :y1="getRateY(schoolAvg)"
+                x2="670"
+                :y2="getRateY(schoolAvg)"
+                stroke="#10b981"
+                stroke-width="1.5"
+                stroke-dasharray="5 3"
+              />
+              <text x="674" :y="getRateY(schoolAvg) + 4" class="text-[10px] font-bold fill-emerald-700">
+                校均 {{ schoolAvg }}%
+              </text>
 
-              <!-- 各班長條柱 (301 ~ 308) -->
-              <g v-for="(cls, idx) in classStats" :key="cls.name">
-                <!-- 柱體本體 (點選下鑽) -->
-                <rect
-                  :x="75 + idx * 82"
-                  :y="220 - (cls.rate * 2)"
-                  width="44"
-                  :height="cls.rate * 2"
-                  rx="6"
-                  class="cursor-pointer transition-all duration-200 fill-[#6096ba]/80 hover:fill-[#274c77] hover:opacity-100"
-                  @click="drillToClass(cls.name)"
+              <!-- 縣市平均線 (Teal) -->
+              <line
+                x1="50"
+                :y1="getRateY(countyAvg)"
+                x2="670"
+                :y2="getRateY(countyAvg)"
+                stroke="#0d9488"
+                stroke-width="1.5"
+                stroke-dasharray="5 3"
+              />
+              <text x="674" :y="getRateY(countyAvg) + 4" class="text-[10px] font-bold fill-teal-700">
+                縣均 {{ countyAvg }}%
+              </text>
+
+              <!-- 總參與平均線 (Slate) -->
+              <line
+                x1="50"
+                :y1="getRateY(nationalAvg)"
+                x2="670"
+                :y2="getRateY(nationalAvg)"
+                stroke="#94a3b8"
+                stroke-width="1.2"
+                stroke-dasharray="3 3"
+              />
+              <text x="674" :y="getRateY(nationalAvg) + 4" class="text-[10px] font-medium fill-slate-500">
+                總均 {{ nationalAvg }}%
+              </text>
+
+              <!-- 各班棒棒糖 (軸線 Stem + 頂端圓點 Head) -->
+              <g
+                v-for="(cls, idx) in classStats"
+                :key="cls.name"
+                class="cursor-pointer group"
+                @click="drillToClass(cls.name)"
+              >
+                <!-- 桿身 (Stem) -->
+                <line
+                  :x1="85 + idx * 72"
+                  :y1="getRateY(70)"
+                  :x2="85 + idx * 72"
+                  :y2="getRateY(cls.rate)"
+                  class="stroke-slate-300 group-hover:stroke-[#52796f] transition-colors"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
                 />
-                <!-- 柱頂百分比文字 -->
+
+                <!-- 當前選定班級光環 (Active Ring) -->
+                <circle
+                  v-if="inquiryState.classObj === cls.name"
+                  :cx="85 + idx * 72"
+                  :cy="getRateY(cls.rate)"
+                  r="18"
+                  class="fill-blue-100/70 stroke-blue-400"
+                  stroke-width="2"
+                />
+
+                <!-- 圓點本體 (Circle Head) -->
+                <circle
+                  :cx="85 + idx * 72"
+                  :cy="getRateY(cls.rate)"
+                  r="14"
+                  class="transition-transform group-hover:scale-110 shadow-sm"
+                  :class="inquiryState.classObj === cls.name
+                    ? 'fill-[#274c77] stroke-white stroke-2'
+                    : 'fill-[#52796f] group-hover:fill-[#3e5c54] stroke-white stroke-2'"
+                />
+
+                <!-- 圓心百分比數字 -->
                 <text
-                  :x="75 + idx * 82 + 22"
-                  :y="220 - (cls.rate * 2) - 6"
+                  :x="85 + idx * 72"
+                  :y="getRateY(cls.rate) + 4"
                   text-anchor="middle"
-                  class="text-[11px] font-bold font-mono fill-slate-700"
+                  class="text-[11px] font-bold font-mono fill-white pointer-events-none select-none"
                 >
                   {{ cls.rate }}%
                 </text>
 
                 <!-- X 軸班級標籤 -->
                 <text
-                  :x="75 + idx * 82 + 22"
-                  y="242"
+                  :x="85 + idx * 72"
+                  y="235"
                   text-anchor="middle"
-                  class="text-xs font-bold fill-slate-600 cursor-pointer hover:fill-[#52796f]"
-                  @click="drillToClass(cls.name)"
+                  class="text-xs font-bold transition-colors select-none"
+                  :class="inquiryState.classObj === cls.name
+                    ? 'fill-blue-800 font-black'
+                    : 'fill-slate-600 group-hover:fill-[#52796f]'"
                 >
                   {{ cls.name }}班
+                </text>
+
+                <!-- 當前選定班級標籤標示 -->
+                <text
+                  v-if="inquiryState.classObj === cls.name"
+                  :x="85 + idx * 72"
+                  y="250"
+                  text-anchor="middle"
+                  class="text-[10px] font-bold fill-blue-600 select-none"
+                >
+                  (目前選定)
                 </text>
               </g>
             </svg>
           </div>
         </div>
 
-        <div class="mt-3 p-3 bg-amber-50/70 border border-amber-200/70 rounded-xl flex items-center justify-between text-xs text-amber-900 flex-wrap gap-2">
+        <!-- 友善專業診斷引導提示 (不標籤化落後班級，避免爭議) -->
+        <div class="mt-3 p-3 bg-slate-50 border border-slate-200/90 rounded-xl flex items-center justify-between text-xs text-slate-700 flex-wrap gap-2">
           <div class="flex items-center gap-2">
-            <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span><strong>303 班</strong> 與 <strong>306 班</strong> 答對率低於縣市平均線（86%），建議點擊該班進行向度弱點診斷。</span>
+            <span class="w-2 h-2 rounded-full bg-[#52796f] shrink-0"></span>
+            <span>
+              <strong>向度診斷指引：</strong>
+              背景綠色區間為校均標（{{ schoolAvg }}%）以上，淺色區間為縣市平均（{{ countyAvg }}%）。點選任一班級圓點即可進入該班查看學生名冊與「形音、字詞、語法、篇章」各向度分析。
+            </span>
           </div>
-          <span class="text-[11px] font-semibold text-amber-700 flex items-center gap-1">
-            <span>點擊班級長條即可進入</span>
+          <span class="text-[11px] font-semibold text-[#52796f] flex items-center gap-1">
+            <span>點選班級即可進入</span>
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
@@ -756,6 +851,14 @@ watch(() => [state.role, state.grade, state.classroom], () => {
 const schoolAvg = 93
 const countyAvg = 86
 const nationalAvg = 84
+
+// 棒棒糖圖 (Lollipop Chart) Y 軸坐標映射 (聚焦 70% ~ 100%)
+function getRateY(rate) {
+  const val = Number(rate) || 70
+  const clamped = Math.max(70, Math.min(100, val))
+  // 100% -> Y=32, 70% -> Y=212 (高度 180px)
+  return Math.round(212 - ((clamped - 70) / 30) * 180)
+}
 
 // 各年級動態班級列表 (Chart 2 及班級切換共用)
 const classStats = computed(() => {
