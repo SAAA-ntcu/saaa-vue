@@ -385,238 +385,198 @@
           </div>
         </div>
 
-        <!-- 總答對率與各向度 一次性同屏呈現 (Dual Panel Layout) -->
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start pt-2">
+        <!-- 多指針時鐘儀表盤全景呈現：頂部總答對率 + 下方 10 大向度多指針時鐘儀表盤全景牆 -->
+        <div class="space-y-6 pt-2">
           
-          <!-- 左側 5 欄：【全科總答對率 · 多指針時鐘儀表盤】(點選右側向度時平滑聯動) -->
-          <div class="xl:col-span-5 flex flex-col items-center justify-between p-4 sm:p-5 bg-slate-50/70 rounded-2xl border border-slate-200/90 shadow-2xs">
-            <div class="w-full flex items-center justify-between pb-2 border-b border-slate-200/70 mb-2">
-              <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full" :class="activeDimIndex === 0 ? 'bg-[#52796f]' : 'bg-emerald-600'"></span>
-                <span class="font-bold text-slate-800 text-sm">
-                  {{ activeDimIndex === 0 ? '【全科總答對率】綜合學力儀表' : `【${activeDim.name}】向度深度儀表` }}
-                </span>
+          <!-- 1. 頂部核心橫幅：【全科總答對率 · 多指針時鐘主儀表盤】 -->
+          <div class="bg-gradient-to-br from-slate-50 via-white to-slate-50/80 border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-xs">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              
+              <!-- 左側：270 度多指針大儀表盤 (5 Cols) -->
+              <div class="lg:col-span-5 flex flex-col items-center justify-center p-3 bg-white rounded-xl border border-slate-100 shadow-2xs">
+                <div class="w-full max-w-[320px] aspect-[16/11] relative flex items-center justify-center">
+                  <svg class="w-full h-full overflow-visible" viewBox="0 0 320 220">
+                    <defs>
+                      <filter id="hub-shadow-hero" x="-30%" y="-30%" width="160%" height="160%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.25"/>
+                      </filter>
+                    </defs>
+
+                    <!-- 外圈分段彩弧 (0-5% 墨灰、5-60% 萊姆綠、60-85% 皇家藍、85-100% 淺灰) -->
+                    <path :d="getDialArc(0, 5, 160, 135, 95)" fill="none" stroke="#334155" stroke-width="7" stroke-linecap="round" />
+                    <path :d="getDialArc(5, 60, 160, 135, 95)" fill="none" stroke="#84cc16" stroke-width="7" />
+                    <path :d="getDialArc(60, 85, 160, 135, 95)" fill="none" stroke="#2563eb" stroke-width="7" />
+                    <path :d="getDialArc(85, 100, 160, 135, 95)" fill="none" stroke="#e2e8f0" stroke-width="7" stroke-linecap="round" />
+
+                    <!-- 內部刻度數字 (每 20%) -->
+                    <g v-for="p in [0, 20, 40, 60, 80, 100]" :key="'hero-tick-' + p">
+                      <line
+                        :x1="160 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 86"
+                        :y1="135 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 86"
+                        :x2="160 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 94"
+                        :y2="135 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 94"
+                        stroke="#64748b"
+                        stroke-width="1.8"
+                      />
+                      <text
+                        :x="160 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 75"
+                        :y="135 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 75 + 3"
+                        font-size="9"
+                        font-family="monospace"
+                        font-weight="bold"
+                        fill="#64748b"
+                        text-anchor="middle"
+                      >
+                        {{ p }}
+                      </text>
+                    </g>
+
+                    <!-- 四根同心指針 (中心 160, 135) -->
+                    <!-- 總參與 (Purple) -->
+                    <line
+                      x1="160" y1="135" x2="160" y2="68"
+                      stroke="#9333ea" stroke-width="2.5" stroke-linecap="round"
+                      class="transition-all duration-500 ease-out opacity-80"
+                      :style="{ transform: `rotate(${getNeedleRotation(overallStat.national)}deg)`, transformOrigin: '160px 135px' }"
+                    />
+                    <!-- 縣市 (Royal Blue) -->
+                    <line
+                      x1="160" y1="135" x2="160" y2="61"
+                      stroke="#2563eb" stroke-width="3" stroke-linecap="round"
+                      class="transition-all duration-500 ease-out opacity-85"
+                      :style="{ transform: `rotate(${getNeedleRotation(overallStat.county)}deg)`, transformOrigin: '160px 135px' }"
+                    />
+                    <!-- 學校 (Amber) -->
+                    <line
+                      x1="160" y1="135" x2="160" y2="53"
+                      stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round"
+                      class="transition-all duration-500 ease-out"
+                      :style="{ transform: `rotate(${getNeedleRotation(overallStat.school)}deg)`, transformOrigin: '160px 135px' }"
+                    />
+                    <!-- 班級實測主指針 (Lime Green) -->
+                    <line
+                      x1="160" y1="135" x2="160" y2="44"
+                      stroke="#84cc16" stroke-width="4.5" stroke-linecap="round"
+                      class="transition-all duration-500 ease-out drop-shadow-md"
+                      :style="{ transform: `rotate(${getNeedleRotation(overallStat.classVal)}deg)`, transformOrigin: '160px 135px' }"
+                    />
+
+                    <!-- 金色軸心 -->
+                    <circle cx="160" cy="135" r="11" fill="#fbbf24" stroke="#ffffff" stroke-width="2.5" filter="url(#hub-shadow-hero)" />
+                    <circle cx="160" cy="135" r="3.5" fill="#d97706" />
+
+                    <!-- 底部中央標籤 -->
+                    <text x="160" y="212" font-size="11" font-weight="bold" fill="#64748b" text-anchor="middle">
+                      全科總答對率 · 鐘面指針
+                    </text>
+                  </svg>
+                </div>
               </div>
-              <button
-                v-if="activeDimIndex !== 0"
-                type="button"
-                @click="activeDimIndex = 0"
-                class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 transition cursor-pointer flex items-center gap-1 shadow-2xs"
-              >
-                <span>返回總答對率</span>
-                <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-              </button>
-              <span v-else class="text-[10px] text-slate-400 font-medium">點右側向度可切換指針</span>
-            </div>
 
-            <!-- 270 度時鐘多指針儀表盤 SVG -->
-            <div class="w-full max-w-[380px] aspect-[16/12] relative flex items-center justify-center my-1">
-              <svg class="w-full h-full overflow-visible" viewBox="0 0 400 310">
-                <defs>
-                  <filter id="hub-shadow-inquiry" x="-30%" y="-30%" width="160%" height="160%">
-                    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.25"/>
-                  </filter>
-                </defs>
-
-                <!-- 外圈分段彩弧 (同參考圖：深鐵灰起步、萊姆綠基礎段、皇家藍精熟段、淺灰頂尖段) -->
-                <path :d="getDialArc(0, 5)" fill="none" stroke="#334155" stroke-width="8" stroke-linecap="round" />
-                <path :d="getDialArc(5, 60)" fill="none" stroke="#84cc16" stroke-width="8" />
-                <path :d="getDialArc(60, 85)" fill="none" stroke="#2563eb" stroke-width="8" />
-                <path :d="getDialArc(85, 100)" fill="none" stroke="#e2e8f0" stroke-width="8" stroke-linecap="round" />
-
-                <!-- 內部刻度線與數字 (0% 到 100%) -->
-                <g v-for="p in [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]" :key="'tick-' + p">
-                  <!-- 主刻度線 -->
-                  <line
-                    :x1="200 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 110"
-                    :y1="175 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 110"
-                    :x2="200 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 121"
-                    :y2="175 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 121"
-                    stroke="#64748b"
-                    stroke-width="2"
-                  />
-                  <!-- 刻度數字 -->
-                  <text
-                    :x="200 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 98"
-                    :y="175 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 98 + 4"
-                    font-size="9"
-                    font-family="monospace"
-                    font-weight="bold"
-                    fill="#64748b"
-                    text-anchor="middle"
+              <!-- 右側：總答對率數值診斷艙 (7 Cols) -->
+              <div class="lg:col-span-7 space-y-4">
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-[#52796f] text-white">
+                      🌟 全科總答對率
+                    </span>
+                    <span class="text-xs text-slate-500 font-medium">
+                      {{ state.school }} {{ inquiryState.classObj }} 班 綜合指標
+                    </span>
+                  </div>
+                  <span
+                    class="px-2.5 py-1 rounded-lg text-xs font-bold"
+                    :class="overallStat.classVal >= overallStat.school ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
                   >
-                    {{ p }}
-                  </text>
-                </g>
+                    相較校均 {{ overallStat.classVal >= overallStat.school ? '+' : '' }}{{ overallStat.classVal - overallStat.school }}%
+                  </span>
+                </div>
 
-                <!-- 次刻度線 (每 2.5%) -->
-                <g v-for="p in [2.5, 5, 7.5, 12.5, 15, 17.5, 22.5, 25, 27.5, 32.5, 35, 37.5, 42.5, 45, 47.5, 52.5, 55, 57.5, 62.5, 65, 67.5, 72.5, 75, 77.5, 82.5, 85, 87.5, 92.5, 95, 97.5]" :key="'subtick-' + p">
-                  <line
-                    :x1="200 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 115"
-                    :y1="175 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 115"
-                    :x2="200 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 121"
-                    :y2="175 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 121"
-                    stroke="#94a3b8"
-                    stroke-width="1"
-                  />
-                </g>
+                <div class="flex items-baseline gap-3">
+                  <span class="text-4xl sm:text-5xl font-mono font-black text-slate-900 tracking-tight">
+                    {{ overallStat.classVal }}.0%
+                  </span>
+                  <span class="text-xs text-slate-500">
+                    高於全國均標 ({{ overallStat.national }}%) · 全縣均標 ({{ overallStat.county }}%)
+                  </span>
+                </div>
 
-                <!-- 四根同心指針 (旋轉中心 200, 175) -->
-                <!-- 指針 1：總參與平均 (Purple) -->
-                <line
-                  x1="200"
-                  y1="175"
-                  x2="200"
-                  y2="92"
-                  stroke="#9333ea"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                  class="transition-all duration-500 ease-out opacity-80"
-                  :style="{ transform: `rotate(${getNeedleRotation(activeDim.national)}deg)`, transformOrigin: '200px 175px' }"
-                />
+                <!-- 4 欄獨立彩色數值艙 (零文字重疊) -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
+                  <div class="p-2.5 rounded-xl bg-purple-50/70 border border-purple-200/60 flex flex-col items-center">
+                    <span class="text-[10px] font-bold text-purple-900 flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#9333ea]"></span>
+                      總參與平均
+                    </span>
+                    <span class="mt-1 px-2.5 py-0.5 rounded-md text-xs font-mono font-bold bg-[#9333ea] text-white">
+                      {{ overallStat.national }}.0%
+                    </span>
+                  </div>
 
-                <!-- 指針 2：縣市平均 (Royal Blue) -->
-                <line
-                  x1="200"
-                  y1="175"
-                  x2="200"
-                  y2="82"
-                  stroke="#2563eb"
-                  stroke-width="3.5"
-                  stroke-linecap="round"
-                  class="transition-all duration-500 ease-out opacity-85"
-                  :style="{ transform: `rotate(${getNeedleRotation(activeDim.county)}deg)`, transformOrigin: '200px 175px' }"
-                />
+                  <div class="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200/60 flex flex-col items-center">
+                    <span class="text-[10px] font-bold text-blue-900 flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#2563eb]"></span>
+                      縣市平均
+                    </span>
+                    <span class="mt-1 px-2.5 py-0.5 rounded-md text-xs font-mono font-bold bg-[#2563eb] text-white">
+                      {{ overallStat.county }}.0%
+                    </span>
+                  </div>
 
-                <!-- 指針 3：學校平均 (Amber Orange) -->
-                <line
-                  x1="200"
-                  y1="175"
-                  x2="200"
-                  y2="72"
-                  stroke="#f59e0b"
-                  stroke-width="4"
-                  stroke-linecap="round"
-                  class="transition-all duration-500 ease-out"
-                  :style="{ transform: `rotate(${getNeedleRotation(activeDim.school)}deg)`, transformOrigin: '200px 175px' }"
-                />
+                  <div class="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/60 flex flex-col items-center">
+                    <span class="text-[10px] font-bold text-amber-900 flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#f59e0b]"></span>
+                      學校平均
+                    </span>
+                    <span class="mt-1 px-2.5 py-0.5 rounded-md text-xs font-mono font-bold bg-[#f59e0b] text-white">
+                      {{ overallStat.school }}.0%
+                    </span>
+                  </div>
 
-                <!-- 指針 4：班級實測主指針 (Lime Green · 同參考圖綠色主針) -->
-                <line
-                  x1="200"
-                  y1="175"
-                  x2="200"
-                  y2="62"
-                  stroke="#84cc16"
-                  stroke-width="5"
-                  stroke-linecap="round"
-                  class="transition-all duration-500 ease-out drop-shadow-md"
-                  :style="{ transform: `rotate(${getNeedleRotation(activeDim.classVal)}deg)`, transformOrigin: '200px 175px' }"
-                />
+                  <div class="p-2.5 rounded-xl bg-lime-50 border border-lime-300 shadow-2xs flex flex-col items-center">
+                    <span class="text-[10px] font-bold text-lime-900 flex items-center gap-1">
+                      <span class="w-1.5 h-1.5 rounded-full bg-[#84cc16]"></span>
+                      {{ inquiryState.classObj }} 班實測
+                    </span>
+                    <span class="mt-1 px-2.5 py-0.5 rounded-md text-xs font-mono font-black bg-[#84cc16] text-white">
+                      {{ overallStat.classVal }}.0%
+                    </span>
+                  </div>
+                </div>
 
-                <!-- 中心金色軸心 (Yellow Hub) -->
-                <circle cx="200" cy="175" r="13" fill="#fbbf24" stroke="#ffffff" stroke-width="3.5" filter="url(#hub-shadow-inquiry)" />
-                <circle cx="200" cy="175" r="4" fill="#d97706" />
-
-                <!-- 弧形下方指針狀態文字 -->
-                <text x="200" y="275" font-size="11" font-weight="bold" fill="#64748b" text-anchor="middle">
-                  {{ activeDim.name }} · 實測答對率
-                </text>
-              </svg>
-            </div>
-
-            <!-- 下方 4 欄獨立數據艙 (徹底解決文字重疊) -->
-            <div class="w-full grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-slate-200/70">
-              <div class="flex flex-col items-center justify-center p-2 rounded-xl bg-purple-50/70 border border-purple-200/60">
-                <span class="text-[10px] font-bold text-purple-900">總參與平均</span>
-                <span class="mt-1 px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-[#9333ea] text-white shadow-2xs">
-                  {{ activeDim.national }}.0%
-                </span>
+                <p class="text-xs text-slate-500 m-0 leading-relaxed">
+                  本班在全體學力常模中位居前段，下方展開 10 大向度的獨立多指針時鐘儀表盤，綠色主指針越過橘色學校刻度即代表達標勝出。
+                </p>
               </div>
-              <div class="flex flex-col items-center justify-center p-2 rounded-xl bg-blue-50/70 border border-blue-200/60">
-                <span class="text-[10px] font-bold text-blue-900">縣市平均</span>
-                <span class="mt-1 px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-[#2563eb] text-white shadow-2xs">
-                  {{ activeDim.county }}.0%
-                </span>
-              </div>
-              <div class="flex flex-col items-center justify-center p-2 rounded-xl bg-amber-50/70 border border-amber-200/60">
-                <span class="text-[10px] font-bold text-amber-900">學校平均</span>
-                <span class="mt-1 px-2 py-0.5 rounded-md text-xs font-mono font-bold bg-[#f59e0b] text-white shadow-2xs">
-                  {{ activeDim.school }}.0%
-                </span>
-              </div>
-              <div class="flex flex-col items-center justify-center p-2 rounded-xl bg-lime-50 border border-lime-300 shadow-2xs">
-                <span class="text-[10px] font-bold text-lime-900">{{ inquiryState.classObj }} 班實測</span>
-                <span class="mt-1 px-2 py-0.5 rounded-md text-xs font-mono font-black bg-[#84cc16] text-white shadow-2xs">
-                  {{ activeDim.classVal }}.0%
-                </span>
-              </div>
-            </div>
 
-            <!-- 勝差簡述與診斷 -->
-            <div class="w-full mt-3 p-2.5 rounded-xl border flex items-center justify-between text-xs" :class="activeDim.classVal >= activeDim.school ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900' : 'bg-rose-50/70 border-rose-200 text-rose-900'">
-              <div class="flex items-center gap-1.5 font-bold">
-                <span class="w-2 h-2 rounded-full" :class="activeDim.classVal >= activeDim.school ? 'bg-emerald-600' : 'bg-rose-600'"></span>
-                <span>{{ activeDim.classVal >= activeDim.school ? '🟢 指針越過學校刻度（勝出達標）' : '🔴 指針落後學校刻度（需加強補救）' }}</span>
-              </div>
-              <span class="font-mono font-bold">
-                距校均 {{ activeDim.classVal >= activeDim.school ? '+' : '' }}{{ activeDim.classVal - activeDim.school }}%
-              </span>
             </div>
           </div>
 
-          <!-- 右側 7 欄：【10 大學習向度 · 一次性全景儀表尺規】 -->
-          <div class="xl:col-span-7 space-y-4">
-            
-            <!-- 分組 A：基礎語文知識層 (6 項) -->
-            <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-2.5">
-              <div class="flex items-center justify-between border-b border-slate-200/70 pb-2">
-                <div class="flex items-center gap-2">
-                  <span class="w-2 h-4 rounded-full bg-[#52796f]"></span>
-                  <h4 class="text-xs font-bold text-slate-800 m-0">A. 基礎語文知識層（提取與語用基礎 · 共 6 項）</h4>
-                </div>
-                <span class="text-[10px] text-slate-400">點選任一項可聯動左側儀表盤</span>
+          <!-- 2. 分組 A：基礎語文知識層（6 個獨立多指針時鐘儀表盤卡片） -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-5 rounded-full bg-[#52796f]"></span>
+                <h4 class="text-sm font-bold text-slate-800 m-0">A. 基礎語文知識層 · 多指針時鐘儀表盤（共 6 項向度）</h4>
               </div>
+              <span class="text-xs text-slate-400 font-medium">每向度獨立 4 指針鐘面 · 點選卡片可篩選學生</span>
+            </div>
 
-              <!-- 6 大向度條目 -->
-              <div class="space-y-2">
-                <div
-                  v-for="item in knowledgeDimensions"
-                  :key="item.name"
-                  @click="selectGaugeDim(item.globalIndex)"
-                  class="flex items-center gap-3 py-1.5 px-2.5 rounded-xl border transition cursor-pointer text-xs"
-                  :class="activeDimIndex === item.globalIndex
-                    ? 'bg-white border-[#52796f] shadow-xs ring-1 ring-[#52796f]/20'
-                    : 'bg-white/90 border-slate-200/70 hover:bg-white hover:border-slate-300'"
-                >
-                  <div class="w-18 font-bold text-slate-700 shrink-0 text-xs flex items-center justify-between">
-                    <span>{{ item.name }}</span>
+            <!-- 6 個儀表盤網格 (Grid of 6 Gauges) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div
+                v-for="item in knowledgeDimensions"
+                :key="item.name"
+                class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs hover:shadow-md hover:border-[#52796f] transition-all flex flex-col justify-between"
+              >
+                <!-- 卡片頂部：標題與勝差 -->
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full" :class="item.classVal >= item.school ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                    <strong class="text-xs text-slate-800">{{ item.name }}</strong>
                   </div>
-
-                  <!-- 橫向線性儀表規 (Linear Gauge Track) -->
-                  <div class="flex-1 h-5 bg-slate-100 rounded-full relative overflow-visible flex items-center border border-slate-200">
-                    <div class="absolute inset-x-0 h-0.5 bg-slate-200"></div>
-
-                    <!-- 總參與刻度標 (紫) -->
-                    <div class="absolute w-1 h-3.5 bg-purple-600 rounded-xs z-10" :style="{ left: item.national + '%' }" :title="`總參與平均: ${item.national}%`"></div>
-                    <!-- 縣市刻度標 (藍) -->
-                    <div class="absolute w-1 h-4 bg-sky-800 rounded-xs z-10" :style="{ left: item.county + '%' }" :title="`縣市平均: ${item.county}%`"></div>
-                    <!-- 學校刻度標 (橘加粗) -->
-                    <div class="absolute w-1.5 h-6 bg-amber-500 rounded-xs z-20 shadow-xs" :style="{ left: item.school + '%' }" :title="`全校平均: ${item.school}%`"></div>
-
-                    <!-- 班級實測主指針圓點 -->
-                    <div
-                      class="absolute w-5 h-5 -ml-2.5 rounded-full border-2 border-white shadow-xs flex items-center justify-center text-[9px] font-mono font-bold text-white z-30 transition-transform hover:scale-125"
-                      :class="item.classVal >= item.school ? 'bg-[#52796f]' : 'bg-rose-500'"
-                      :style="{ left: item.classVal + '%' }"
-                    >
-                      {{ item.classVal }}
-                    </div>
-                  </div>
-
-                  <!-- 班級數值與勝差徽章 -->
-                  <div class="w-24 text-right shrink-0 flex items-center justify-end gap-1.5">
-                    <span class="font-mono font-bold text-slate-800 text-xs">{{ item.classVal }}%</span>
+                  <div class="flex items-center gap-1">
+                    <span class="font-mono font-black text-xs text-slate-900">{{ item.classVal }}%</span>
                     <span
                       class="px-1.5 py-0.5 rounded text-[10px] font-bold"
                       :class="item.classVal >= item.school ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
@@ -625,58 +585,128 @@
                     </span>
                   </div>
                 </div>
+
+                <!-- 270 度多指針鐘面 SVG (中心 130, 115, 半徑 75) -->
+                <div class="w-full aspect-[16/11] relative flex items-center justify-center my-1">
+                  <svg class="w-full h-full overflow-visible" viewBox="0 0 260 190">
+                    <!-- 外圈分段彩弧 -->
+                    <path :d="getDialArc(0, 5, 130, 115, 75)" fill="none" stroke="#334155" stroke-width="6" stroke-linecap="round" />
+                    <path :d="getDialArc(5, 60, 130, 115, 75)" fill="none" stroke="#84cc16" stroke-width="6" />
+                    <path :d="getDialArc(60, 85, 130, 115, 75)" fill="none" stroke="#2563eb" stroke-width="6" />
+                    <path :d="getDialArc(85, 100, 130, 115, 75)" fill="none" stroke="#e2e8f0" stroke-width="6" stroke-linecap="round" />
+
+                    <!-- 內部刻度線與數字 (每 20%) -->
+                    <g v-for="p in [0, 20, 40, 60, 80, 100]" :key="'g1-tick-' + p">
+                      <line
+                        :x1="130 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 67"
+                        :y1="115 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 67"
+                        :x2="130 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 74"
+                        :y2="115 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 74"
+                        stroke="#64748b"
+                        stroke-width="1.5"
+                      />
+                      <text
+                        :x="130 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 58"
+                        :y="115 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 58 + 3"
+                        font-size="8"
+                        font-family="monospace"
+                        font-weight="bold"
+                        fill="#64748b"
+                        text-anchor="middle"
+                      >
+                        {{ p }}
+                      </text>
+                    </g>
+
+                    <!-- 4 根同心指針 -->
+                    <!-- 總參與 (Purple) -->
+                    <line
+                      x1="130" y1="115" x2="130" y2="60"
+                      stroke="#9333ea" stroke-width="2" stroke-linecap="round"
+                      class="transition-all duration-500 ease-out opacity-80"
+                      :style="{ transform: `rotate(${getNeedleRotation(item.national)}deg)`, transformOrigin: '130px 115px' }"
+                    />
+                    <!-- 縣市 (Royal Blue) -->
+                    <line
+                      x1="130" y1="115" x2="130" y2="55"
+                      stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"
+                      class="transition-all duration-500 ease-out opacity-85"
+                      :style="{ transform: `rotate(${getNeedleRotation(item.county)}deg)`, transformOrigin: '130px 115px' }"
+                    />
+                    <!-- 學校 (Amber) -->
+                    <line
+                      x1="130" y1="115" x2="130" y2="49"
+                      stroke="#f59e0b" stroke-width="3" stroke-linecap="round"
+                      class="transition-all duration-500 ease-out"
+                      :style="{ transform: `rotate(${getNeedleRotation(item.school)}deg)`, transformOrigin: '130px 115px' }"
+                    />
+                    <!-- 班級實測主指針 (Lime Green) -->
+                    <line
+                      x1="130" y1="115" x2="130" y2="42"
+                      stroke="#84cc16" stroke-width="4" stroke-linecap="round"
+                      class="transition-all duration-500 ease-out drop-shadow-sm"
+                      :style="{ transform: `rotate(${getNeedleRotation(item.classVal)}deg)`, transformOrigin: '130px 115px' }"
+                    />
+
+                    <!-- 金色軸心 -->
+                    <circle cx="130" cy="115" r="8" fill="#fbbf24" stroke="#ffffff" stroke-width="2" />
+                    <circle cx="130" cy="115" r="2.5" fill="#d97706" />
+
+                    <!-- 指針下方中央文字 -->
+                    <text x="130" y="174" font-size="9" font-weight="bold" fill="#64748b" text-anchor="middle">
+                      {{ item.name }} 實測
+                    </text>
+                  </svg>
+                </div>
+
+                <!-- 卡片底部：4 欄數值艙 (零碰撞排版) -->
+                <div class="grid grid-cols-4 gap-1 pt-2 border-t border-slate-100 text-center">
+                  <div class="bg-purple-50/70 rounded p-1">
+                    <span class="block text-[9px] font-bold text-purple-800">總參與</span>
+                    <span class="font-mono text-[10px] font-bold text-purple-900">{{ item.national }}%</span>
+                  </div>
+                  <div class="bg-blue-50/70 rounded p-1">
+                    <span class="block text-[9px] font-bold text-blue-800">縣市</span>
+                    <span class="font-mono text-[10px] font-bold text-blue-900">{{ item.county }}%</span>
+                  </div>
+                  <div class="bg-amber-50/70 rounded p-1">
+                    <span class="block text-[9px] font-bold text-amber-800">學校</span>
+                    <span class="font-mono text-[10px] font-bold text-amber-900">{{ item.school }}%</span>
+                  </div>
+                  <div class="bg-lime-50 rounded p-1 border border-lime-300">
+                    <span class="block text-[9px] font-bold text-lime-800">本班</span>
+                    <span class="font-mono text-[10px] font-black text-lime-900">{{ item.classVal }}%</span>
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
 
-            <!-- 分組 B：閱讀理解認知階梯 (4 項) -->
-            <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-4 space-y-2.5">
-              <div class="flex items-center justify-between border-b border-slate-200/70 pb-2">
-                <div class="flex items-center gap-2">
-                  <span class="w-2 h-4 rounded-full bg-teal-600"></span>
-                  <h4 class="text-xs font-bold text-slate-800 m-0">B. 閱讀理解進階層（字詞 ➔ 句子 ➔ 段落 ➔ 篇章階梯遞進）</h4>
-                </div>
-                <span class="text-[10px] text-teal-700 font-bold bg-teal-50 px-2 py-0.5 rounded">階梯認知</span>
+          <!-- 3. 分組 B：閱讀理解進階層次（4 個獨立多指針時鐘儀表盤卡片） -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-5 rounded-full bg-teal-600"></span>
+                <h4 class="text-sm font-bold text-slate-800 m-0">B. 閱讀理解進階層 · 多指針時鐘儀表盤（字詞 ➔ 句子 ➔ 段落 ➔ 篇章階梯 · 共 4 項）</h4>
               </div>
+              <span class="text-xs text-teal-700 font-bold bg-teal-50 px-2 py-0.5 rounded">階梯認知層次</span>
+            </div>
 
-              <!-- 4 大階梯向度條目 -->
-              <div class="space-y-2">
-                <div
-                  v-for="item in comprehensionDimensions"
-                  :key="item.name"
-                  @click="selectGaugeDim(item.globalIndex)"
-                  class="flex items-center gap-3 py-1.5 px-2.5 rounded-xl border transition cursor-pointer text-xs"
-                  :class="activeDimIndex === item.globalIndex
-                    ? 'bg-white border-teal-600 shadow-xs ring-1 ring-teal-600/20'
-                    : 'bg-white/90 border-slate-200/70 hover:bg-white hover:border-slate-300'"
-                >
-                  <div class="w-18 font-bold text-slate-700 shrink-0 text-xs flex items-center justify-between">
-                    <span>{{ item.name }}</span>
+            <!-- 4 個儀表盤網格 (Grid of 4 Gauges) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div
+                v-for="item in comprehensionDimensions"
+                :key="item.name"
+                class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs hover:shadow-md hover:border-teal-600 transition-all flex flex-col justify-between"
+              >
+                <!-- 卡片頂部：標題與勝差 -->
+                <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full" :class="item.classVal >= item.school ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                    <strong class="text-xs text-slate-800">{{ item.name }}</strong>
                   </div>
-
-                  <!-- 橫向線性儀表規 (Linear Gauge Track) -->
-                  <div class="flex-1 h-5 bg-slate-100 rounded-full relative overflow-visible flex items-center border border-slate-200">
-                    <div class="absolute inset-x-0 h-0.5 bg-slate-200"></div>
-
-                    <!-- 總參與刻度標 (紫) -->
-                    <div class="absolute w-1 h-3.5 bg-purple-600 rounded-xs z-10" :style="{ left: item.national + '%' }" :title="`總參與平均: ${item.national}%`"></div>
-                    <!-- 縣市刻度標 (藍) -->
-                    <div class="absolute w-1 h-4 bg-sky-800 rounded-xs z-10" :style="{ left: item.county + '%' }" :title="`縣市平均: ${item.county}%`"></div>
-                    <!-- 學校刻度標 (橘加粗) -->
-                    <div class="absolute w-1.5 h-6 bg-amber-500 rounded-xs z-20 shadow-xs" :style="{ left: item.school + '%' }" :title="`全校平均: ${item.school}%`"></div>
-
-                    <!-- 班級實測主指針圓點 -->
-                    <div
-                      class="absolute w-5 h-5 -ml-2.5 rounded-full border-2 border-white shadow-xs flex items-center justify-center text-[9px] font-mono font-bold text-white z-30 transition-transform hover:scale-125"
-                      :class="item.classVal >= item.school ? 'bg-[#52796f]' : 'bg-rose-500'"
-                      :style="{ left: item.classVal + '%' }"
-                    >
-                      {{ item.classVal }}
-                    </div>
-                  </div>
-
-                  <!-- 班級數值與勝差徽章 -->
-                  <div class="w-24 text-right shrink-0 flex items-center justify-end gap-1.5">
-                    <span class="font-mono font-bold text-slate-800 text-xs">{{ item.classVal }}%</span>
+                  <div class="flex items-center gap-1">
+                    <span class="font-mono font-black text-xs text-slate-900">{{ item.classVal }}%</span>
                     <span
                       class="px-1.5 py-0.5 rounded text-[10px] font-bold"
                       :class="item.classVal >= item.school ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
@@ -685,9 +715,101 @@
                     </span>
                   </div>
                 </div>
+
+                <!-- 270 度多指針鐘面 SVG (中心 130, 115, 半徑 75) -->
+                <div class="w-full aspect-[16/11] relative flex items-center justify-center my-1">
+                  <svg class="w-full h-full overflow-visible" viewBox="0 0 260 190">
+                    <!-- 外圈分段彩弧 -->
+                    <path :d="getDialArc(0, 5, 130, 115, 75)" fill="none" stroke="#334155" stroke-width="6" stroke-linecap="round" />
+                    <path :d="getDialArc(5, 60, 130, 115, 75)" fill="none" stroke="#84cc16" stroke-width="6" />
+                    <path :d="getDialArc(60, 85, 130, 115, 75)" fill="none" stroke="#2563eb" stroke-width="6" />
+                    <path :d="getDialArc(85, 100, 130, 115, 75)" fill="none" stroke="#e2e8f0" stroke-width="6" stroke-linecap="round" />
+
+                    <!-- 內部刻度線與數字 (每 20%) -->
+                    <g v-for="p in [0, 20, 40, 60, 80, 100]" :key="'g2-tick-' + p">
+                      <line
+                        :x1="130 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 67"
+                        :y1="115 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 67"
+                        :x2="130 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 74"
+                        :y2="115 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 74"
+                        stroke="#64748b"
+                        stroke-width="1.5"
+                      />
+                      <text
+                        :x="130 + Math.cos((135 + p * 2.7) * Math.PI / 180) * 58"
+                        :y="115 + Math.sin((135 + p * 2.7) * Math.PI / 180) * 58 + 3"
+                        font-size="8"
+                        font-family="monospace"
+                        font-weight="bold"
+                        fill="#64748b"
+                        text-anchor="middle"
+                      >
+                        {{ p }}
+                      </text>
+                    </g>
+
+                    <!-- 4 根同心指針 -->
+                    <!-- 總參與 (Purple) -->
+                    <line
+                      x1="130" y1="115" x2="130" y2="60"
+                      stroke="#9333ea" stroke-width="2" stroke-linecap="round"
+                      class="transition-all duration-500 ease-out opacity-80"
+                      :style="{ transform: `rotate(${getNeedleRotation(item.national)}deg)`, transformOrigin: '130px 115px' }"
+                    />
+                    <!-- 縣市 (Royal Blue) -->
+                    <line
+                      x1="130" y1="115" x2="130" y2="55"
+                      stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"
+                      class="transition-all duration-500 ease-out opacity-85"
+                      :style="{ transform: `rotate(${getNeedleRotation(item.county)}deg)`, transformOrigin: '130px 115px' }"
+                    />
+                    <!-- 學校 (Amber) -->
+                    <line
+                      x1="130" y1="115" x2="130" y2="49"
+                      stroke="#f59e0b" stroke-width="3" stroke-linecap="round"
+                      class="transition-all duration-500 ease-out"
+                      :style="{ transform: `rotate(${getNeedleRotation(item.school)}deg)`, transformOrigin: '130px 115px' }"
+                    />
+                    <!-- 班級實測主指針 (Lime Green) -->
+                    <line
+                      x1="130" y1="115" x2="130" y2="42"
+                      stroke="#84cc16" stroke-width="4" stroke-linecap="round"
+                      class="transition-all duration-500 ease-out drop-shadow-sm"
+                      :style="{ transform: `rotate(${getNeedleRotation(item.classVal)}deg)`, transformOrigin: '130px 115px' }"
+                    />
+
+                    <!-- 金色軸心 -->
+                    <circle cx="130" cy="115" r="8" fill="#fbbf24" stroke="#ffffff" stroke-width="2" />
+                    <circle cx="130" cy="115" r="2.5" fill="#d97706" />
+
+                    <!-- 指針下方中央文字 -->
+                    <text x="130" y="174" font-size="9" font-weight="bold" fill="#64748b" text-anchor="middle">
+                      {{ item.name }} 實測
+                    </text>
+                  </svg>
+                </div>
+
+                <!-- 卡片底部：4 欄數值艙 (零碰撞排版) -->
+                <div class="grid grid-cols-4 gap-1 pt-2 border-t border-slate-100 text-center">
+                  <div class="bg-purple-50/70 rounded p-1">
+                    <span class="block text-[9px] font-bold text-purple-800">總參與</span>
+                    <span class="font-mono text-[10px] font-bold text-purple-900">{{ item.national }}%</span>
+                  </div>
+                  <div class="bg-blue-50/70 rounded p-1">
+                    <span class="block text-[9px] font-bold text-blue-800">縣市</span>
+                    <span class="font-mono text-[10px] font-bold text-blue-900">{{ item.county }}%</span>
+                  </div>
+                  <div class="bg-amber-50/70 rounded p-1">
+                    <span class="block text-[9px] font-bold text-amber-800">學校</span>
+                    <span class="font-mono text-[10px] font-bold text-amber-900">{{ item.school }}%</span>
+                  </div>
+                  <div class="bg-lime-50 rounded p-1 border border-lime-300">
+                    <span class="block text-[9px] font-bold text-lime-800">本班</span>
+                    <span class="font-mono text-[10px] font-black text-lime-900">{{ item.classVal }}%</span>
+                  </div>
+                </div>
               </div>
             </div>
-
           </div>
 
         </div>
@@ -1125,34 +1247,19 @@ const classDimensions = computed(() => {
   ]
 })
 
-// 多指針儀表盤選定向度 (0: 總答對率, 1~10: 各向度)
-const activeDimIndex = ref(0)
-const activeDim = computed(() => classDimensions.value[activeDimIndex.value] || classDimensions.value[0])
+// 全科總答對率與各向度分組
+const overallStat = computed(() => classDimensions.value[0] || { name: '總答對率', national: 70, county: 72, school: 77, classVal: 75 })
 
 // 10 個向度拆解為兩大層次 (A. 基礎知識 6 項, B. 閱讀理解 4 項)
-const knowledgeDimensions = computed(() => {
-  return classDimensions.value.slice(1, 7).map((dim, idx) => ({
-    ...dim,
-    globalIndex: idx + 1
-  }))
-})
-const comprehensionDimensions = computed(() => {
-  return classDimensions.value.slice(7).map((dim, idx) => ({
-    ...dim,
-    globalIndex: idx + 7
-  }))
-})
-
-const selectGaugeDim = (idx) => {
-  activeDimIndex.value = idx
-}
+const knowledgeDimensions = computed(() => classDimensions.value.slice(1, 7))
+const comprehensionDimensions = computed(() => classDimensions.value.slice(7))
 
 // 儀表盤角度計算 (0% = 135 deg, 100% = 405 deg)
 const pctToDialDeg = (pct) => 135 + (pct || 0) * 2.7
 const getNeedleRotation = (pct) => pctToDialDeg(pct) - 270
 
-// 儀表盤外圈分段圓弧生成 (R=125, CX=200, CY=175)
-const getDialArc = (p1, p2, cx = 200, cy = 175, r = 125) => {
+// 儀表盤外圈分段圓弧生成
+const getDialArc = (p1, p2, cx = 130, cy = 115, r = 75) => {
   const deg1 = pctToDialDeg(p1), deg2 = pctToDialDeg(p2)
   const rad1 = deg1 * Math.PI / 180, rad2 = deg2 * Math.PI / 180
   const x1 = cx + Math.cos(rad1) * r, y1 = cy + Math.sin(rad1) * r
