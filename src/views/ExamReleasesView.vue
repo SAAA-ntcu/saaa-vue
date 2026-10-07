@@ -447,7 +447,7 @@ function handleQuickMockLogin() {
 // 彈窗內前往登入頁
 function goToLoginPage() {
   showLoginPromptDialog.value = false
-  router.push('/Login')
+  router.push('/logins')
 }
 
 // 監聽身分切換，若是未登入則自動清除已選 6 年級試題

@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
+import { ElMessage } from 'element-plus'
 
 const routes = [
   {
@@ -61,6 +63,18 @@ const router = createRouter({
   scrollBehavior() {
     return { top: 0 }
   }
+})
+
+router.beforeEach((to, from, next) => {
+  const protectedPaths = ['/scores', '/integrated', '/changepasss']
+  if (protectedPaths.includes(to.path)) {
+    const { state } = useAuth()
+    if (!state.isLoggedIn) {
+      ElMessage.warning('此專區需登入驗證身分，請先登入系統')
+      return next({ path: '/logins', query: { redirect: to.fullPath } })
+    }
+  }
+  next()
 })
 
 router.afterEach((to) => {

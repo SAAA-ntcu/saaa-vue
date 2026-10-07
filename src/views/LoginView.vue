@@ -253,11 +253,12 @@
 
 <script setup>
 import { reactive, ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import LoginQaDialog from '../components/common/LoginQaDialog.vue'
 
 const router = useRouter()
+const route = useRoute()
 const showPassword = ref(false)
 const showQaModal = ref(false)
 
@@ -367,9 +368,10 @@ function handleSubmit() {
 
   ElMessage.success(`登入成功！歡迎【${userDisplayName}】`)
   
-  // 1 秒後跳轉回首頁
+  // 1 秒後跳轉回原頁面或首頁
   setTimeout(() => {
-    router.push('/')
+    const targetUrl = route.query.redirect || '/'
+    router.push(targetUrl)
   }, 1000)
 }
 </script>

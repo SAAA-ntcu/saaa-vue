@@ -26,7 +26,7 @@ export function buildUsername({
 }
 
 const defaultInitial = {
-  isLoggedIn: true,
+  isLoggedIn: false,
   city: '測試市',
   area: '測試區',
   school: '測試國小',
@@ -40,7 +40,17 @@ const defaultInitial = {
   countdownSeconds: 3600
 }
 
-const stored = localStorage.getItem('saaa_auth_state')
+const STORAGE_KEY = 'saaa_auth_state_v3'
+
+// Clear legacy cached login states so visitors default to unauthenticated (待登入)
+try {
+  localStorage.removeItem('saaa_auth_state')
+  localStorage.removeItem('saaa_auth_state_v2')
+} catch (e) {
+  // ignore in non-browser env
+}
+
+const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null
 let initial = { ...defaultInitial }
 
 if (stored) {
@@ -90,7 +100,8 @@ async function detectRealIp() {
 detectRealIp()
 
 function saveState() {
-  localStorage.setItem('saaa_auth_state', JSON.stringify({
+  if (typeof localStorage === 'undefined') return
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
     isLoggedIn: state.isLoggedIn,
     city: state.city,
     area: state.area,

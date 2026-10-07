@@ -203,6 +203,20 @@
               </div>
             </transition>
           </div>
+
+          <!-- Unauthenticated / Guest state: 系統登入 Button -->
+          <div v-else class="flex items-center">
+            <router-link
+              to="/logins"
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs lg:text-sm font-semibold text-white bg-[#52796f] hover:bg-[#354f52] rounded-xl shadow-xs hover:shadow-md transition-all duration-200 no-underline cursor-pointer active:scale-95 ring-1 ring-[#52796f]/30"
+              title="前往系統登入"
+            >
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+              </svg>
+              <span>系統登入</span>
+            </router-link>
+          </div>
         </div>
 
         <!-- Mobile Menu Toggle Button -->
@@ -284,6 +298,19 @@
             </div>
           </div>
 
+          <!-- Guest Card in Mobile Drawer when NOT logged in -->
+          <div v-else class="mb-5 p-3.5 bg-slate-50/90 rounded-2xl border border-slate-200/80">
+            <div class="flex items-center gap-2 mb-1.5">
+              <span class="text-xs px-2 py-0.5 rounded-md font-semibold bg-slate-200 text-slate-700">
+                訪客狀態
+              </span>
+              <span class="text-xs font-bold text-slate-500">待登入</span>
+            </div>
+            <p class="text-[11px] text-slate-400 m-0 leading-relaxed">
+              尚未登入系統。登入後可存取成績專區、報表下載與管理功能。
+            </p>
+          </div>
+
           <!-- Nav Items with Expandable Submenus -->
           <ul class="space-y-1.5 text-sm font-medium text-slate-700 flex-1 list-none p-0 m-0">
             <li v-for="item in currentNavItems" :key="item.path">
@@ -359,6 +386,20 @@
               </svg>
               登出系統
             </button>
+          </div>
+
+          <!-- Action button in Mobile Drawer when NOT logged in -->
+          <div v-else class="mt-4 pt-4 border-t border-slate-100">
+            <router-link
+              to="/logins"
+              @click="isMobileMenuOpen = false"
+              class="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[#52796f] hover:bg-[#354f52] text-white rounded-xl text-xs font-bold no-underline cursor-pointer transition shadow-xs active:scale-98"
+            >
+              <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+              </svg>
+              前往系統登入
+            </router-link>
           </div>
 
           <div class="border-t border-slate-100 pt-4 mt-4 text-xs text-slate-400 text-center">
@@ -471,8 +512,7 @@ const currentNavItems = computed(() => {
     return [
       { title: '最新消息', path: '/' },
       { title: '評量架構', path: '/AssessmentFrames' },
-      { title: '試題公告', path: '/ExamReleases' },
-      { title: '登入', path: '/logins' }
+      { title: '試題公告', path: '/ExamReleases' }
     ]
   }
 })
