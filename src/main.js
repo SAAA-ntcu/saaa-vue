@@ -1,18 +1,31 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import {
+  ElDialog,
+  ElPagination,
+  ElSwitch,
+  ElPopover,
+  ElDrawer
+} from 'element-plus'
+import 'element-plus/theme-chalk/base.css'
+import 'element-plus/theme-chalk/el-overlay.css'
+import 'element-plus/theme-chalk/el-dialog.css'
+import 'element-plus/theme-chalk/el-drawer.css'
+import 'element-plus/theme-chalk/el-pagination.css'
+import 'element-plus/theme-chalk/el-switch.css'
+import 'element-plus/theme-chalk/el-popper.css'
+import 'element-plus/theme-chalk/el-popover.css'
+import 'element-plus/theme-chalk/el-message.css'
 import './style.css'
 
 const app = createApp(App)
 
-for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-  app.component(key, component)
-}
+const components = [ElDialog, ElPagination, ElSwitch, ElPopover, ElDrawer]
+components.forEach(component => {
+  app.use(component)
+})
 
 app.use(router)
-app.use(ElementPlus)
 
 app.mount('#app')
