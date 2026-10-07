@@ -69,7 +69,6 @@
               <option value="學年主任">學年主任</option>
               <option value="班級導師">班級導師</option>
               <option value="科任教師">科任教師</option>
-              <option value="導師兼科任">導師兼科任</option>
             </select>
           </div>
 
@@ -822,7 +821,7 @@
               <span class="text-slate-500">範例：國文科任教師同時教授三年 2 班、四年 1 班，預設「授課教師設定」填寫科目與年級。</span>
             </p>
             <p class="m-0">
-              <span class="font-bold text-slate-800">3. 導師兼科任：</span>兼任班級導師，亦教授其它班級特定學科教學之教師。
+              <span class="font-bold text-slate-800">3. 科兼導師：</span>兼任班級導師，亦教授其它班級特定學科教學之教師（如：國文科兼導師、英文科兼導師）。
             </p>
           </div>
         </div>
@@ -1166,10 +1165,10 @@ const filteredTeacherList = computed(() => {
   return allTeacherList.value.filter(t => {
     // 身分群組篩選
     if (teacherFilters.role !== 'all') {
-      if (teacherFilters.role === '導師兼科任') {
-        if (t.role !== '導師兼科任' && t.role !== '授課教師' && !t.role?.includes('兼導師')) return false
-      } else if (teacherFilters.role === '授課教師') {
-        if (t.role !== '導師兼科任' && t.role !== '授課教師' && !t.role?.includes('兼導師')) return false
+      if (teacherFilters.role === '班級導師') {
+        if (!t.role?.includes('導師') && !formatRoleName(t).includes('導師')) return false
+      } else if (teacherFilters.role === '科任教師') {
+        if (!t.role?.includes('科任') && !formatRoleName(t).includes('科任')) return false
       } else {
         if (t.role !== teacherFilters.role && !t.role?.includes(teacherFilters.role)) return false
       }
