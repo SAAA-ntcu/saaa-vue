@@ -170,11 +170,11 @@
 import { ref, reactive, computed } from 'vue'
 import YearSelector from '../components/common/YearSelector.vue'
 import { useAssessmentYear } from '../composables/useAssessmentYear'
+import { assessmentService } from '../services/assessmentService'
 import {
   assessmentYears,
   assessmentSubjects,
-  gradesHeader,
-  getAssessmentDownloadUrl
+  gradesHeader
 } from '../data/assessmentData'
 import { downloadMultipleFiles } from '../utils/batchDownloader'
 
@@ -194,7 +194,7 @@ function getItemObject(year, gradeName, subjectName) {
     gradeName,
     subjectName,
     name: `${year}年度縣市學生學習能力檢測_${gradeName}${subjectName}.pdf`,
-    url: getAssessmentDownloadUrl(year, gradeName, subjectName)
+    url: assessmentService.getDownloadUrl(year, gradeName, subjectName)
   }
 }
 

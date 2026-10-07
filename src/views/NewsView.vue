@@ -111,40 +111,36 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { newsList } from '../data/newsData'
+import { ref, computed, onMounted } from 'vue'
+import { newsService } from '../services/newsService'
+import { usePagination } from '../composables/usePagination'
 import NewsCard from '../components/news/NewsCard.vue'
 import DownloadDialog from '../components/news/DownloadDialog.vue'
 
+const newsItems = ref([])
 const keyword = ref('')
 const activeKeyword = ref('')
-const currentPage = ref(1)
-const pageSize = ref(7)
 
 const modalVisible = ref(false)
 const currentModalData = ref(null)
 
-function handleSearch() {
-  activeKeyword.value = keyword.value.trim()
-  currentPage.value = 1
+// 載入資料
+async function loadNews() {
+  const res = await newsService.getNewsList()
+  if (res.success) {
+    newsItems.value = res.data
+  }
 }
 
-function clearSearch() {
-  keyword.value = ''
-  activeKeyword.value = ''
-  currentPage.value = 1
-}
-
-function openDownloadModal(data) {
-  currentModalData.value = data
-  modalVisible.value = true
-}
+onMounted(() => {
+  loadNews()
+})
 
 // Filtered list based on search keyword
 const filteredNews = computed(() => {
-  if (!activeKeyword.value) return newsList
+  if (!activeKeyword.value) return newsItems.value
   const kw = activeKeyword.value.toLowerCase()
-  return newsList.filter(
+  return newsItems.value.filter(
     (item) =>
       item.title.toLowerCase().includes(kw) ||
       item.type.toLowerCase().includes(kw) ||
@@ -152,9 +148,27 @@ const filteredNews = computed(() => {
   )
 })
 
-// Current page sliced items
-const paginatedNews = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  return filteredNews.value.slice(start, start + pageSize.value)
-})
+// 使用共用 usePagination Composable
+const {
+  currentPage,
+  pageSize,
+  paginatedItems: paginatedNews,
+  resetPage
+} = usePagination(filteredNews, { initialPageSize: 7 })
+
+function handleSearch() {
+  activeKeyword.value = keyword.value.trim()
+  resetPage()
+}
+
+function clearSearch() {
+  keyword.value = ''
+  activeKeyword.value = ''
+  resetPage()
+}
+
+function openDownloadModal(data) {
+  currentModalData.value = data
+  modalVisible.value = true
+}
 </script>

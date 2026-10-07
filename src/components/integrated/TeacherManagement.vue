@@ -851,11 +851,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useAuth } from '../../composables/useAuth'
+import { teacherService } from '../../services/teacherService'
+import { usePagination } from '../../composables/usePagination'
 
 const { state } = useAuth()
+
 // 1. 教師帳號管理 (新舊融合旗艦版)
 // ==========================================
 const teacherFilters = reactive({
@@ -866,179 +869,21 @@ const teacherFilters = reactive({
   keyword: ''
 })
 
-const teacherCurrentPage = ref(1)
-const teacherPageSize = ref(8)
+const allTeacherList = ref([])
 
-const allTeacherList = ref([
-  {
-    id: 1,
-    selected: false,
-    year: '115',
-    username: 'PAdmin_054628',
-    name: `${state.school}_校長`,
-    adminCode: 'PAdmin_054628',
-    role: '校長',
-    grade: '',
-    assignedClass: '',
-    email: 'principal@ntcu.edu.tw',
-    expiryDate: '2027/07/31',
-    isActive: true
-  },
-  {
-    id: 2,
-    selected: false,
-    year: '115',
-    username: 'DAdmin_014628',
-    name: '陳○廷',
-    adminCode: 'DAdmin_014628',
-    role: '學年主任',
-    grade: '',
-    assignedClass: '',
-    email: 'grade1@ntcu.edu.tw',
-    expiryDate: '2027/07/31',
-    isActive: true
-  },
-  {
-    id: 3,
-    selected: false,
-    year: '115',
-    username: 'DAdmin_024628',
-    name: '林○萱',
-    adminCode: 'DAdmin_024628',
-    role: '學年主任',
-    grade: '',
-    assignedClass: '',
-    email: 'grade2@ntcu.edu.tw',
-    expiryDate: '2027/07/31',
-    isActive: false // 停用帳號 1
-  },
-  {
-    id: 4,
-    selected: false,
-    year: '115',
-    username: 'DAdmin_034628',
-    name: '張○恩',
-    adminCode: 'DAdmin_034628',
-    role: '學年主任',
-    grade: '',
-    assignedClass: '',
-    email: 'grade3@ntcu.edu.tw',
-    expiryDate: '2027/07/31',
-    isActive: true
-  },
-  {
-    id: 5,
-    selected: false,
-    year: '115',
-    username: 'TAdmin_301001',
-    name: '王○晴',
-    adminCode: 'TAdmin_301001',
-    role: '班級導師',
-    grade: '3',
-    assignedClass: '三年 1 班',
-    email: 'wang@ntcu.edu.tw',
-    expiryDate: '2027/07/31',
-    isActive: true
-  },
-  {
-    id: 6,
-    selected: false,
-    year: '115',
-    username: 'TAdmin_302002',
-    name: '李○哲',
-    adminCode: 'TAdmin_302002',
-    role: '班級導師',
-    grade: '3',
-    assignedClass: '三年 2 班',
-    email: 'lee@ntcu.edu.tw',
-    expiryDate: '2027/07/31',
-    isActive: false // 停用帳號 2
-  },
-  {
-    id: 7,
-    selected: false,
-    year: '115',
-    username: 'TAdmin_401003',
-    name: '許○婷',
-    adminCode: 'TAdmin_401003',
-    role: '科任教師',
-    grade: '4',
-    assignedClass: '四年級 (數學科任)',
-    email: 'hsu@ntcu.edu.tw',
-    expiryDate: '2027/07/31',
-    isActive: true
-  },
-  {
-    id: 8,
-    selected: false,
-    year: '115',
-    username: 'TAdmin_501004',
-    name: '趙○芬',
-    adminCode: 'TAdmin_501004',
-    role: '班級導師',
-    grade: '5',
-    assignedClass: '五年 1 班',
-    email: 'chao@ntcu.edu.tw',
-    expiryDate: '2027/07/31',
-    isActive: true
-  },
-  {
-    id: 9,
-    selected: false,
-    year: '115',
-    username: 'TAdmin_502005',
-    name: '周○廷',
-    adminCode: 'TAdmin_502005',
-    role: '授課教師',
-    grade: '5',
-    assignedClass: '五年 2 班兼國語科任',
-    email: 'chou@ntcu.edu.tw',
-    expiryDate: '2027/07/31',
-    isActive: false // 停用帳號 3
-  },
-  {
-    id: 10,
-    selected: false,
-    year: '115',
-    username: 'TAdmin_601006',
-    name: '謝○睿',
-    adminCode: 'TAdmin_601006',
-    role: '科任教師',
-    grade: '6',
-    assignedClass: '六年級 (英語文科任)',
-    email: 'hsieh@ntcu.edu.tw',
-    expiryDate: '2027/07/31',
-    isActive: true
-  },
-  {
-    id: 11,
-    selected: false,
-    year: '115',
-    username: 'TAdmin_402007',
-    name: '吳○翰',
-    adminCode: 'TAdmin_402007',
-    role: '科任教師',
-    grade: '4',
-    assignedClass: '四年級 (自然科任)',
-    email: 'wu@ntcu.edu.tw',
-    expiryDate: '2027/07/31',
-    isActive: false // 停用帳號 4
-  },
-  {
-    id: 12,
-    selected: false,
-    year: '115',
-    username: 'TAdmin_602008',
-    name: '郭○妤',
-    adminCode: 'TAdmin_602008',
-    role: '班級導師',
-    grade: '6',
-    assignedClass: '六年 2 班',
-    email: 'kuo@ntcu.edu.tw',
-    expiryDate: '2027/07/31',
-    isActive: true
+async function loadTeacherList() {
+  const res = await teacherService.getTeachers()
+  if (res.success) {
+    allTeacherList.value = res.data.map(t => ({
+      ...t,
+      selected: false
+    }))
   }
-])
+}
+
+onMounted(() => {
+  loadTeacherList()
+})
 
 // 角色徽章顏色輔助樣式
 function getRoleBadgeClass(role) {
@@ -1062,25 +907,23 @@ const filteredTeacherList = computed(() => {
       return false
     }
     // 帳號狀態篩選
-    if (teacherFilters.status === 'active' && !t.isActive) {
-      return false
-    }
-    if (teacherFilters.status === 'inactive' && t.isActive) {
-      return false
+    if (teacherFilters.status !== 'all') {
+      const wantActive = teacherFilters.status === 'active'
+      if (t.isActive !== wantActive) return false
     }
     // 授課年級篩選
-    if (teacherFilters.grade !== 'all' && t.grade !== teacherFilters.grade) {
-      return false
+    if (teacherFilters.grade !== 'all') {
+      if (!t.grade || String(t.grade) !== String(teacherFilters.grade)) {
+        return false
+      }
     }
-    // 關鍵字搜尋 (支援搜尋 使用者名稱、姓名、管理碼、信箱、班級)
+    // 關鍵字搜尋 (使用者名稱、教師姓名、信箱)
     if (teacherFilters.keyword.trim()) {
       const kw = teacherFilters.keyword.trim().toLowerCase()
-      const matchName = t.name.toLowerCase().includes(kw)
-      const matchUser = (t.username || '').toLowerCase().includes(kw)
-      const matchCode = (t.adminCode || '').toLowerCase().includes(kw)
+      const matchUsername = (t.username || t.adminCode || '').toLowerCase().includes(kw)
+      const matchName = (t.name || '').toLowerCase().includes(kw)
       const matchEmail = (t.email || '').toLowerCase().includes(kw)
-      const matchClass = (t.assignedClass || '').toLowerCase().includes(kw)
-      if (!matchName && !matchUser && !matchCode && !matchEmail && !matchClass) {
+      if (!matchUsername && !matchName && !matchEmail) {
         return false
       }
     }
@@ -1088,14 +931,16 @@ const filteredTeacherList = computed(() => {
   })
 })
 
-// 分頁切片
-const paginatedTeacherList = computed(() => {
-  const start = (teacherCurrentPage.value - 1) * teacherPageSize.value
-  return filteredTeacherList.value.slice(start, start + teacherPageSize.value)
-})
+// 分頁 Composable
+const {
+  currentPage: teacherCurrentPage,
+  pageSize: teacherPageSize,
+  paginatedItems: paginatedTeacherList,
+  resetPage: resetTeacherPage
+} = usePagination(filteredTeacherList, { initialPageSize: 8 })
 
 function handleTeacherFilterChange() {
-  teacherCurrentPage.value = 1
+  resetTeacherPage()
 }
 
 function resetTeacherFilters() {
@@ -1104,7 +949,7 @@ function resetTeacherFilters() {
   teacherFilters.grade = 'all'
   teacherFilters.status = 'all'
   teacherFilters.keyword = ''
-  teacherCurrentPage.value = 1
+  resetTeacherPage()
   ElMessage.info('已重設教師篩選條件')
 }
 
@@ -1122,7 +967,8 @@ const inactiveTeacherCount = computed(() => {
 })
 
 // 個別切換教師帳號啟用/停用
-function handleToggleTeacherStatus(t, val) {
+async function handleToggleTeacherStatus(t, val) {
+  await teacherService.updateTeacher(t.id, { isActive: val })
   if (val) {
     ElMessage.success(`已啟用教師【${t.name}】之帳號權限`)
   } else {
@@ -1131,17 +977,21 @@ function handleToggleTeacherStatus(t, val) {
 }
 
 // 批次啟用
-function batchEnableTeachers() {
+async function batchEnableTeachers() {
   const selected = allTeacherList.value.filter(t => t.selected)
   if (selected.length === 0) return
+  const ids = selected.map(t => t.id)
+  await teacherService.batchUpdateStatus(ids, true)
   selected.forEach(t => { t.isActive = true })
   ElMessage.success(`已批次啟用所選 ${selected.length} 位教師之帳號權限`)
 }
 
 // 批次停用
-function batchDisableTeachers() {
+async function batchDisableTeachers() {
   const selected = allTeacherList.value.filter(t => t.selected)
   if (selected.length === 0) return
+  const ids = selected.map(t => t.id)
+  await teacherService.batchUpdateStatus(ids, false)
   selected.forEach(t => { t.isActive = false })
   ElMessage.warning(`已批次停用所選 ${selected.length} 位教師帳號（將暫時無法登入）`)
 }
@@ -1168,232 +1018,185 @@ function exportTeacherList() {
 }
 
 function exportSelectedTeachers() {
-  const count = selectedTeacherCount.value
-  ElMessage.success(`已成功匯出所選取的【${count} 位教師帳號名冊】EXCEL 檔案！`)
+  const selected = allTeacherList.value.filter(t => t.selected)
+  ElMessage.success(`已開始匯出所選 ${selected.length} 位教師名冊 EXCEL 檔案`)
 }
 
-function batchResetTeacherPw() {
-  const count = selectedTeacherCount.value
-  ElMessage.success(`已將所選取的【${count} 位教師密碼】批次重設為預設值：saaa.ntcu`)
-  cancelSelectAll()
-}
-
-function resetTeacherPw(name) {
-  ElMessage.success(`已重設【${name}】教師密碼為預設值：saaa.ntcu`)
+async function batchResetTeacherPw() {
+  const selected = allTeacherList.value.filter(t => t.selected)
+  const ids = selected.map(t => t.id)
+  await teacherService.batchResetPassword(ids)
+  ElMessage.success(`已重設所選 ${selected.length} 位教師密碼，並發送臨時密碼通知信！`)
 }
 
 // ==========================================
-// 彈窗 1：新增 / 編輯教師帳號 (極致雙頁籤 UX)
+// 彈窗 1：新增 / 編輯教師帳號
 // ==========================================
 const createDialogVisible = ref(false)
 const isEditMode = ref(false)
 const currentEditingId = ref(null)
 
-// 編輯彈窗子頁籤: 'basic' (基本資料) 或 'classes' (班級任課設定)
-const modalSubTab = ref('basic')
-const activeClassSubject = ref('國語文')
-
-// 支援科任/授課配置的三大測驗科目
-const availableSubjects = ['國語文', '數學', '英語文']
-
-// 班級任課數據庫結構 (符合 Screenshot 2 的 3~6 年級編制)
-const gradeClassStructure = [
-  { grade: 3, label: '3年級', classes: ['301', '302', '303', '304', '305', '306', '307', '308'] },
-  { grade: 4, label: '4年級', classes: ['401', '402', '403', '404', '405', '406', '407', '408'] },
-  { grade: 5, label: '5年級', classes: ['501', '502', '503', '504', '505', '506', '507', '508', '509'] },
-  { grade: 6, label: '6年級', classes: ['601', '602', '603', '604', '605', '606', '607', '608'] }
-]
+const modalActiveTab = ref('basic')
 
 const teacherForm = reactive({
-  role: '班級導師',
-  name: '',
-  username: '',
-  grade: '3',
-  assignedClass: '',
-  email: '',
-  startDate: '2026-10-06',
-  endDate: '2027-07-31',
-  isActive: true,
+  role: '校長',
+  directorGrade: '1',
   homeroomGrade: '3',
   homeroomClass: '1',
-  selectedSubjects: ['國語文'],
-  classMatrix: {
-    國語文: ['301'],
-    數學: [],
-    英語文: []
+  name: '',
+  username: '',
+  email: '',
+  isActive: true,
+  teachingGrades: ['3', '4'],
+  selectedSubjects: ['自然科學'],
+  subjectMatrix: {
+    '1': [],
+    '2': [],
+    '3': ['自然科學'],
+    '4': ['自然科學'],
+    '5': [],
+    '6': []
   }
 })
 
-// 計算所有科目累計被選取的班級次數
 const totalSelectedClassesCount = computed(() => {
   let count = 0
-  availableSubjects.forEach(sub => {
-    count += (teacherForm.classMatrix[sub] || []).length
+  Object.keys(teacherForm.subjectMatrix).forEach(g => {
+    count += teacherForm.subjectMatrix[g].length
   })
   return count
 })
 
-function isClassSelected(sub, classCode) {
-  return (teacherForm.classMatrix[sub] || []).includes(classCode)
-}
-
-function toggleClassSelection(sub, classCode) {
-  if (!teacherForm.classMatrix[sub]) {
-    teacherForm.classMatrix[sub] = []
-  }
-  const arr = teacherForm.classMatrix[sub]
-  const idx = arr.indexOf(classCode)
-  if (idx > -1) {
-    arr.splice(idx, 1)
-  } else {
-    arr.push(classCode)
-    if (!teacherForm.selectedSubjects.includes(sub)) {
-      teacherForm.selectedSubjects.push(sub)
-    }
-  }
-}
-
-function isGradeAllSelected(sub, gradeItem) {
-  const arr = teacherForm.classMatrix[sub] || []
-  return gradeItem.classes.length > 0 && gradeItem.classes.every(c => arr.includes(c))
-}
-
-function toggleGradeAll(sub, gradeItem) {
-  if (!teacherForm.classMatrix[sub]) {
-    teacherForm.classMatrix[sub] = []
-  }
-  const arr = teacherForm.classMatrix[sub]
-  const allSelected = isGradeAllSelected(sub, gradeItem)
-  if (allSelected) {
-    teacherForm.classMatrix[sub] = arr.filter(c => !gradeItem.classes.includes(c))
-  } else {
-    gradeItem.classes.forEach(c => {
-      if (!arr.includes(c)) arr.push(c)
-    })
-    if (!teacherForm.selectedSubjects.includes(sub)) {
-      teacherForm.selectedSubjects.push(sub)
-    }
-  }
-}
-
-function copySubjectClasses(fromSub, toSub) {
-  if (fromSub === toSub) return
-  const fromArr = teacherForm.classMatrix[fromSub] || []
-  teacherForm.classMatrix[toSub] = [...fromArr]
-  if (fromArr.length > 0 && !teacherForm.selectedSubjects.includes(toSub)) {
-    teacherForm.selectedSubjects.push(toSub)
-  }
-  ElMessage.success(`已將【${fromSub}】的班級配置複製至【${toSub}】（共 ${fromArr.length} 班）`)
+function switchModalTab(tab) {
+  modalActiveTab.value = tab
 }
 
 function openCreateTeacherModal() {
   isEditMode.value = false
   currentEditingId.value = null
-  modalSubTab.value = 'basic'
-  activeClassSubject.value = '國語文'
+  modalActiveTab.value = 'basic'
+  
   teacherForm.role = '班級導師'
-  teacherForm.name = ''
-  teacherForm.username = ''
-  teacherForm.grade = '3'
-  teacherForm.assignedClass = ''
-  teacherForm.email = ''
-  teacherForm.startDate = '2026-10-06'
-  teacherForm.endDate = '2027-07-31'
-  teacherForm.isActive = true
+  teacherForm.directorGrade = '3'
   teacherForm.homeroomGrade = '3'
   teacherForm.homeroomClass = '1'
+  teacherForm.name = ''
+  teacherForm.username = 'TAdmin_' + Math.floor(100000 + Math.random() * 900000)
+  teacherForm.email = ''
+  teacherForm.isActive = true
+  teacherForm.teachingGrades = ['3']
   teacherForm.selectedSubjects = ['國語文']
-  teacherForm.classMatrix = {
-    國語文: ['301'],
-    數學: [],
-    英語文: []
-  }
+  teacherForm.subjectMatrix = { '1': [], '2': [], '3': ['1班'], '4': [], '5': [], '6': [] }
+  
   createDialogVisible.value = true
 }
 
 function openEditTeacherModal(t) {
   isEditMode.value = true
   currentEditingId.value = t.id
-  modalSubTab.value = 'basic'
-  activeClassSubject.value = '國語文'
-  teacherForm.role = t.role
-  teacherForm.name = t.name
-  teacherForm.username = t.username || t.adminCode
-  teacherForm.grade = t.grade || '3'
-  teacherForm.assignedClass = t.assignedClass || ''
-  teacherForm.email = t.email
-  teacherForm.startDate = '2026-10-06'
-  teacherForm.endDate = t.expiryDate ? t.expiryDate.replace(/\//g, '-') : '2027-07-31'
+  modalActiveTab.value = 'basic'
+
+  teacherForm.role = t.role || '校長'
+  teacherForm.name = t.name || ''
+  teacherForm.username = t.username || t.adminCode || ''
+  teacherForm.email = t.email || ''
   teacherForm.isActive = t.isActive !== false
 
-  // 解析既有班級
-  if (t.role === '班級導師') {
-    const match = (t.assignedClass || '').match(/([一二三四五六1-6])年\s*([0-9]+)\s*班/)
-    if (match) {
-      const gMap = { '一': '1', '二': '2', '三': '3', '四': '4', '五': '5', '六': '6' }
-      teacherForm.homeroomGrade = gMap[match[1]] || match[1]
-      teacherForm.homeroomClass = match[2]
-    } else {
-      teacherForm.homeroomGrade = t.grade || '3'
-      teacherForm.homeroomClass = '1'
-    }
-    teacherForm.selectedSubjects = ['國語文']
-    teacherForm.classMatrix = { 國語文: [], 數學: [], 英語文: [] }
-  } else if (t.role === '科任教師') {
-    teacherForm.homeroomGrade = ''
-    teacherForm.homeroomClass = ''
-    teacherForm.selectedSubjects = t.assignedClass.includes('英語') ? ['英語文'] : ['數學']
-    teacherForm.classMatrix = {
-      國語文: [],
-      數學: t.grade === '4' ? ['401', '402', '403'] : ['501', '502'],
-      英語文: t.grade === '6' ? ['601', '602'] : []
-    }
-  } else if (t.role === '授課教師') {
-    teacherForm.homeroomGrade = '5'
-    teacherForm.homeroomClass = '2'
-    teacherForm.selectedSubjects = ['國語文']
-    teacherForm.classMatrix = {
-      國語文: ['502', '503', '504'],
-      數學: [],
-      英語文: []
-    }
-  } else {
-    teacherForm.homeroomGrade = ''
-    teacherForm.homeroomClass = ''
-    teacherForm.selectedSubjects = []
-    teacherForm.classMatrix = { 國語文: [], 數學: [], 英語文: [] }
+  if (t.role === '學年主任') {
+    teacherForm.directorGrade = t.grade || '1'
+  } else if (t.role === '班級導師') {
+    teacherForm.homeroomGrade = t.grade || '3'
+    teacherForm.homeroomClass = t.assignedClass ? t.assignedClass.replace(/[^0-9]/g, '') : '1'
   }
 
   createDialogVisible.value = true
 }
 
-function saveTeacher() {
-  if (!teacherForm.name || !teacherForm.username || !teacherForm.email) {
-    ElMessage.warning('請填寫完整必填欄位')
+function handleRoleChange() {
+  if (teacherForm.role === '校長') {
+    teacherForm.username = 'PAdmin_054628'
+  } else if (teacherForm.role === '學年主任') {
+    teacherForm.username = `DAdmin_${String(teacherForm.directorGrade).padStart(2, '0')}4628`
+  } else if (teacherForm.role === '班級導師') {
+    teacherForm.username = `TAdmin_${teacherForm.homeroomGrade}0${teacherForm.homeroomClass}001`
+  } else if (teacherForm.role === '科任教師') {
+    teacherForm.username = `SAdmin_${teacherForm.teachingGrades[0] || '3'}00001`
+  }
+}
+
+function toggleTeachingGrade(g) {
+  const idx = teacherForm.teachingGrades.indexOf(g)
+  if (idx > -1) {
+    if (teacherForm.teachingGrades.length > 1) {
+      teacherForm.teachingGrades.splice(idx, 1)
+      teacherForm.subjectMatrix[g] = []
+    }
+  } else {
+    teacherForm.teachingGrades.push(g)
+  }
+}
+
+function isMatrixClassChecked(grade, cls) {
+  return (teacherForm.subjectMatrix[grade] || []).includes(cls)
+}
+
+function toggleMatrixClass(grade, cls) {
+  if (!teacherForm.subjectMatrix[grade]) {
+    teacherForm.subjectMatrix[grade] = []
+  }
+  const idx = teacherForm.subjectMatrix[grade].indexOf(cls)
+  if (idx > -1) {
+    teacherForm.subjectMatrix[grade].splice(idx, 1)
+  } else {
+    teacherForm.subjectMatrix[grade].push(cls)
+  }
+}
+
+function selectAllClassesForGrade(grade) {
+  teacherForm.subjectMatrix[grade] = ['1班', '2班', '3班', '4班', '5班']
+}
+
+function clearAllClassesForGrade(grade) {
+  teacherForm.subjectMatrix[grade] = []
+}
+
+function toggleHomeroomSubject(sub) {
+  const idx = teacherForm.selectedSubjects.indexOf(sub)
+  if (idx > -1) {
+    if (teacherForm.selectedSubjects.length > 1) {
+      teacherForm.selectedSubjects.splice(idx, 1)
+    }
+  } else {
+    teacherForm.selectedSubjects.push(sub)
+  }
+}
+
+async function saveTeacher() {
+  if (!teacherForm.name.trim()) {
+    ElMessage.warning('請填寫教師姓名！')
+    return
+  }
+  if (!teacherForm.username.trim()) {
+    ElMessage.warning('請填寫登入使用者名稱！')
     return
   }
 
-  const isSpecialRole = teacherForm.role === '校長' || teacherForm.role === '學年主任'
-  
-  let finalAssignedClass = ''
   let finalGrade = ''
+  let finalAssignedClass = ''
 
-  if (isSpecialRole) {
-    finalAssignedClass = ''
+  if (teacherForm.role === '校長') {
     finalGrade = ''
+    finalAssignedClass = ''
+  } else if (teacherForm.role === '學年主任') {
+    finalGrade = teacherForm.directorGrade
+    finalAssignedClass = ''
   } else if (teacherForm.role === '班級導師') {
     finalGrade = teacherForm.homeroomGrade
-    const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[teacherForm.homeroomGrade] || teacherForm.homeroomGrade
+    const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[finalGrade] || finalGrade
     finalAssignedClass = `${numChar}年 ${teacherForm.homeroomClass} 班`
   } else if (teacherForm.role === '科任教師') {
-    const subs = []
-    availableSubjects.forEach(s => {
-      const cls = teacherForm.classMatrix[s] || []
-      if (cls.length > 0) {
-        subs.push(`${s}(${cls.length}班)`)
-      }
-    })
-    finalGrade = teacherForm.grade || '4'
+    finalGrade = teacherForm.teachingGrades[0] || '3'
+    const subs = teacherForm.selectedSubjects
     const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[finalGrade] || finalGrade
     finalAssignedClass = subs.length > 0 ? `${numChar}年級 (${subs.join(', ')})` : `${numChar}年級 (科任教師)`
   } else if (teacherForm.role === '授課教師') {
@@ -1403,36 +1206,34 @@ function saveTeacher() {
     finalAssignedClass = `${numChar}年 ${teacherForm.homeroomClass} 班兼${teacherForm.selectedSubjects.join('、')}科任(${subCount}班)`
   }
 
+  const payload = {
+    name: teacherForm.name,
+    username: teacherForm.username,
+    adminCode: teacherForm.username,
+    role: teacherForm.role,
+    grade: finalGrade,
+    assignedClass: finalAssignedClass,
+    email: teacherForm.email,
+    isActive: teacherForm.isActive
+  }
+
   if (isEditMode.value && currentEditingId.value) {
+    await teacherService.updateTeacher(currentEditingId.value, payload)
     const item = allTeacherList.value.find(t => t.id === currentEditingId.value)
     if (item) {
-      item.name = teacherForm.name
-      item.username = teacherForm.username
-      item.adminCode = teacherForm.username
-      item.role = teacherForm.role
-      item.grade = finalGrade
-      item.assignedClass = finalAssignedClass
-      item.email = teacherForm.email
-      item.expiryDate = teacherForm.endDate.replace(/-/g, '/')
-      item.isActive = teacherForm.isActive
-      ElMessage.success(`已更新【${item.name}】教師帳號與任課設定！`)
+      Object.assign(item, payload)
     }
+    ElMessage.success(`已更新【${payload.name}】教師帳號與任課設定！`)
   } else {
-    allTeacherList.value.unshift({
-      id: Date.now(),
-      selected: false,
-      year: teacherFilters.year || '115',
-      username: teacherForm.username,
-      name: teacherForm.name,
-      adminCode: teacherForm.username,
-      role: teacherForm.role,
-      grade: finalGrade,
-      assignedClass: finalAssignedClass,
-      email: teacherForm.email,
-      expiryDate: teacherForm.endDate.replace(/-/g, '/'),
-      isActive: teacherForm.isActive
+    const res = await teacherService.createTeacher({
+      ...payload,
+      year: teacherFilters.year || '115'
     })
-    ElMessage.success(`成功建立教師帳號：${teacherForm.name}，並已發送通知信！`)
+    allTeacherList.value.unshift({
+      ...res.data,
+      selected: false
+    })
+    ElMessage.success(`成功建立教師帳號：${payload.name}，並已發送通知信！`)
   }
 
   createDialogVisible.value = false
@@ -1460,15 +1261,15 @@ function handleFileChange(e) {
   }
 }
 
-function uploadBatch() {
+async function uploadBatch() {
   if (!selectedFileName.value) {
     ElMessage.warning('請先選擇要上傳的 Excel 檔案！')
     return
   }
+  await teacherService.batchImport(selectedFileName.value)
   ElMessage.success(`檔案【${selectedFileName.value}】批次解析完成，已成功匯入教師帳號並寄送通知信！`)
   selectedFileName.value = ''
   batchDialogVisible.value = false
+  await loadTeacherList()
 }
-
-
 </script>

@@ -1,0 +1,7 @@
+export { apiClient } from './apiClient'
+export { newsService } from './newsService'
+export { assessmentService } from './assessmentService'
+export { examService } from './examService'
+export { teacherService } from './teacherService'
+export { absenteeService } from './absenteeService'
+export { scoreService } from './scoreService'

@@ -378,11 +378,11 @@ import { ElMessage } from 'element-plus'
 import YearSelector from '../components/common/YearSelector.vue'
 import { useAssessmentYear } from '../composables/useAssessmentYear'
 import { useAuth } from '../composables/useAuth'
+import { examService } from '../services/examService'
 import {
   examYears,
   examSubjects,
-  examGradesHeader,
-  getExamDownloadUrl
+  examGradesHeader
 } from '../data/examData'
 import { downloadMultipleFiles } from '../utils/batchDownloader'
 
@@ -517,7 +517,7 @@ function getItemObject(year, gradeName, subjectName) {
     gradeName,
     subjectName,
     name: `${year}年縣市學生學力檢測正式施測題本(${subjectName}${gradeName}).zip`,
-    url: getExamDownloadUrl(year, gradeName, subjectName)
+    url: examService.getDownloadUrl(year, gradeName, subjectName)
   }
 }
 
