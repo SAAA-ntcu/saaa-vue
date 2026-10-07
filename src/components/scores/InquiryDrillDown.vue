@@ -306,20 +306,6 @@
         </div>
       </div>
 
-      <!-- 快捷班級卡片矩陣 -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-        <button
-          v-for="cls in classStats"
-          :key="cls.name"
-          type="button"
-          @click="drillToClass(cls.name)"
-          class="p-3 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl text-center shadow-2xs hover:shadow-xs transition cursor-pointer group"
-        >
-          <div class="text-xs font-bold text-slate-800 group-hover:text-[#52796f]">{{ cls.name }} 班</div>
-          <div class="text-base font-black font-mono text-[#52796f] my-1">{{ cls.rate }}%</div>
-          <div class="text-[10px] text-slate-400">平均分：{{ (cls.rate * 0.95).toFixed(1) }}</div>
-        </button>
-      </div>
     </div>
 
     <!-- ============================================================== -->
