@@ -31,6 +31,17 @@
           </button>
           <button
             type="button"
+            @click="openBatchAllocationModal"
+            class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-[#2d5a52] border border-emerald-300 rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
+            title="選取教師後統一年級並依序或個別排定班級"
+          >
+            <svg class="w-4 h-4 text-[#52796f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            批次學年班級指派
+          </button>
+          <button
+            type="button"
             @click="exportTeacherList"
             class="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95"
           >
@@ -148,6 +159,16 @@
             class="px-3 py-1.5 bg-[#52796f] hover:bg-[#354f52] text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer active:scale-95"
           >
             匯出所選教師 (Excel)
+          </button>
+          <button
+            type="button"
+            @click="openBatchAllocationModal"
+            class="px-3.5 py-1.5 bg-[#2d5a52] hover:bg-[#1f3f39] text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer active:scale-95 flex items-center gap-1.5 border border-emerald-500/40"
+          >
+            <svg class="w-3.5 h-3.5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>⚡ 批次學年班級指派</span>
           </button>
           <button
             type="button"
@@ -829,6 +850,214 @@
       </div>
     </el-dialog>
 
+    <!-- ============================================== -->
+    <!-- MODAL 3: 批次學年班級指派盤 (兩階段智慧配班彈窗 - 方案一) -->
+    <!-- ============================================== -->
+    <el-dialog
+      v-model="batchAllocationDialogVisible"
+      title="⚡ 批次學年班級指派盤 (兩階段智慧配班)"
+      width="840px"
+      append-to-body
+      destroy-on-close
+      class="rounded-2xl overflow-hidden"
+    >
+      <div class="space-y-4 text-xs">
+        <!-- 說明橫幅 -->
+        <div class="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl text-xs text-emerald-950 flex items-start gap-2.5">
+          <span class="text-base">💡</span>
+          <div>
+            <strong class="font-bold">兩階段操作流程：</strong>
+            已選取 <span class="font-mono font-bold text-emerald-800">{{ batchAllocList.length }}</span> 位教師。
+            第一步先統一指定目標學年，第二步可個別改班或使用「⚡ 依序流水號自動填入」，內建即時衝突防呆，杜絕重複撞班！
+          </div>
+        </div>
+
+        <!-- 第一步：統一指定任教年級 -->
+        <div class="p-3.5 bg-sky-50/60 border border-sky-200 rounded-xl space-y-2">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <span class="font-bold text-sky-950 text-xs sm:text-sm flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs font-bold">1</span>
+                <span>第一步：統一指定任教年級</span>
+              </span>
+              <p class="text-[11px] text-sky-800 m-0 mt-0.5 pl-6.5">
+                切換年級時，下方所有選定教師將同步連動至該學年
+              </p>
+            </div>
+
+            <!-- Grade Select -->
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-slate-700">目標學年：</span>
+              <select
+                v-model="batchTargetGrade"
+                class="h-8 px-3 bg-white border border-sky-300 rounded-lg font-bold text-xs outline-none focus:border-sky-600 cursor-pointer shadow-2xs"
+              >
+                <option value="1">1 年級</option>
+                <option value="2">2 年級</option>
+                <option value="3">3 年級</option>
+                <option value="4">4 年級</option>
+                <option value="5">5 年級</option>
+                <option value="6">6 年級</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 第二步：分別指定擔任班級別 -->
+        <div class="p-3.5 bg-slate-50/70 border border-slate-200 rounded-xl space-y-3">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <span class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5">
+                <span class="w-5 h-5 rounded-full bg-[#52796f] text-white flex items-center justify-center text-xs font-bold">2</span>
+                <span>第二步：分別指定擔任班級別</span>
+              </span>
+              <p class="text-[11px] text-slate-500 m-0 mt-0.5 pl-6.5">
+                可單獨逐一微調切換，或使用快捷鍵一鍵依序流水號填入
+              </p>
+            </div>
+
+            <!-- Fast Batch Helpers -->
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <button
+                type="button"
+                @click="autoFillSequentialClasses"
+                class="px-2.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-xs font-bold cursor-pointer transition shadow-2xs flex items-center gap-1"
+                title="一鍵將選定老師依序填為 1班、2班、3班、4班..."
+              >
+                <span>⚡ 依序流水號自動填入 (1班、2班、3班...)</span>
+              </button>
+              <button
+                type="button"
+                @click="clearAllBatchClasses"
+                class="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 rounded-lg text-xs font-medium cursor-pointer transition"
+              >
+                清空班級
+              </button>
+            </div>
+          </div>
+
+          <!-- Teachers Sequential Table -->
+          <div class="border border-slate-200 rounded-xl overflow-hidden bg-white max-h-72 overflow-y-auto">
+            <table class="w-full text-left">
+              <thead class="bg-slate-50 text-slate-600 font-bold border-b border-slate-200 sticky top-0 z-10">
+                <tr>
+                  <th class="py-2.5 px-3 w-12 text-center">No.</th>
+                  <th class="py-2.5 px-3">教師姓名</th>
+                  <th class="py-2.5 px-3">原身分 / 原配置</th>
+                  <th class="py-2.5 px-3 text-sky-900 font-bold">統一年級</th>
+                  <th class="py-2.5 px-3 text-emerald-800 font-bold">個別擔任班級別</th>
+                  <th class="py-2.5 px-3 text-center">狀態檢核</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 font-medium">
+                <tr
+                  v-for="(item, idx) in batchAllocList"
+                  :key="item.id"
+                  class="hover:bg-slate-50/80 transition"
+                  :class="{ 'bg-amber-50/40': isClassConflict(item.targetClassNum) }"
+                >
+                  <td class="py-2.5 px-3 text-slate-400 font-mono text-center">{{ idx + 1 }}</td>
+                  <td class="py-2.5 px-3 font-bold text-slate-800">
+                    {{ item.name }}
+                    <span class="text-slate-400 font-mono text-[10px] ml-1 font-normal">({{ item.username }})</span>
+                  </td>
+                  <td class="py-2.5 px-3 text-slate-500">
+                    <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] mr-1">{{ item.role }}</span>
+                    <span>{{ item.oldClass }}</span>
+                  </td>
+                  <td class="py-2.5 px-3 font-bold text-sky-900 bg-sky-50/30">
+                    <span class="px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 font-mono text-[11px]">
+                      {{ batchTargetGrade }} 年級
+                    </span>
+                  </td>
+                  <td class="py-2.5 px-3 bg-emerald-50/30">
+                    <select
+                      v-model="item.targetClassNum"
+                      class="h-7 px-2.5 bg-white border border-emerald-300 rounded-lg text-xs font-bold text-[#354f52] outline-none focus:border-[#52796f] cursor-pointer shadow-2xs"
+                      :class="{ 'border-amber-500 text-amber-900 bg-amber-50': isClassConflict(item.targetClassNum) }"
+                    >
+                      <option v-for="c in 8" :key="c" :value="String(c)">
+                        {{ c }} 班
+                      </option>
+                      <option value="0">（未指派班級）</option>
+                    </select>
+                  </td>
+                  <td class="py-2.5 px-3 text-center">
+                    <span
+                      v-if="isClassConflict(item.targetClassNum)"
+                      class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-[10px] inline-flex items-center gap-1"
+                    >
+                      <span>⚠️</span> 重複選班
+                    </span>
+                    <span
+                      v-else-if="item.targetClassNum !== '0'"
+                      class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]"
+                    >
+                      ✓ 正常指派
+                    </span>
+                    <span
+                      v-else
+                      class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-medium text-[10px]"
+                    >
+                      未指派
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Conflict Warning Banner (Shown if duplicate class selected) -->
+          <div
+            v-if="hasBatchConflict"
+            class="p-3 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-900 flex items-center justify-between transition"
+          >
+            <div class="flex items-center gap-2">
+              <span class="text-base">⚠️</span>
+              <strong class="font-bold">
+                偵測到重複班級衝突：{{ conflictClassesDesc }} 同時有 2 位以上導師！
+              </strong>
+            </div>
+            <span class="text-[11px] text-amber-700">請避免多位導師指派於同一班級</span>
+          </div>
+        </div>
+
+        <!-- 底部確認按鈕與總結 -->
+        <div class="flex items-center justify-between pt-2 border-t border-slate-100 flex-wrap gap-2">
+          <div class="text-xs">
+            <span v-if="hasBatchConflict" class="text-rose-600 font-bold">
+              ⚠️ 請先排除重複班級衝突後再進行儲存
+            </span>
+            <span v-else class="text-emerald-700 font-bold">
+              ✅ {{ batchAllocList.length }} 位教師皆已完成班級配置規劃，無任何衝突。
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              @click="batchAllocationDialogVisible = false"
+              class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold cursor-pointer transition"
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              :disabled="hasBatchConflict || isSavingBatchAllocation"
+              @click="saveBatchAllocation"
+              class="px-5 py-2 rounded-lg text-xs font-bold shadow-xs transition flex items-center gap-1.5"
+              :class="hasBatchConflict || isSavingBatchAllocation ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-[#52796f] hover:bg-[#354f52] text-white cursor-pointer active:scale-95'"
+            >
+              <svg v-if="isSavingBatchAllocation" class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              <span>{{ isSavingBatchAllocation ? '儲存中...' : `確認儲存指派 (共 ${batchAllocList.length} 位)` }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </el-dialog>
+
   
   </div>
 </template>
@@ -1436,131 +1665,139 @@ async function saveInlineEdits() {
 }
 
 // ==========================================
-// 方案 A：批次修改配置彈窗 (Batch Action Modal)
+// 方案 1：兩階段智慧配班 (Sequential Grade & Class Allocation Wizard)
 // ==========================================
-const batchConfigDialogVisible = ref(false)
-const batchConfigSubTab = ref('grade')
-const batchGradeMode = ref('plusOne')
-const batchFixedGrade = ref('4')
-const batchSelectedSubjects = ref(['國語文', '數學'])
+const batchAllocationDialogVisible = ref(false)
+const batchTargetGrade = ref('4')
+const batchAllocList = ref([])
+const isSavingBatchAllocation = ref(false)
 
-function openBatchConfigModal() {
-  if (selectedTeacherCount.value === 0) {
-    ElMessage.warning('請先勾選欲批次修改的教師！')
+function openBatchAllocationModal() {
+  const selected = allTeacherList.value.filter(t => t.selected)
+  if (selected.length === 0) {
+    ElMessage.info('請先在下方教師名冊勾選欲指派班級的教師（例如勾選某個學年群的老師），即可開啟指派盤！')
     return
   }
-  batchConfigSubTab.value = 'grade'
-  batchGradeMode.value = 'plusOne'
-  batchFixedGrade.value = '4'
-  batchSelectedSubjects.value = ['國語文', '數學']
-  batchConfigDialogVisible.value = true
-}
 
-const batchDiffPreviewList = computed(() => {
-  const selected = allTeacherList.value.filter(t => t.selected)
-  return selected.map(t => {
-    const beforeDesc = (t.role === '校長' || t.role === '學年主任') ? '(系統預設)' : (t.assignedClass || `${t.grade || '3'}年級`)
-    let afterDesc = ''
+  // 自動根據已選的第一位教師的年級預設，若無則預設 '4'
+  const firstWithGrade = selected.find(t => t.grade && t.grade !== 'all')
+  batchTargetGrade.value = firstWithGrade ? String(firstWithGrade.grade) : '4'
 
-    if (t.role === '校長' || t.role === '學年主任') {
-      afterDesc = '(系統預設，不變動)'
-    } else if (batchConfigSubTab.value === 'grade') {
-      if (batchGradeMode.value === 'plusOne') {
-        const currG = parseInt(t.grade) || 3
-        const nextG = currG + 1
-        if (nextG > 6) {
-          afterDesc = '滿 6 年級畢業 ➔ 轉為未指派班級'
-        } else {
-          const cMatch = t.assignedClass?.match(/\d+/)
-          const cNum = cMatch ? cMatch[0] : '1'
-          const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[nextG] || nextG
-          afterDesc = `${numChar}年 ${cNum} 班`
-        }
-      } else {
-        const nextG = batchFixedGrade.value
-        const cMatch = t.assignedClass?.match(/\d+/)
-        const cNum = cMatch ? cMatch[0] : '1'
-        const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[nextG] || nextG
-        afterDesc = `${numChar}年 ${cNum} 班`
-      }
-    } else if (batchConfigSubTab.value === 'subject') {
-      const subs = batchSelectedSubjects.value.join('、')
-      afterDesc = `${t.assignedClass || ''} 附加【${subs || '無'}】`
-    } else if (batchConfigSubTab.value === 'reset') {
-      afterDesc = '班級清空 (釋放資源保留帳號)'
+  // 初始化教師清單與預設流水號班級
+  batchAllocList.value = selected.map((t, idx) => {
+    // 嘗試解析原班級
+    let classNum = '0'
+    const cMatch = t.assignedClass?.match(/(\d+)[\s*]班/)
+    if (cMatch) {
+      classNum = cMatch[1]
+    } else {
+      // 預設給予流水號 1~8
+      classNum = (idx + 1) <= 8 ? String(idx + 1) : '0'
     }
 
     return {
       id: t.id,
+      username: t.username || t.adminCode || '',
       name: t.name,
-      role: t.role,
-      before: beforeDesc,
-      after: afterDesc
+      role: t.role || '教師',
+      oldClass: t.assignedClass || '(未配置)',
+      targetClassNum: classNum
     }
   })
+
+  batchAllocationDialogVisible.value = true
+}
+
+function autoFillSequentialClasses() {
+  batchAllocList.value.forEach((item, idx) => {
+    item.targetClassNum = (idx + 1) <= 8 ? String(idx + 1) : '0'
+  })
+}
+
+function clearAllBatchClasses() {
+  batchAllocList.value.forEach(item => {
+    item.targetClassNum = '0'
+  })
+}
+
+const conflictClasses = computed(() => {
+  const counts = {}
+  batchAllocList.value.forEach(item => {
+    if (item.targetClassNum && item.targetClassNum !== '0') {
+      counts[item.targetClassNum] = (counts[item.targetClassNum] || 0) + 1
+    }
+  })
+  return Object.keys(counts).filter(num => counts[num] > 1)
 })
 
-async function applyBatchConfig() {
-  const selected = allTeacherList.value.filter(t => t.selected)
-  const updates = []
+const hasBatchConflict = computed(() => conflictClasses.value.length > 0)
 
-  selected.forEach(t => {
-    if (t.role === '校長' || t.role === '學年主任') return
+const conflictClassesDesc = computed(() => {
+  return conflictClasses.value.map(c => `${c}班`).join('、')
+})
 
-    let newGrade = t.grade
-    let newAssignedClass = t.assignedClass
+function isClassConflict(classNum) {
+  if (!classNum || classNum === '0') return false
+  return conflictClasses.value.includes(classNum)
+}
 
-    if (batchConfigSubTab.value === 'grade') {
-      if (batchGradeMode.value === 'plusOne') {
-        const currG = parseInt(t.grade) || 3
-        const nextG = currG + 1
-        if (nextG > 6) {
-          newGrade = ''
-          newAssignedClass = '未指定班級'
-        } else {
-          newGrade = String(nextG)
-          const cMatch = t.assignedClass?.match(/\d+/)
-          const cNum = cMatch ? cMatch[0] : '1'
-          const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[nextG] || nextG
-          newAssignedClass = `${numChar}年 ${cNum} 班`
+async function saveBatchAllocation() {
+  if (hasBatchConflict.value) {
+    ElMessage.error(`偵測到重複班級衝突（${conflictClassesDesc.value}），請修正後再儲存！`)
+    return
+  }
+
+  isSavingBatchAllocation.value = true
+  try {
+    const numCharMap = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }
+    const chineseGrade = numCharMap[batchTargetGrade.value] || batchTargetGrade.value
+
+    const updates = batchAllocList.value.map(item => {
+      let newAssignedClass = ''
+      let newRole = item.role
+
+      if (item.targetClassNum === '0') {
+        newAssignedClass = `${batchTargetGrade.value}年級 (未指派班級)`
+      } else {
+        newAssignedClass = `${chineseGrade}年 ${item.targetClassNum} 班`
+        // 如果原本是純科任，指派了明確班級則調整身分為導師 (若原為導師兼科任則保留)
+        if (newRole === '科任教師' || newRole === '教師') {
+          newRole = '班級導師'
         }
-      } else {
-        newGrade = batchFixedGrade.value
-        const cMatch = t.assignedClass?.match(/\d+/)
-        const cNum = cMatch ? cMatch[0] : '1'
-        const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[newGrade] || newGrade
-        newAssignedClass = `${numChar}年 ${cNum} 班`
       }
-    } else if (batchConfigSubTab.value === 'subject') {
-      const subs = batchSelectedSubjects.value.join('、')
-      if (t.role === '班級導師') {
-        newAssignedClass = `${t.assignedClass} 兼【${subs}】`
-        t.role = '導師兼科任'
-      } else {
-        newAssignedClass = `${t.grade || '3'}年級 (${subs}科任)`
-      }
-    } else if (batchConfigSubTab.value === 'reset') {
-      newGrade = ''
-      newAssignedClass = ''
-    }
 
-    updates.push({
-      id: t.id,
-      data: {
-        grade: newGrade,
-        assignedClass: newAssignedClass,
-        role: t.role
+      return {
+        id: item.id,
+        data: {
+          grade: batchTargetGrade.value,
+          assignedClass: newAssignedClass,
+          role: newRole
+        }
       }
     })
 
-    t.grade = newGrade
-    t.assignedClass = newAssignedClass
-  })
+    // 呼叫後端/Service批次更新
+    await teacherService.batchUpdateTeachers(updates)
 
-  await teacherService.batchUpdateTeachers(updates)
-  batchConfigDialogVisible.value = false
-  cancelSelectAll()
-  ElMessage.success(`已成功批次更新 ${updates.length} 位教師之教學配置！`)
+    // 同步更新前端記憶體狀態
+    updates.forEach(({ id, data }) => {
+      const localTeacher = allTeacherList.value.find(t => t.id === id)
+      if (localTeacher) {
+        localTeacher.grade = data.grade
+        localTeacher.assignedClass = data.assignedClass
+        localTeacher.role = data.role
+        localTeacher.selected = false
+      }
+    })
+
+    batchAllocationDialogVisible.value = false
+    cancelSelectAll()
+    ElMessage.success(`🎉 已成功完成 ${updates.length} 位教師之 ${batchTargetGrade.value} 年級班級配置！`)
+  } catch (err) {
+    ElMessage.error('儲存失敗：' + (err.message || '系統發生錯誤'))
+  } finally {
+    isSavingBatchAllocation.value = false
+  }
 }
 
 // ==========================================
