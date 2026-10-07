@@ -93,7 +93,7 @@
 
       <!-- Filter Bar (與缺考名單一致的現代卡片式篩選) -->
       <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-3.5 sm:p-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
           <!-- 年度 -->
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">年度</label>
@@ -122,6 +122,20 @@
               <option value="班級導師">班級導師</option>
               <option value="科任教師">科任教師</option>
               <option value="授課教師">授課教師</option>
+            </select>
+          </div>
+
+          <!-- 帳號狀態 -->
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">帳號狀態</label>
+            <select
+              v-model="teacherFilters.status"
+              @change="handleTeacherFilterChange"
+              class="w-full h-9 px-2.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f] cursor-pointer"
+            >
+              <option value="all">全部狀態</option>
+              <option value="active">啟用中</option>
+              <option value="inactive">已停用</option>
             </select>
           </div>
 
@@ -170,19 +184,39 @@
       <!-- Batch Selection Floating Toolbar -->
       <div
         v-if="selectedTeacherCount > 0"
-        class="flex items-center justify-between p-2.5 sm:p-3 bg-[#edf2ee] border border-[#52796f]/30 rounded-xl text-xs text-[#2f3e46] transition-all"
+        class="flex items-center justify-between p-2.5 sm:p-3 bg-[#edf2ee] border border-[#52796f]/30 rounded-xl text-xs text-[#2f3e46] transition-all flex-wrap gap-2"
       >
         <div class="flex items-center gap-2 font-medium">
           <span class="w-2 h-2 rounded-full bg-[#52796f]"></span>
           <span>已勾選 <strong class="text-[#354f52] font-bold">{{ selectedTeacherCount }}</strong> 位教師帳號</span>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <button
             type="button"
             @click="exportSelectedTeachers"
             class="px-3 py-1.5 bg-[#52796f] hover:bg-[#354f52] text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer active:scale-95"
           >
             匯出所選教師 (Excel)
+          </button>
+          <button
+            type="button"
+            @click="batchEnableTeachers"
+            class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer active:scale-95 flex items-center gap-1"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            批次啟用
+          </button>
+          <button
+            type="button"
+            @click="batchDisableTeachers"
+            class="px-3 py-1.5 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer active:scale-95 flex items-center gap-1"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+            </svg>
+            批次停用
           </button>
           <button
             type="button"
@@ -231,7 +265,10 @@
                 v-for="(t, index) in paginatedTeacherList"
                 :key="t.id"
                 class="hover:bg-slate-50/70 transition"
-                :class="{ 'bg-emerald-50/20': t.selected }"
+                :class="{
+                  'bg-emerald-50/20': t.selected,
+                  'bg-slate-50/60 text-slate-500': !t.isActive && !t.selected
+                }"
               >
                 <!-- Checkbox -->
                 <td class="py-3 px-3 text-center">
@@ -253,12 +290,21 @@
                 </td>
 
                 <!-- 使用者名稱 -->
-                <td class="py-3 px-4 font-mono font-bold text-[#52796f]">
-                  {{ t.username || t.adminCode }}
+                <td class="py-3 px-4 font-mono font-bold" :class="t.isActive ? 'text-[#52796f]' : 'text-slate-500'">
+                  <div class="flex items-center gap-1.5">
+                    <span>{{ t.username || t.adminCode }}</span>
+                    <span
+                      v-if="!t.isActive"
+                      class="px-1.5 py-0.2 rounded text-[10px] font-sans font-bold bg-slate-200 text-slate-600"
+                      title="帳號目前為停用狀態"
+                    >
+                      停用
+                    </span>
+                  </div>
                 </td>
 
                 <!-- 教師姓名 -->
-                <td class="py-3 px-4 font-bold text-slate-800">
+                <td class="py-3 px-4 font-bold" :class="t.isActive ? 'text-slate-800' : 'text-slate-500'">
                   {{ t.name }}
                 </td>
 
@@ -283,7 +329,7 @@
 
                 <!-- 任教年級 / 班級 (校長與學年主任依規範留空) -->
                 <td class="py-3 px-4">
-                  <div class="font-medium text-slate-700">
+                  <div class="font-medium" :class="t.isActive ? 'text-slate-700' : 'text-slate-400'">
                     {{ (t.role === '校長' || t.role === '學年主任') ? '' : (t.assignedClass || '') }}
                   </div>
                 </td>
@@ -295,12 +341,27 @@
                   </a>
                 </td>
 
-                <!-- 有效期限 / 狀態 -->
+                <!-- 有效期限 / 狀態 (Switch 啟用/停用) -->
                 <td class="py-3 px-4 text-center">
-                  <div class="font-mono text-slate-600 text-[11px]">{{ t.expiryDate }}</div>
-                  <div class="inline-flex items-center gap-1 text-emerald-600 font-semibold text-[10px] mt-0.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                    啟用中
+                  <div class="font-mono text-slate-500 text-[11px]">{{ t.expiryDate }}</div>
+                  <div class="flex items-center justify-center gap-1.5 mt-1">
+                    <el-switch
+                      v-model="t.isActive"
+                      size="small"
+                      active-color="#52796f"
+                      inactive-color="#cbd5e1"
+                      inline-prompt
+                      active-text="啟"
+                      inactive-text="停"
+                      @change="(val) => handleToggleTeacherStatus(t, val)"
+                    />
+                    <span
+                      class="inline-flex items-center gap-1 font-semibold text-[11px] select-none"
+                      :class="t.isActive ? 'text-emerald-700' : 'text-slate-400'"
+                    >
+                      <span class="w-1.5 h-1.5 rounded-full" :class="t.isActive ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+                      {{ t.isActive ? '啟用中' : '已停用' }}
+                    </span>
                   </div>
                 </td>
 
@@ -345,7 +406,9 @@
       <!-- Bottom Pagination & Counts -->
       <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
         <div class="text-xs text-slate-500 font-medium">
-          全校教師共 <span class="font-bold text-slate-800">{{ allTeacherList.length }}</span> 位，符合篩選條件：<span class="font-bold text-[#52796f]">{{ filteredTeacherList.length }}</span> 位
+          全校教師共 <span class="font-bold text-slate-800">{{ allTeacherList.length }}</span> 位
+          （啟用中：<span class="font-bold text-emerald-600">{{ activeTeacherCount }}</span> 位，已停用：<span class="font-bold text-slate-500">{{ inactiveTeacherCount }}</span> 位）
+          ，符合篩選條件：<span class="font-bold text-[#52796f]">{{ filteredTeacherList.length }}</span> 位
         </div>
         <el-pagination
           v-if="filteredTeacherList.length > teacherPageSize"
@@ -724,6 +787,30 @@
               </div>
             </div>
 
+            <!-- 帳號啟用狀態 -->
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+              <div>
+                <label class="block font-bold text-slate-700 mb-0.5">帳號啟用狀態</label>
+                <p class="text-[11px] text-slate-400 m-0">停用後教師帳號將暫時無法登入系統使用各專區功能</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <el-switch
+                  v-model="teacherForm.isActive"
+                  active-color="#52796f"
+                  inactive-color="#cbd5e1"
+                  inline-prompt
+                  active-text="啟用"
+                  inactive-text="停用"
+                />
+                <span
+                  class="text-xs font-bold whitespace-nowrap select-none"
+                  :class="teacherForm.isActive ? 'text-emerald-700' : 'text-slate-500'"
+                >
+                  {{ teacherForm.isActive ? '● 啟用中' : '○ 已停用' }}
+                </span>
+              </div>
+            </div>
+
             <!-- 導師班級設定 (針對班級導師、授課教師) -->
             <div v-if="teacherForm.role === '班級導師' || teacherForm.role === '授課教師'" class="p-3 bg-sky-50/60 border border-sky-200 rounded-xl space-y-2">
               <label class="block font-bold text-sky-900">
@@ -1073,6 +1160,7 @@ const teacherFilters = reactive({
   year: '115',
   role: 'all',
   grade: 'all',
+  status: 'all', // 'all' | 'active' | 'inactive'
   keyword: ''
 })
 
@@ -1091,7 +1179,8 @@ const allTeacherList = ref([
     grade: '',
     assignedClass: '',
     email: 'principal@ntcu.edu.tw',
-    expiryDate: '2027/07/31'
+    expiryDate: '2027/07/31',
+    isActive: true
   },
   {
     id: 2,
@@ -1104,7 +1193,8 @@ const allTeacherList = ref([
     grade: '',
     assignedClass: '',
     email: 'grade1@ntcu.edu.tw',
-    expiryDate: '2027/07/31'
+    expiryDate: '2027/07/31',
+    isActive: true
   },
   {
     id: 3,
@@ -1117,7 +1207,8 @@ const allTeacherList = ref([
     grade: '',
     assignedClass: '',
     email: 'grade2@ntcu.edu.tw',
-    expiryDate: '2027/07/31'
+    expiryDate: '2027/07/31',
+    isActive: false // 停用帳號 1
   },
   {
     id: 4,
@@ -1130,7 +1221,8 @@ const allTeacherList = ref([
     grade: '',
     assignedClass: '',
     email: 'grade3@ntcu.edu.tw',
-    expiryDate: '2027/07/31'
+    expiryDate: '2027/07/31',
+    isActive: true
   },
   {
     id: 5,
@@ -1143,7 +1235,8 @@ const allTeacherList = ref([
     grade: '3',
     assignedClass: '三年 1 班',
     email: 'wang@ntcu.edu.tw',
-    expiryDate: '2027/07/31'
+    expiryDate: '2027/07/31',
+    isActive: true
   },
   {
     id: 6,
@@ -1156,7 +1249,8 @@ const allTeacherList = ref([
     grade: '3',
     assignedClass: '三年 2 班',
     email: 'lee@ntcu.edu.tw',
-    expiryDate: '2027/07/31'
+    expiryDate: '2027/07/31',
+    isActive: false // 停用帳號 2
   },
   {
     id: 7,
@@ -1169,7 +1263,8 @@ const allTeacherList = ref([
     grade: '4',
     assignedClass: '四年級 (數學科任)',
     email: 'hsu@ntcu.edu.tw',
-    expiryDate: '2027/07/31'
+    expiryDate: '2027/07/31',
+    isActive: true
   },
   {
     id: 8,
@@ -1182,7 +1277,8 @@ const allTeacherList = ref([
     grade: '5',
     assignedClass: '五年 1 班',
     email: 'chao@ntcu.edu.tw',
-    expiryDate: '2027/07/31'
+    expiryDate: '2027/07/31',
+    isActive: true
   },
   {
     id: 9,
@@ -1195,7 +1291,8 @@ const allTeacherList = ref([
     grade: '5',
     assignedClass: '五年 2 班兼國語科任',
     email: 'chou@ntcu.edu.tw',
-    expiryDate: '2027/07/31'
+    expiryDate: '2027/07/31',
+    isActive: false // 停用帳號 3
   },
   {
     id: 10,
@@ -1208,7 +1305,36 @@ const allTeacherList = ref([
     grade: '6',
     assignedClass: '六年級 (英語文科任)',
     email: 'hsieh@ntcu.edu.tw',
-    expiryDate: '2027/07/31'
+    expiryDate: '2027/07/31',
+    isActive: true
+  },
+  {
+    id: 11,
+    selected: false,
+    year: '115',
+    username: 'TAdmin_402007',
+    name: '吳○翰',
+    adminCode: 'TAdmin_402007',
+    role: '科任教師',
+    grade: '4',
+    assignedClass: '四年級 (自然科任)',
+    email: 'wu@ntcu.edu.tw',
+    expiryDate: '2027/07/31',
+    isActive: false // 停用帳號 4
+  },
+  {
+    id: 12,
+    selected: false,
+    year: '115',
+    username: 'TAdmin_602008',
+    name: '郭○妤',
+    adminCode: 'TAdmin_602008',
+    role: '班級導師',
+    grade: '6',
+    assignedClass: '六年 2 班',
+    email: 'kuo@ntcu.edu.tw',
+    expiryDate: '2027/07/31',
+    isActive: true
   }
 ])
 
@@ -1231,6 +1357,13 @@ const filteredTeacherList = computed(() => {
     }
     // 身分群組篩選
     if (teacherFilters.role !== 'all' && t.role !== teacherFilters.role) {
+      return false
+    }
+    // 帳號狀態篩選
+    if (teacherFilters.status === 'active' && !t.isActive) {
+      return false
+    }
+    if (teacherFilters.status === 'inactive' && t.isActive) {
       return false
     }
     // 授課年級篩選
@@ -1267,6 +1400,7 @@ function resetTeacherFilters() {
   teacherFilters.year = '115'
   teacherFilters.role = 'all'
   teacherFilters.grade = 'all'
+  teacherFilters.status = 'all'
   teacherFilters.keyword = ''
   teacherCurrentPage.value = 1
   ElMessage.info('已重設教師篩選條件')
@@ -1276,6 +1410,39 @@ function resetTeacherFilters() {
 const selectedTeacherCount = computed(() => {
   return allTeacherList.value.filter(t => t.selected).length
 })
+
+const activeTeacherCount = computed(() => {
+  return allTeacherList.value.filter(t => t.isActive).length
+})
+
+const inactiveTeacherCount = computed(() => {
+  return allTeacherList.value.filter(t => !t.isActive).length
+})
+
+// 個別切換教師帳號啟用/停用
+function handleToggleTeacherStatus(t, val) {
+  if (val) {
+    ElMessage.success(`已啟用教師【${t.name}】之帳號權限`)
+  } else {
+    ElMessage.warning(`已停用教師【${t.name}】之帳號（該教師將暫時無法登入）`)
+  }
+}
+
+// 批次啟用
+function batchEnableTeachers() {
+  const selected = allTeacherList.value.filter(t => t.selected)
+  if (selected.length === 0) return
+  selected.forEach(t => { t.isActive = true })
+  ElMessage.success(`已批次啟用所選 ${selected.length} 位教師之帳號權限`)
+}
+
+// 批次停用
+function batchDisableTeachers() {
+  const selected = allTeacherList.value.filter(t => t.selected)
+  if (selected.length === 0) return
+  selected.forEach(t => { t.isActive = false })
+  ElMessage.warning(`已批次停用所選 ${selected.length} 位教師帳號（將暫時無法登入）`)
+}
 
 const isAllTeachersSelected = computed({
   get() {
@@ -1344,6 +1511,7 @@ const teacherForm = reactive({
   email: '',
   startDate: '2026-10-06',
   endDate: '2027-07-31',
+  isActive: true,
   homeroomGrade: '3',
   homeroomClass: '1',
   selectedSubjects: ['國語文'],
@@ -1429,6 +1597,7 @@ function openCreateTeacherModal() {
   teacherForm.email = ''
   teacherForm.startDate = '2026-10-06'
   teacherForm.endDate = '2027-07-31'
+  teacherForm.isActive = true
   teacherForm.homeroomGrade = '3'
   teacherForm.homeroomClass = '1'
   teacherForm.selectedSubjects = ['國語文']
@@ -1453,6 +1622,7 @@ function openEditTeacherModal(t) {
   teacherForm.email = t.email
   teacherForm.startDate = '2026-10-06'
   teacherForm.endDate = t.expiryDate ? t.expiryDate.replace(/\//g, '-') : '2027-07-31'
+  teacherForm.isActive = t.isActive !== false
 
   // 解析既有班級
   if (t.role === '班級導師') {
@@ -1542,6 +1712,7 @@ function saveTeacher() {
       item.assignedClass = finalAssignedClass
       item.email = teacherForm.email
       item.expiryDate = teacherForm.endDate.replace(/-/g, '/')
+      item.isActive = teacherForm.isActive
       ElMessage.success(`已更新【${item.name}】教師帳號與任課設定！`)
     }
   } else {
@@ -1556,7 +1727,8 @@ function saveTeacher() {
       grade: finalGrade,
       assignedClass: finalAssignedClass,
       email: teacherForm.email,
-      expiryDate: teacherForm.endDate.replace(/-/g, '/')
+      expiryDate: teacherForm.endDate.replace(/-/g, '/'),
+      isActive: teacherForm.isActive
     })
     ElMessage.success(`成功建立教師帳號：${teacherForm.name}，並已發送通知信！`)
   }
