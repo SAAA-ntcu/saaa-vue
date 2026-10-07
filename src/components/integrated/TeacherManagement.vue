@@ -6,7 +6,7 @@
       <!-- Top Action Bar -->
       <div class="flex items-center justify-between flex-wrap gap-3 pb-1">
         <div class="text-xs text-slate-500 font-medium">
-          {{ teacherFilters.year }} 年度教師登入權限、身分群組與授課配置，支援即時篩選、彈窗新增與批次匯出。
+          校內教師帳號權限、身分群組與授課配置，支援即時篩選、線上新增與批次指派匯出。
         </div>
         <div class="flex items-center gap-2 flex-wrap">
           <button
@@ -53,23 +53,9 @@
         </div>
       </div>
 
-      <!-- Filter Bar (與缺考名單一致的現代卡片式篩選) -->
+      <!-- Filter Bar (現代卡片式篩選) -->
       <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-3.5 sm:p-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          <!-- 年度 -->
-          <div>
-            <label class="block text-[11px] font-bold text-slate-600 mb-1">年度</label>
-            <select
-              v-model="teacherFilters.year"
-              @change="handleTeacherFilterChange"
-              class="w-full h-9 px-2.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f] cursor-pointer"
-            >
-              <option value="115">115 年度</option>
-              <option value="114">114 年度</option>
-              <option value="113">113 年度</option>
-            </select>
-          </div>
-
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <!-- 組別身分 -->
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">組別身分</label>
@@ -222,7 +208,6 @@
                   />
                 </th>
                 <th class="py-3 px-2 text-center w-10">No.</th>
-                <th class="py-3 px-3 text-center w-16">年度</th>
                 <th class="py-3 px-4">使用者名稱</th>
                 <th class="py-3 px-4">教師姓名</th>
                 <th class="py-3 px-4">組別身分</th>
@@ -254,11 +239,6 @@
                 <!-- No. -->
                 <td class="py-3 px-2 text-center font-mono text-slate-400">
                   {{ (teacherCurrentPage - 1) * teacherPageSize + index + 1 }}
-                </td>
-
-                <!-- 年度 -->
-                <td class="py-3 px-3 text-center font-mono font-bold text-slate-700">
-                  {{ t.year || teacherFilters.year }}
                 </td>
 
                 <!-- 使用者名稱 -->
@@ -407,8 +387,6 @@
           <!-- 麵包屑導覽 -->
           <div class="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
             <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-bold">校內名冊</span>
-            <span>&gt;</span>
-            <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-bold font-mono">115 年度</span>
             <span>&gt;</span>
             <span class="font-bold text-slate-800 truncate max-w-[140px]">{{ teacherForm.name || '新教師帳號' }}</span>
           </div>
@@ -1074,7 +1052,6 @@ const { state } = useAuth()
 // 1. 教師帳號管理 (新舊融合旗艦版)
 // ==========================================
 const teacherFilters = reactive({
-  year: '115',
   role: 'all',
   grade: 'all',
   status: 'all', // 'all' | 'active' | 'inactive'
@@ -1116,10 +1093,6 @@ function getRoleBadgeClass(role) {
 // 篩選後名單
 const filteredTeacherList = computed(() => {
   return allTeacherList.value.filter(t => {
-    // 年度篩選
-    if (teacherFilters.year && t.year && t.year !== teacherFilters.year) {
-      return false
-    }
     // 身分群組篩選
     if (teacherFilters.role !== 'all') {
       if (teacherFilters.role === '導師兼科任') {
@@ -1168,7 +1141,6 @@ function handleTeacherFilterChange() {
 }
 
 function resetTeacherFilters() {
-  teacherFilters.year = '115'
   teacherFilters.role = 'all'
   teacherFilters.grade = 'all'
   teacherFilters.status = 'all'
@@ -1583,7 +1555,7 @@ async function saveTeacher() {
   } else {
     const res = await teacherService.createTeacher({
       ...payload,
-      year: teacherFilters.year || '115'
+      year: '115'
     })
     allTeacherList.value.unshift({
       ...res.data,

@@ -34,14 +34,8 @@
         </button>
       </div>
 
-      <!-- Year & Username Tag -->
+      <!-- Username Tag -->
       <div class="flex items-center gap-3 text-xs flex-wrap">
-        <span class="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 font-bold flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          年度：<strong class="font-bold font-mono">115</strong> 年度
-        </span>
         <span class="text-slate-600 font-medium">
           使用者名稱：<strong class="text-slate-800 font-bold font-mono">{{ state.username }}</strong>
         </span>
