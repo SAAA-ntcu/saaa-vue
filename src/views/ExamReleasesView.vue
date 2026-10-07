@@ -8,17 +8,20 @@
       <div class="w-12 md:w-16 h-1 bg-[#52796f] mx-auto mt-2 rounded-full"></div>
     </div>
 
-    <!-- 政策情境模擬切換控制台 (Simulation Switcher) -->
-    <div class="bg-gradient-to-r from-slate-50 via-white to-slate-50 border border-slate-200/90 rounded-2xl p-4 mb-5 shadow-xs shrink-0">
+    <!-- 政策情境模擬切換控制台 (Simulation Switcher) - 僅在最新年度（115年）提供模擬 -->
+    <div
+      v-if="isLatestYearSelected"
+      class="bg-gradient-to-r from-slate-50 via-white to-slate-50 border border-slate-200/90 rounded-2xl p-4 mb-5 shadow-xs shrink-0"
+    >
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
         <!-- 左側：情境模式切換 -->
         <div>
           <div class="flex items-center gap-2 mb-1.5 flex-wrap">
             <span class="text-[11px] font-black uppercase tracking-wider text-[#52796f] bg-[#52796f]/10 px-2.5 py-0.5 rounded-md flex items-center gap-1">
               <span>⚖️</span>
-              <span>試題公告政策模擬</span>
+              <span>最新 {{ latestExamYear }} 年度政策模擬</span>
             </span>
-            <span class="text-[11px] text-slate-400 font-medium">切換比對不同資安與授權保護機制</span>
+            <span class="text-[11px] text-slate-400 font-medium">切換比對最新年度資安與授權保護機制（歷年試題維持全開放）</span>
           </div>
 
           <!-- 雙情境切換 Segmented Switch -->
@@ -81,7 +84,7 @@
             <button
               type="button"
               @click="simulationIdentity = 'real'"
-              class="px-2 py-1 rounded-md font-medium transition cursor-pointer"
+              class="px-2.5 py-1 rounded-md font-medium transition cursor-pointer"
               :class="simulationIdentity === 'real' ? 'bg-white text-[#52796f] shadow-2xs font-bold' : 'text-slate-400 hover:text-slate-700'"
               title="恢復跟隨系統真實登入狀態"
             >
@@ -98,15 +101,36 @@
           <span>國小 3~6 年級及國中 7~8 年級全部公開，無需登入即可查看與單檔/批次下載。</span>
         </div>
         <div v-else class="text-slate-600 flex items-center gap-1.5">
-          <span class="text-amber-700 font-bold">● 6年級需登入政策：</span>
+          <span class="text-amber-700 font-bold">● 最新 {{ latestExamYear }} 年 6 年級需登入政策：</span>
           <span v-if="!isEffectiveLoggedIn" class="text-amber-800 font-medium">
-            目前為<strong>未登入狀態</strong>，國小 6 年級試題受保護 🔒 需登入才能看；其他年級仍可自由查看。
+            目前為<strong>未登入狀態</strong>，最新 {{ latestExamYear }} 年國小 6 年級試題受保護 🔒 需登入才能看；其他年級與歷年試題仍自由開放。
           </span>
           <span v-else class="text-emerald-700 font-medium">
             您已處於<strong>登入狀態</strong> 🔓，國小 6 年級試題已成功授權解鎖，享有完整檢視與下載權限！
           </span>
         </div>
       </div>
+    </div>
+
+    <!-- 歷年試題全開放提示（非最新年度顯示） -->
+    <div
+      v-else
+      class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 mb-5 shadow-2xs shrink-0 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
+    >
+      <div class="flex items-center gap-2 text-slate-600">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+        <span>
+          <strong>{{ selectedYear }} 年度歷年試題：</strong>全學段試題皆全面公開提供查閱與下載（政策情境模擬僅套用於最新 <strong>{{ latestExamYear }}</strong> 年度）。
+        </span>
+      </div>
+      <button
+        type="button"
+        @click="changeYear(latestExamYear)"
+        class="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-[#52796f] border border-[#52796f]/40 hover:border-[#52796f] rounded-xl font-bold transition shadow-2xs cursor-pointer whitespace-nowrap active:scale-95 flex items-center gap-1"
+      >
+        <span>前往最新 {{ latestExamYear }} 年度體驗政策模擬</span>
+        <span>→</span>
+      </button>
     </div>
 
     <!-- Year Selection & Batch Selection Controls Bar -->
@@ -375,6 +399,18 @@ const { state: authState } = useAuth()
 const { activeYear: selectedYear, setYear: changeYear } = useAssessmentYear(examYears)
 
 // ----------------------------------------------------
+// 最新年度計算 (僅最新年度需進行政策模擬)
+// ----------------------------------------------------
+const latestExamYear = computed(() => {
+  return [...examYears].sort((a, b) => Number(b) - Number(a))[0] || '115'
+})
+
+// 當前是否選擇最新年度
+const isLatestYearSelected = computed(() => {
+  return selectedYear.value === latestExamYear.value
+})
+
+// ----------------------------------------------------
 // 政策情境模擬狀態 (Policy Simulation State)
 // ----------------------------------------------------
 // 模式：'current' (情況一：現行全開放) | 'p6_login_required' (情況二：國小6年級需登入才能看)
@@ -400,8 +436,10 @@ const currentDisplayName = computed(() => {
   return authState.isLoggedIn ? (authState.username || '已登入人員') : '未登入訪客'
 })
 
-// 判斷特定年級是否處於鎖定狀態 (需登入且當前未登入)
+// 判斷特定年級是否處於鎖定狀態 (需登入且當前未登入，且【只有最新年度】才需模擬與保護)
 function isGradeLocked(gradeName) {
+  // 依要求：歷年試題維持全面開放，只有最新的那一年才需模擬
+  if (!isLatestYearSelected.value) return false
   if (policyMode.value === 'current') return false
   // 情況二：國小 6 年級受保護
   if (gradeName === '六年級') {
@@ -413,13 +451,13 @@ function isGradeLocked(gradeName) {
 // 切換政策情境
 function setPolicyMode(mode) {
   policyMode.value = mode
-  if (mode === 'p6_login_required' && !isEffectiveLoggedIn.value) {
-    // 若切換為受限模式且未登入，清除任何已勾選的 6 年級試題
+  if (mode === 'p6_login_required' && !isEffectiveLoggedIn.value && isLatestYearSelected.value) {
+    // 若切換為受限模式且未登入，清除最新年度已勾選的 6 年級試題
     examSubjects.forEach((s) => {
-      selectedMap.delete(getItemKey(selectedYear.value, '六年級', s.name))
+      selectedMap.delete(getItemKey(latestExamYear.value, '六年級', s.name))
     })
     ElMessage({
-      message: '已切換為【情況二：國小 6 年級需登入模式】（未登入者無法檢視與下載 6 年級試題）',
+      message: `已切換為【情況二：最新 ${latestExamYear.value} 年國小 6 年級需登入模式】（歷年試題維持全開放）`,
       type: 'warning',
       duration: 3500
     })
@@ -430,9 +468,10 @@ function setPolicyMode(mode) {
 
 // 點擊受限項目時跳出登入引導彈窗
 function handleLockedClick(subjectName) {
+  if (!isLatestYearSelected.value) return
   loginPromptTarget.value = {
     subject: subjectName || '全學科',
-    grade: '國小6年級'
+    grade: `最新 ${latestExamYear.value} 年 國小6年級`
   }
   showLoginPromptDialog.value = true
 }
@@ -450,11 +489,20 @@ function goToLoginPage() {
   router.push('/logins')
 }
 
-// 監聽身分切換，若是未登入則自動清除已選 6 年級試題
+// 監聽身分切換，若是未登入且處於最新年度，則自動清除已選 6 年級試題
 watch(isEffectiveLoggedIn, (isLogged) => {
-  if (policyMode.value === 'p6_login_required' && !isLogged) {
+  if (policyMode.value === 'p6_login_required' && !isLogged && isLatestYearSelected.value) {
     examSubjects.forEach((s) => {
-      selectedMap.delete(getItemKey(selectedYear.value, '六年級', s.name))
+      selectedMap.delete(getItemKey(latestExamYear.value, '六年級', s.name))
+    })
+  }
+})
+
+// 監聽年度切換
+watch(selectedYear, (newYear) => {
+  if (newYear === latestExamYear.value && policyMode.value === 'p6_login_required' && !isEffectiveLoggedIn.value) {
+    examSubjects.forEach((s) => {
+      selectedMap.delete(getItemKey(latestExamYear.value, '六年級', s.name))
     })
   }
 })
