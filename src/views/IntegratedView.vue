@@ -350,16 +350,13 @@
                       size="small"
                       active-color="#52796f"
                       inactive-color="#cbd5e1"
-                      inline-prompt
-                      active-text="啟"
-                      inactive-text="停"
                       @change="(val) => handleToggleTeacherStatus(t, val)"
                     />
                     <span
                       class="inline-flex items-center gap-1 font-semibold text-[11px] select-none"
-                      :class="t.isActive ? 'text-emerald-700' : 'text-slate-400'"
+                      :class="t.isActive ? 'text-emerald-700' : 'text-red-600'"
                     >
-                      <span class="w-1.5 h-1.5 rounded-full" :class="t.isActive ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+                      <span class="w-1.5 h-1.5 rounded-full" :class="t.isActive ? 'bg-emerald-500' : 'bg-red-500'"></span>
                       {{ t.isActive ? '啟用中' : '已停用' }}
                     </span>
                   </div>
@@ -407,7 +404,7 @@
       <div class="flex items-center justify-between flex-wrap gap-3 pt-2">
         <div class="text-xs text-slate-500 font-medium">
           全校教師共 <span class="font-bold text-slate-800">{{ allTeacherList.length }}</span> 位
-          （啟用中：<span class="font-bold text-emerald-600">{{ activeTeacherCount }}</span> 位，已停用：<span class="font-bold text-slate-500">{{ inactiveTeacherCount }}</span> 位）
+          （啟用中：<span class="font-bold text-emerald-600">{{ activeTeacherCount }}</span> 位，已停用：<span class="font-bold text-red-600">{{ inactiveTeacherCount }}</span> 位）
           ，符合篩選條件：<span class="font-bold text-[#52796f]">{{ filteredTeacherList.length }}</span> 位
         </div>
         <el-pagination
@@ -798,15 +795,12 @@
                   v-model="teacherForm.isActive"
                   active-color="#52796f"
                   inactive-color="#cbd5e1"
-                  inline-prompt
-                  active-text="啟用"
-                  inactive-text="停用"
                 />
                 <span
                   class="text-xs font-bold whitespace-nowrap select-none"
-                  :class="teacherForm.isActive ? 'text-emerald-700' : 'text-slate-500'"
+                  :class="teacherForm.isActive ? 'text-emerald-700' : 'text-red-600'"
                 >
-                  {{ teacherForm.isActive ? '● 啟用中' : '○ 已停用' }}
+                  {{ teacherForm.isActive ? '● 啟用中' : '● 已停用' }}
                 </span>
               </div>
             </div>

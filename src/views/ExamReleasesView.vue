@@ -181,16 +181,8 @@
               class="bg-[#52796f] py-3 px-2 tracking-wider cursor-pointer hover:bg-[#43645b] transition select-none group"
               :title="isGradeLocked(grade.gradeName) ? '國小 6 年級需登入方可選取' : `點擊全選/取消 ${grade.label}`"
             >
-              <div class="flex items-center justify-center gap-1 flex-wrap">
+              <div class="flex items-center justify-center gap-1.5 flex-wrap">
                 <span>{{ grade.label }}</span>
-                <!-- 鎖定/解鎖狀態徽章 (情況二) -->
-                <span
-                  v-if="policyMode === 'p6_login_required' && grade.gradeName === '六年級'"
-                  class="text-[9px] px-1 py-0.2 rounded font-mono font-bold"
-                  :class="isGradeLocked(grade.gradeName) ? 'bg-amber-400 text-amber-950' : 'bg-emerald-300 text-emerald-950'"
-                >
-                  {{ isGradeLocked(grade.gradeName) ? '🔒需登入' : '🔓已解鎖' }}
-                </span>
                 <span
                   v-if="!isGradeLocked(grade.gradeName)"
                   class="w-3.5 h-3.5 rounded border border-white/60 flex items-center justify-center text-[10px] transition-colors"
