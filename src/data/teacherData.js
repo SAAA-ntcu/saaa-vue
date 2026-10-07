@@ -88,10 +88,10 @@ export function getInitialTeachers(schoolName = '測試國小') {
       username: 'TAdmin_401003',
       name: '黃○宏',
       adminCode: 'TAdmin_401003',
-      role: '國語科兼導師',
-      subject: '國語',
+      role: '國文科兼導師',
+      subject: '國文',
       grade: '4',
-      assignedClass: '四年 1 班兼【國語2班】',
+      assignedClass: '四年 1 班兼【國文2班】',
       email: 'huang@ntcu.edu.tw',
       isActive: true
     },
@@ -127,7 +127,7 @@ export function getInitialTeachers(schoolName = '測試國小') {
       adminCode: 'SAdmin_300006',
       role: '科任教師',
       grade: '3',
-      assignedClass: '三年級 (英語科任)',
+      assignedClass: '三年級 (英文科任)',
       email: 'tsai@ntcu.edu.tw',
       isActive: true
     },
@@ -162,10 +162,10 @@ export function getInitialTeachers(schoolName = '測試國小') {
       username: 'TAdmin_303009',
       name: '洪○文',
       adminCode: 'TAdmin_303009',
-      role: '英語科兼導師',
-      subject: '英語',
+      role: '英文科兼導師',
+      subject: '英文',
       grade: '3',
-      assignedClass: '三年 3 班兼【英語2班】',
+      assignedClass: '三年 3 班兼【英文2班】',
       email: 'hung@ntcu.edu.tw',
       isActive: true
     }
