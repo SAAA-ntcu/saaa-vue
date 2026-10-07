@@ -7,11 +7,7 @@
 
       <!-- Card Title -->
       <div class="flex items-center space-x-2.5 border-b border-slate-200/60 pb-4 mb-6">
-        <div class="w-8 h-8 rounded-lg bg-[#52796f]/10 text-[#52796f] flex items-center justify-center shrink-0">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-          </svg>
-        </div>
+        <img :src="logoIcon" alt="SAAA" class="w-8 h-8 object-contain shrink-0" />
         <h2 class="text-xl font-extrabold text-slate-800 tracking-wider m-0">忘記密碼</h2>
       </div>
 
@@ -78,6 +74,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import logoIcon from '@/assets/logo/saaa-logo-icon.svg'
 
 const router = useRouter()
 const email = ref('')

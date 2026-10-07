@@ -3,20 +3,12 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
       <div class="flex items-center justify-between h-16 lg:h-20 relative z-10">
         <!-- Logo and Site Title -->
-        <router-link to="/" class="flex items-center space-x-3 pointer-events-auto no-underline group shrink-0">
-          <div class="w-10 h-10 rounded-xl bg-[#52796f] text-white flex items-center justify-center shadow-xs shrink-0 group-hover:scale-105 transition-transform">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-          </div>
-          <div>
-            <h1 class="text-base sm:text-lg lg:text-xl font-black text-slate-800 tracking-wide group-hover:text-[#52796f] transition-colors m-0">
-              縣市學生學習能力檢測
-            </h1>
-            <p class="text-[9px] lg:text-[10px] text-[#52796f] uppercase tracking-widest font-bold m-0">
-              Students' Academic Attainment Assessment
-            </p>
-          </div>
+        <router-link to="/" class="flex items-center pointer-events-auto no-underline group shrink-0 py-1" title="縣市學生學習能力檢測 - 回首頁">
+          <img
+            :src="logoHeader"
+            alt="縣市學生學習能力檢測 Students' Academic Attainment Assessment"
+            class="h-10 sm:h-12 lg:h-14 w-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]"
+          />
         </router-link>
 
         <!-- Desktop Navigation & User Section -->
@@ -246,10 +238,13 @@
         <div class="absolute right-0 top-0 bottom-0 w-[85%] max-w-sm bg-white shadow-2xl p-6 flex flex-col overflow-y-auto">
           <!-- Drawer Header -->
           <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
-            <div class="text-base font-bold text-slate-800 flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-[#52796f]"></span>
-              導覽功能表
-            </div>
+            <router-link to="/" @click="isMobileMenuOpen = false" class="flex items-center no-underline" title="回首頁">
+              <img
+                :src="logoHeader"
+                alt="縣市學生學習能力檢測"
+                class="h-8 w-auto object-contain"
+              />
+            </router-link>
             <button
               type="button"
               @click="isMobileMenuOpen = false"
@@ -416,6 +411,7 @@ import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAuth } from '../../composables/useAuth'
+import logoHeader from '@/assets/logo/saaa-logo-header.svg'
 
 const route = useRoute()
 const router = useRouter()

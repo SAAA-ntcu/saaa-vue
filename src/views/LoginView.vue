@@ -7,6 +7,11 @@
 
       <!-- Card Header -->
       <div class="px-8 pt-6 pb-2 text-center">
+        <img
+          :src="logoHorizontal"
+          alt="縣市學生學習能力檢測 Students' Academic Attainment Assessment"
+          class="h-12 sm:h-14 mx-auto mb-3 object-contain"
+        />
         <h3 class="text-xl font-bold text-slate-800 tracking-wider m-0">歡迎登入系統</h3>
         <p class="text-xs text-slate-400 mt-1 mb-0">請選擇您的單位與身分以開始檢測</p>
       </div>
@@ -256,6 +261,7 @@ import { reactive, ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import LoginQaDialog from '../components/common/LoginQaDialog.vue'
+import logoHorizontal from '@/assets/logo/saaa-logo-horizontal.svg'
 
 const router = useRouter()
 const route = useRoute()
