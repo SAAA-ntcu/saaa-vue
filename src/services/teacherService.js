@@ -111,6 +111,24 @@ export const teacherService = {
   },
 
   /**
+   * 批次更新教師基本資訊與班級配置
+   */
+  async batchUpdateTeachers(updates = []) {
+    return apiClient.request(() => {
+      updates.forEach(({ id, data }) => {
+        const index = teacherDatabase.findIndex(t => t.id === id)
+        if (index > -1) {
+          teacherDatabase[index] = {
+            ...teacherDatabase[index],
+            ...data
+          }
+        }
+      })
+      return { updatedCount: updates.length }
+    })
+  },
+
+  /**
    * 批次匯入教師
    */
   async batchImport(fileName) {

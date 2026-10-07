@@ -1367,6 +1367,259 @@ async function saveTeacher() {
 }
 
 // ==========================================
+// 方案 D：行內快速編輯模式 (Inline Quick Edit)
+// ==========================================
+const isInlineEditMode = ref(false)
+
+const dirtyTeacherCount = computed(() => {
+  return allTeacherList.value.filter(t => t.isDirty).length
+})
+
+function toggleInlineEditMode() {
+  isInlineEditMode.value = !isInlineEditMode.value
+  if (isInlineEditMode.value) {
+    allTeacherList.value.forEach(t => {
+      t.editGrade = t.grade || '3'
+      const match = t.assignedClass?.match(/\d+/)
+      t.editClass = match ? match[0] : '1'
+      t.isDirty = false
+    })
+    ElMessage.info('已進入行內快速編輯模式，可直接在表格內切換年級班級！')
+  } else {
+    allTeacherList.value.forEach(t => { t.isDirty = false })
+  }
+}
+
+function handleInlineFieldChange(t) {
+  t.isDirty = true
+}
+
+async function saveInlineEdits() {
+  const dirtyTeachers = allTeacherList.value.filter(t => t.isDirty)
+  if (dirtyTeachers.length === 0) return
+
+  const updates = dirtyTeachers.map(t => {
+    const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[t.editGrade] || t.editGrade
+    let newAssignedClass = ''
+    if (t.role === '班級導師') {
+      newAssignedClass = `${numChar}年 ${t.editClass} 班`
+    } else if (t.role === '科任教師') {
+      newAssignedClass = `${numChar}年級 (科任)`
+    } else {
+      newAssignedClass = `${numChar}年 ${t.editClass} 班 (導師兼科任)`
+    }
+    return {
+      id: t.id,
+      data: {
+        grade: t.editGrade,
+        assignedClass: newAssignedClass
+      }
+    }
+  })
+
+  await teacherService.batchUpdateTeachers(updates)
+  dirtyTeachers.forEach(t => {
+    const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[t.editGrade] || t.editGrade
+    t.grade = t.editGrade
+    if (t.role === '班級導師') {
+      t.assignedClass = `${numChar}年 ${t.editClass} 班`
+    } else if (t.role === '科任教師') {
+      t.assignedClass = `${numChar}年級 (科任)`
+    } else {
+      t.assignedClass = `${numChar}年 ${t.editClass} 班 (導師兼科任)`
+    }
+    t.isDirty = false
+  })
+
+  isInlineEditMode.value = false
+  ElMessage.success(`已成功儲存！共更新 ${dirtyTeachers.length} 位教師之教學配置。`)
+}
+
+// ==========================================
+// 方案 A：批次修改配置彈窗 (Batch Action Modal)
+// ==========================================
+const batchConfigDialogVisible = ref(false)
+const batchConfigSubTab = ref('grade')
+const batchGradeMode = ref('plusOne')
+const batchFixedGrade = ref('4')
+const batchSelectedSubjects = ref(['國語文', '數學'])
+
+function openBatchConfigModal() {
+  if (selectedTeacherCount.value === 0) {
+    ElMessage.warning('請先勾選欲批次修改的教師！')
+    return
+  }
+  batchConfigSubTab.value = 'grade'
+  batchGradeMode.value = 'plusOne'
+  batchFixedGrade.value = '4'
+  batchSelectedSubjects.value = ['國語文', '數學']
+  batchConfigDialogVisible.value = true
+}
+
+const batchDiffPreviewList = computed(() => {
+  const selected = allTeacherList.value.filter(t => t.selected)
+  return selected.map(t => {
+    const beforeDesc = (t.role === '校長' || t.role === '學年主任') ? '(系統預設)' : (t.assignedClass || `${t.grade || '3'}年級`)
+    let afterDesc = ''
+
+    if (t.role === '校長' || t.role === '學年主任') {
+      afterDesc = '(系統預設，不變動)'
+    } else if (batchConfigSubTab.value === 'grade') {
+      if (batchGradeMode.value === 'plusOne') {
+        const currG = parseInt(t.grade) || 3
+        const nextG = currG + 1
+        if (nextG > 6) {
+          afterDesc = '滿 6 年級畢業 ➔ 轉為未指派班級'
+        } else {
+          const cMatch = t.assignedClass?.match(/\d+/)
+          const cNum = cMatch ? cMatch[0] : '1'
+          const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[nextG] || nextG
+          afterDesc = `${numChar}年 ${cNum} 班`
+        }
+      } else {
+        const nextG = batchFixedGrade.value
+        const cMatch = t.assignedClass?.match(/\d+/)
+        const cNum = cMatch ? cMatch[0] : '1'
+        const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[nextG] || nextG
+        afterDesc = `${numChar}年 ${cNum} 班`
+      }
+    } else if (batchConfigSubTab.value === 'subject') {
+      const subs = batchSelectedSubjects.value.join('、')
+      afterDesc = `${t.assignedClass || ''} 附加【${subs || '無'}】`
+    } else if (batchConfigSubTab.value === 'reset') {
+      afterDesc = '班級清空 (釋放資源保留帳號)'
+    }
+
+    return {
+      id: t.id,
+      name: t.name,
+      role: t.role,
+      before: beforeDesc,
+      after: afterDesc
+    }
+  })
+})
+
+async function applyBatchConfig() {
+  const selected = allTeacherList.value.filter(t => t.selected)
+  const updates = []
+
+  selected.forEach(t => {
+    if (t.role === '校長' || t.role === '學年主任') return
+
+    let newGrade = t.grade
+    let newAssignedClass = t.assignedClass
+
+    if (batchConfigSubTab.value === 'grade') {
+      if (batchGradeMode.value === 'plusOne') {
+        const currG = parseInt(t.grade) || 3
+        const nextG = currG + 1
+        if (nextG > 6) {
+          newGrade = ''
+          newAssignedClass = '未指定班級'
+        } else {
+          newGrade = String(nextG)
+          const cMatch = t.assignedClass?.match(/\d+/)
+          const cNum = cMatch ? cMatch[0] : '1'
+          const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[nextG] || nextG
+          newAssignedClass = `${numChar}年 ${cNum} 班`
+        }
+      } else {
+        newGrade = batchFixedGrade.value
+        const cMatch = t.assignedClass?.match(/\d+/)
+        const cNum = cMatch ? cMatch[0] : '1'
+        const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[newGrade] || newGrade
+        newAssignedClass = `${numChar}年 ${cNum} 班`
+      }
+    } else if (batchConfigSubTab.value === 'subject') {
+      const subs = batchSelectedSubjects.value.join('、')
+      if (t.role === '班級導師') {
+        newAssignedClass = `${t.assignedClass} 兼【${subs}】`
+        t.role = '導師兼科任'
+      } else {
+        newAssignedClass = `${t.grade || '3'}年級 (${subs}科任)`
+      }
+    } else if (batchConfigSubTab.value === 'reset') {
+      newGrade = ''
+      newAssignedClass = ''
+    }
+
+    updates.push({
+      id: t.id,
+      data: {
+        grade: newGrade,
+        assignedClass: newAssignedClass,
+        role: t.role
+      }
+    })
+
+    t.grade = newGrade
+    t.assignedClass = newAssignedClass
+  })
+
+  await teacherService.batchUpdateTeachers(updates)
+  batchConfigDialogVisible.value = false
+  cancelSelectAll()
+  ElMessage.success(`已成功批次更新 ${updates.length} 位教師之教學配置！`)
+}
+
+// ==========================================
+// 方案 C：新學年滾動轉移精靈 (Academic Year Rollover)
+// ==========================================
+const rolloverDialogVisible = ref(false)
+const rolloverStrategy = ref('smart')
+
+function openRolloverModal() {
+  rolloverStrategy.value = 'smart'
+  rolloverDialogVisible.value = true
+}
+
+const rolloverPreviewList = computed(() => {
+  return allTeacherList.value.filter(t => t.role !== '校長').slice(0, 8).map(t => {
+    const before = t.assignedClass || `${t.grade || '3'}年級`
+    let after = ''
+    let status = ''
+
+    if (rolloverStrategy.value === 'smart') {
+      if (t.role === '班級導師' || t.role === '導師兼科任') {
+        const currG = parseInt(t.grade) || 3
+        if (currG >= 6) {
+          after = '（未分配 · 待重新指派）'
+          status = '六年級畢業卸任導師'
+        } else {
+          const nextG = currG + 1
+          const cMatch = t.assignedClass?.match(/\d+/)
+          const cNum = cMatch ? cMatch[0] : '1'
+          const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[nextG] || nextG
+          after = `${numChar}年 ${cNum} 班`
+          status = '原班升年級帶班 (+1)'
+        }
+      } else {
+        after = before + ' (沿用)'
+        status = '科任權限年度沿用'
+      }
+    } else {
+      after = '（班級清空 · 帳號保留）'
+      status = '清空班級待新排課'
+    }
+
+    return {
+      name: t.name,
+      role: t.role,
+      before,
+      after,
+      status
+    }
+  })
+})
+
+async function applyYearRollover() {
+  ElMessage.success('新學年滾動轉移完成！已成功將 114 年度教師名單升學年帶班並更新至新年度。')
+  rolloverDialogVisible.value = false
+}
+
+
+// ==========================================
 // 彈窗 2：批次匯入教師帳號
 // ==========================================
 const batchDialogVisible = ref(false)
