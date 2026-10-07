@@ -266,9 +266,9 @@
                   <div class="flex items-center gap-1.5 flex-wrap">
                     <span
                       class="px-2.5 py-0.5 rounded-md text-[11px] font-semibold"
-                      :class="getRoleBadgeClass(t.role)"
+                      :class="getRoleBadgeClass(t)"
                     >
-                      {{ formatRoleName(t.role) }}
+                      {{ formatRoleName(t) }}
                     </span>
                     <span
                       v-if="t.role === '校長' || t.role === '學年主任'"
@@ -1087,19 +1087,77 @@ onMounted(() => {
   loadTeacherList()
 })
 
-// 角色名稱格式化 (UI 統一淘汰「授課教師」，呈現直覺之「導師兼科任」)
-function formatRoleName(role) {
-  if (role === '授課教師') return '導師兼科任'
+// 學科名稱正規化輔助函式 (國語文 -> 國語、英語文 -> 英語、自然科學 -> 自然、數學 -> 數學)
+function normalizeSubjectShortName(subName) {
+  if (!subName) return ''
+  if (subName.includes('國語') || subName.includes('國文') || subName.includes('國')) return '國語'
+  if (subName.includes('數學') || subName.includes('數')) return '數學'
+  if (subName.includes('英語') || subName.includes('英文') || subName.includes('英')) return '英語'
+  if (subName.includes('自然') || subName.includes('理化') || subName.includes('自')) return '自然'
+  if (subName.includes('社會') || subName.includes('社')) return '社會'
+  return subName.replace(/文|學|科/g, '') || subName
+}
+
+// 角色名稱格式化（教授多班又當導師，依規範呈現「{subject}科兼導師」）
+function formatRoleName(teacherOrRole) {
+  if (!teacherOrRole) return ''
+  const t = typeof teacherOrRole === 'object' ? teacherOrRole : null
+  const role = t ? (t.role || '') : String(teacherOrRole)
+
+  // 1. 若已經是具體的「{subject}科兼導師」，直接返回
+  if (role.includes('科兼導師')) {
+    return role
+  }
+
+  // 2. 判斷是否為「教授多班 又當導師」
+  const isDualRole = role === '導師兼科任' ||
+                     role === '授課教師' ||
+                     (t && t.isHomeroom && t.isSubject) ||
+                     (t && t.assignedClass && t.assignedClass.includes('班兼【'))
+
+  if (isDualRole) {
+    let detectedSubject = ''
+    if (t) {
+      if (t.subject) {
+        detectedSubject = t.subject
+      } else if (t.subjects && t.subjects.length > 0) {
+        detectedSubject = t.subjects[0]
+      } else if (t.assignedClass) {
+        const match = t.assignedClass.match(/兼【([^】]+)】/)
+        if (match) {
+          const content = match[1]
+          if (content.includes('國語')) detectedSubject = '國語'
+          else if (content.includes('數')) detectedSubject = '數學'
+          else if (content.includes('英')) detectedSubject = '英語'
+          else if (content.includes('自')) detectedSubject = '自然'
+          else if (content.includes('社')) detectedSubject = '社會'
+          else detectedSubject = content.replace(/\d+班/g, '').replace(/、/g, '')
+        } else {
+          if (t.assignedClass.includes('國語')) detectedSubject = '國語'
+          else if (t.assignedClass.includes('數學')) detectedSubject = '數學'
+          else if (t.assignedClass.includes('英語') || t.assignedClass.includes('英文')) detectedSubject = '英語'
+          else if (t.assignedClass.includes('自然')) detectedSubject = '自然'
+        }
+      }
+    }
+
+    const shortSub = normalizeSubjectShortName(detectedSubject) || '國語'
+    return `${shortSub}科兼導師`
+  }
+
   return role
 }
 
 // 角色徽章顏色輔助樣式
-function getRoleBadgeClass(role) {
+function getRoleBadgeClass(teacherOrRole) {
+  const role = typeof teacherOrRole === 'object' ? (teacherOrRole.role || '') : String(teacherOrRole || '')
   if (role === '校長') return 'bg-slate-100 text-slate-700 border border-slate-300'
   if (role === '學年主任') return 'bg-amber-50 text-amber-800 border border-amber-200'
   if (role === '班級導師') return 'bg-sky-50 text-sky-800 border border-sky-200'
   if (role === '科任教師') return 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-  if (role === '導師兼科任' || role === '授課教師') return 'bg-indigo-50 text-indigo-800 border border-indigo-200'
+  if (role === '導師兼科任' || role === '授課教師' || role.includes('兼導師')) {
+    return 'bg-indigo-50 text-indigo-800 border border-indigo-200'
+  }
   return 'bg-slate-100 text-slate-700 border border-slate-200'
 }
 
@@ -1109,11 +1167,11 @@ const filteredTeacherList = computed(() => {
     // 身分群組篩選
     if (teacherFilters.role !== 'all') {
       if (teacherFilters.role === '導師兼科任') {
-        if (t.role !== '導師兼科任' && t.role !== '授課教師') return false
+        if (t.role !== '導師兼科任' && t.role !== '授課教師' && !t.role?.includes('兼導師')) return false
       } else if (teacherFilters.role === '授課教師') {
-        if (t.role !== '導師兼科任' && t.role !== '授課教師') return false
+        if (t.role !== '導師兼科任' && t.role !== '授課教師' && !t.role?.includes('兼導師')) return false
       } else {
-        if (t.role !== teacherFilters.role) return false
+        if (t.role !== teacherFilters.role && !t.role?.includes(teacherFilters.role)) return false
       }
     }
     // 帳號狀態篩選
@@ -1469,20 +1527,39 @@ function openEditTeacherModal(t) {
     }
     teacherForm.classMatrix[sub] = [`${g}01`, `${g}02`, `${g}03`]
   } else {
-    // 導師兼科任 或 原授課教師
+    // 導師兼科任 或 {subject}科兼導師
     teacherForm.isSystemPreset = false
     teacherForm.role = '導師兼科任'
     teacherForm.isHomeroom = true
     teacherForm.homeroomGrade = t.grade || '3'
     teacherForm.homeroomClass = t.assignedClass ? (t.assignedClass.match(/\d+/) ? t.assignedClass.match(/\d+/)[0] : '1') : '1'
     teacherForm.isSubject = true
-    teacherForm.activeSubject = '國語文'
+
+    let sub = '國語文'
+    if (t.role && t.role.includes('科兼導師')) {
+      if (t.role.includes('數')) sub = '數學'
+      else if (t.role.includes('英')) sub = '英語文'
+      else if (t.role.includes('自')) sub = '自然科學'
+      else sub = '國語文'
+    } else if (t.subject) {
+      if (t.subject.includes('數')) sub = '數學'
+      else if (t.subject.includes('英')) sub = '英語文'
+      else if (t.subject.includes('自')) sub = '自然科學'
+      else sub = '國語文'
+    } else if (t.assignedClass) {
+      if (t.assignedClass.includes('數學')) sub = '數學'
+      else if (t.assignedClass.includes('英語') || t.assignedClass.includes('英文')) sub = '英語文'
+      else if (t.assignedClass.includes('自然')) sub = '自然科學'
+      else sub = '國語文'
+    }
+    teacherForm.activeSubject = sub
     teacherForm.classMatrix = {
-      '國語文': [`${t.grade || '3'}01`, `${t.grade || '3'}02`],
+      '國語文': [],
       '數學': [],
       '英語文': [],
       '自然科學': []
     }
+    teacherForm.classMatrix[sub] = [`${t.grade || '3'}01`, `${t.grade || '3'}02`]
   }
 
   createDialogVisible.value = true
@@ -1537,21 +1614,26 @@ async function saveTeacher() {
       const subDesc = activeSubs.join('、')
       finalAssignedClass = `${numChar}年級 (${subDesc}科任，${allSelectedCodes.length}班)`
     } else {
-      // 導師兼科任 (對應後端 access_level = 3)
-      finalRole = '導師兼科任'
+      // 教授多班 又當導師 (對應後端 access_level = 3) -> 依規範設為「{subject}科兼導師」
+      const activeSubs = availableSubjects.filter(s => (teacherForm.classMatrix[s] || []).length > 0)
+      const primarySub = activeSubs[0] || '國語文'
+      const shortSub = normalizeSubjectShortName(primarySub) || '國語'
+      finalRole = `${shortSub}科兼導師`
+
       finalGrade = teacherForm.homeroomGrade
       const numChar = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' }[finalGrade] || finalGrade
-      const activeSubs = availableSubjects.filter(s => (teacherForm.classMatrix[s] || []).length > 0)
       const subParts = activeSubs.map(s => `${s}${teacherForm.classMatrix[s].length}班`).join('、')
       finalAssignedClass = `${numChar}年 ${teacherForm.homeroomClass} 班兼【${subParts}】`
     }
   }
 
+  const activeSubList = teacherForm.isSubject ? availableSubjects.filter(s => (teacherForm.classMatrix[s] || []).length > 0) : []
   const payload = {
     name: teacherForm.name.trim(),
     username: teacherForm.username.trim(),
     adminCode: teacherForm.username.trim(),
     role: finalRole,
+    subject: activeSubList.length > 0 ? normalizeSubjectShortName(activeSubList[0]) : '',
     grade: finalGrade,
     assignedClass: finalAssignedClass,
     email: teacherForm.email.trim(),

@@ -85,20 +85,19 @@ export function getInitialTeachers(schoolName = '測試國小') {
     {
       id: 7,
       selected: false,
-      year: '115',
       username: 'TAdmin_401003',
       name: '黃○宏',
       adminCode: 'TAdmin_401003',
-      role: '班級導師',
+      role: '國語科兼導師',
+      subject: '國語',
       grade: '4',
-      assignedClass: '四年 1 班',
+      assignedClass: '四年 1 班兼【國語2班】',
       email: 'huang@ntcu.edu.tw',
       isActive: true
     },
     {
       id: 8,
       selected: false,
-      year: '115',
       username: 'TAdmin_501004',
       name: '趙○芬',
       adminCode: 'TAdmin_501004',
@@ -111,7 +110,6 @@ export function getInitialTeachers(schoolName = '測試國小') {
     {
       id: 9,
       selected: false,
-      year: '115',
       username: 'TAdmin_502005',
       name: '周○翔',
       adminCode: 'TAdmin_502005',
@@ -124,7 +122,6 @@ export function getInitialTeachers(schoolName = '測試國小') {
     {
       id: 10,
       selected: false,
-      year: '115',
       username: 'SAdmin_300006',
       name: '蔡○安',
       adminCode: 'SAdmin_300006',
@@ -137,7 +134,6 @@ export function getInitialTeachers(schoolName = '測試國小') {
     {
       id: 11,
       selected: false,
-      year: '115',
       username: 'SAdmin_400007',
       name: '吳○嘉',
       adminCode: 'SAdmin_400007',
@@ -150,14 +146,27 @@ export function getInitialTeachers(schoolName = '測試國小') {
     {
       id: 12,
       selected: false,
-      year: '115',
       username: 'TAdmin_602008',
       name: '郭○妤',
       adminCode: 'TAdmin_602008',
-      role: '班級導師',
+      role: '數學科兼導師',
+      subject: '數學',
       grade: '6',
-      assignedClass: '六年 2 班',
+      assignedClass: '六年 2 班兼【數學3班】',
       email: 'kuo@ntcu.edu.tw',
+      isActive: true
+    },
+    {
+      id: 13,
+      selected: false,
+      username: 'TAdmin_303009',
+      name: '洪○文',
+      adminCode: 'TAdmin_303009',
+      role: '英語科兼導師',
+      subject: '英語',
+      grade: '3',
+      assignedClass: '三年 3 班兼【英語2班】',
+      email: 'hung@ntcu.edu.tw',
       isActive: true
     }
   ]
