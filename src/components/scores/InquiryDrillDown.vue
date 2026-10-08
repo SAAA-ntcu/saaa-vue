@@ -673,7 +673,6 @@
                 <span>0%</span>
                 <span>25%</span>
                 <span>50%</span>
-                <span class="text-rose-500 font-bold">60%(及格)</span>
                 <span>75%</span>
                 <span>100%</span>
               </div>
@@ -704,8 +703,6 @@
                   <div class="absolute left-1/4 top-0 bottom-0 w-px bg-slate-200 pointer-events-none"></div>
                   <div class="absolute left-2/4 top-0 bottom-0 w-px bg-slate-200 pointer-events-none"></div>
                   <div class="absolute left-3/4 top-0 bottom-0 w-px bg-slate-200 pointer-events-none"></div>
-                  <!-- 60% 及格線 -->
-                  <div class="absolute top-0 bottom-0 w-px border-r border-dashed border-rose-300 pointer-events-none" style="left: 60%;"></div>
 
                   <!-- 本班得分長條 (Main Bar - 統一純粹翡翠綠) -->
                   <div
