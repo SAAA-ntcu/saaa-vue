@@ -435,7 +435,39 @@
                       class="transition-all duration-700 ease-out drop-shadow-sm"
                     />
 
-                    <!-- 3. 中央浮島純白圓形卡片 (直徑與環形保留 13px 安全間距，絕對不壓圖) -->
+                    <!-- 3. 方案 B 之軌道微型刻度標記線 (學校、縣市、全體，無壓圖零遮蔽) -->
+                    <g class="pointer-events-auto">
+                      <template v-for="bm in precisionTicks" :key="'tick-' + bm.key">
+                        <g
+                          class="cursor-pointer transition-all duration-300"
+                          @mouseenter="activeHoverBenchmark = bm.key"
+                          @mouseleave="activeHoverBenchmark = null"
+                        >
+                          <!-- 刻度微線 (橫跨外軌，安全離中心白圓 12px 間隔) -->
+                          <line
+                            :x1="bm.p1.x"
+                            :y1="bm.p1.y"
+                            :x2="bm.p2.x"
+                            :y2="bm.p2.y"
+                            :stroke="bm.color"
+                            :stroke-width="activeHoverBenchmark === bm.key ? 4 : 2.5"
+                            stroke-linecap="round"
+                            class="transition-all duration-300 drop-shadow-xs"
+                          />
+                          <!-- 外端點小微珠 (增添刻度指針精緻度) -->
+                          <circle
+                            :cx="bm.p2.x"
+                            :cy="bm.p2.y"
+                            :r="activeHoverBenchmark === bm.key ? 3.5 : 2.2"
+                            :fill="bm.color"
+                            class="transition-all duration-300 drop-shadow-xs"
+                          />
+                          <title>{{ bm.label }}平均：{{ bm.val }}%</title>
+                        </g>
+                      </template>
+                    </g>
+
+                    <!-- 4. 中央浮島純白圓形卡片 (直徑與環形保留 13px 安全間距，絕對不壓圖) -->
                     <circle
                       cx="160"
                       cy="160"
@@ -444,7 +476,7 @@
                       filter="url(#discShadow)"
                     />
 
-                    <!-- 4. 中央數值文字 (100% 依附圖純粹大字風格) -->
+                    <!-- 5. 中央數值文字 (100% 依附圖純粹大字風格) -->
                     <text
                       x="160"
                       y="162"
@@ -465,7 +497,7 @@
                 </div>
               </div>
 
-              <!-- 右側：全科綜合說明與 4 大基準指標卡 (7 Cols，無任何冗餘重複) -->
+              <!-- 右側：全科綜合說明與 3 大對照基準卡 (7 Cols，無任何冗餘重複) -->
               <div class="lg:col-span-7 space-y-4 flex flex-col justify-center">
                 <div>
                   <div class="flex items-center gap-2 flex-wrap">
@@ -481,22 +513,15 @@
                   </p>
                 </div>
 
-                <!-- 4 欄獨立數值艙 (純粹乾淨、精準對齊、零冗餘) -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-                  <!-- 1. 本班實測 (藍色主環) -->
-                  <div class="p-3.5 rounded-xl bg-blue-50/70 border-2 border-[#1d4ed8] shadow-2xs flex flex-col items-center transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
-                    <span class="text-xs font-black text-blue-950 flex items-center gap-1.5">
-                      <span class="w-2 h-2 rounded-full bg-[#1d4ed8]"></span>
-                      {{ inquiryState.classObj }} 班實測
-                    </span>
-                    <span class="mt-1.5 font-mono text-2xl font-black text-blue-950">
-                      {{ overallStat.classVal }}.0%
-                    </span>
-                    <span class="text-[10px] font-bold text-blue-700 mt-1">本班常模</span>
-                  </div>
-
-                  <!-- 2. 學校平均 (琥珀橘) -->
-                  <div class="p-3.5 rounded-xl bg-amber-50/70 border border-amber-300 shadow-2xs flex flex-col items-center transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
+                <!-- 3 欄獨立基準常模艙 (學校、縣市、全體對照，移除非必要的本班重複卡片) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1">
+                  <!-- 1. 學校平均 (琥珀橘) -->
+                  <div
+                    @mouseenter="activeHoverBenchmark = 'school'"
+                    @mouseleave="activeHoverBenchmark = null"
+                    class="p-3.5 rounded-xl bg-amber-50/70 border border-amber-300 shadow-2xs flex flex-col items-center transition-all duration-200 hover:shadow-md hover:scale-[1.02] cursor-pointer"
+                    :class="activeHoverBenchmark === 'school' ? 'ring-2 ring-amber-400 bg-amber-100/90 scale-[1.02]' : ''"
+                  >
                     <span class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
                       <span class="w-2 h-2 rounded-full bg-[#f59e0b]"></span>
                       學校平均
@@ -507,8 +532,13 @@
                     <span class="text-[10px] font-medium text-amber-700 mt-1">校內平均</span>
                   </div>
 
-                  <!-- 3. 縣市平均 (蔚藍色) -->
-                  <div class="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200 shadow-2xs flex flex-col items-center transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
+                  <!-- 2. 縣市平均 (蔚藍色) -->
+                  <div
+                    @mouseenter="activeHoverBenchmark = 'county'"
+                    @mouseleave="activeHoverBenchmark = null"
+                    class="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200 shadow-2xs flex flex-col items-center transition-all duration-200 hover:shadow-md hover:scale-[1.02] cursor-pointer"
+                    :class="activeHoverBenchmark === 'county' ? 'ring-2 ring-blue-400 bg-blue-100/90 scale-[1.02]' : ''"
+                  >
                     <span class="text-xs font-bold text-blue-900 flex items-center gap-1.5">
                       <span class="w-2 h-2 rounded-full bg-[#2563eb]"></span>
                       縣市平均
@@ -519,8 +549,13 @@
                     <span class="text-[10px] font-medium text-blue-700 mt-1">縣市常模</span>
                   </div>
 
-                  <!-- 4. 全體平均 (質感紫) -->
-                  <div class="p-3.5 rounded-xl bg-purple-50/60 border border-purple-200 shadow-2xs flex flex-col items-center transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
+                  <!-- 3. 全體平均 (質感紫) -->
+                  <div
+                    @mouseenter="activeHoverBenchmark = 'national'"
+                    @mouseleave="activeHoverBenchmark = null"
+                    class="p-3.5 rounded-xl bg-purple-50/60 border border-purple-200 shadow-2xs flex flex-col items-center transition-all duration-200 hover:shadow-md hover:scale-[1.02] cursor-pointer"
+                    :class="activeHoverBenchmark === 'national' ? 'ring-2 ring-purple-400 bg-purple-100/90 scale-[1.02]' : ''"
+                  >
                     <span class="text-xs font-bold text-purple-900 flex items-center gap-1.5">
                       <span class="w-2 h-2 rounded-full bg-[#9333ea]"></span>
                       全體平均
@@ -1137,6 +1172,59 @@ const ringCircumference = 2 * Math.PI * 110 // 約 691.15
 const ringProgressOffset = computed(() => {
   const score = Math.max(0, Math.min(100, Number(overallStat.value?.classVal) || 76))
   return ringCircumference * (1 - score / 100)
+})
+
+// 儀表盤刻度基準融合 (方案 B：軌道微型精準刻度標記線)
+const activeHoverBenchmark = ref(null)
+
+const precisionTicks = computed(() => {
+  const cx = 160
+  const cy = 160
+  const r1 = 98
+  const r2 = 123
+  const stat = overallStat.value || { classVal: 76, school: 77, county: 72, national: 70 }
+
+  const benchmarks = [
+    {
+      key: 'national',
+      label: '全體',
+      val: Number(stat.national) || 70,
+      color: '#9333ea'
+    },
+    {
+      key: 'county',
+      label: '縣市',
+      val: Number(stat.county) || 72,
+      color: '#2563eb'
+    },
+    {
+      key: 'school',
+      label: '學校',
+      val: Number(stat.school) || 77,
+      color: '#f59e0b'
+    }
+  ]
+
+  return benchmarks.map(bm => {
+    // 圓環進度計算：0% 位於 3 點鐘方位 (0度)，順時針依比例前進
+    const angleDeg = (Math.max(0, Math.min(100, bm.val)) / 100) * 360
+    const rad = (angleDeg * Math.PI) / 180
+    const cosVal = Math.cos(rad)
+    const sinVal = Math.sin(rad)
+
+    return {
+      ...bm,
+      angleDeg,
+      p1: {
+        x: Number((cx + r1 * cosVal).toFixed(1)),
+        y: Number((cy + r1 * sinVal).toFixed(1))
+      },
+      p2: {
+        x: Number((cx + r2 * cosVal).toFixed(1)),
+        y: Number((cy + r2 * sinVal).toFixed(1))
+      }
+    }
+  })
 })
 
 // 各班學生名冊 (動態隨選定之班級計算)
