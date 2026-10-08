@@ -113,6 +113,162 @@
     <!-- 層級 1：學校成績統計（整合圖二：各班答對率比較圖 + 基準參考線） -->
     <!-- ============================================================== -->
     <div v-if="inquiryState.level === 'school'" class="space-y-5">
+      <!-- 五年級專屬：高通真實學力資料總覽、問題定位儀表、待加強分布樹狀圖與優先行動方案 (引用 gaotong-dashboard) -->
+      <section v-if="isGaotongGrade(inquiryState.grade)" class="space-y-5">
+        <!-- 頂部 4 大校務指標卡 -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div class="p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs space-y-1">
+            <span class="text-xs text-slate-400 font-medium">五年級在籍學生</span>
+            <div class="text-xl sm:text-2xl font-mono font-black text-slate-800">
+              {{ gaotongSchoolStats.totalStudents }} <span class="text-xs font-normal text-slate-400">人</span>
+            </div>
+            <div class="text-[11px] text-slate-500">501–509 班 (共 9 班)</div>
+          </div>
+          <div class="p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs space-y-1">
+            <span class="text-xs text-slate-400 font-medium">跨科成績完整度</span>
+            <div class="text-xl sm:text-2xl font-mono font-black text-emerald-600">
+              {{ gaotongSchoolStats.completenessRate }}%
+            </div>
+            <div class="text-[11px] text-emerald-700/80">缺考／待補資料已全數標示</div>
+          </div>
+          <div class="p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs space-y-1">
+            <span class="text-xs text-slate-400 font-medium">優先處理班級</span>
+            <div class="text-xl sm:text-2xl font-mono font-black text-amber-600">
+              {{ gaotongSchoolStats.priorityClassCount }} <span class="text-xs font-normal text-slate-400">班</span>
+            </div>
+            <div class="text-[11px] text-amber-700/80">至少一科待加強率偏高</div>
+          </div>
+          <div class="p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs space-y-1">
+            <span class="text-xs text-slate-400 font-medium">跨科到考率</span>
+            <div class="text-xl sm:text-2xl font-mono font-black text-blue-600">
+              {{ gaotongSchoolStats.testedRate }}%
+            </div>
+            <div class="text-[11px] text-blue-700/80">三科皆有完整作答紀錄</div>
+          </div>
+        </div>
+
+        <!-- 01 / 科目問題定位與待加強分布樹狀圖 -->
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-4">
+          <div class="flex items-center justify-between flex-wrap gap-2 pb-3 border-b border-slate-100">
+            <div>
+              <span class="text-[10px] font-black uppercase tracking-wider text-[#52796f] bg-[#52796f]/10 px-2 py-0.5 rounded">
+                01 / 科目問題定位
+              </span>
+              <h3 class="text-base font-bold text-slate-800 m-0 mt-1">
+                各學科與縣市差距指針 · 待加強人數分布樹狀圖
+              </h3>
+            </div>
+            <span class="text-xs text-slate-400">
+              指針顯示與縣市平均之差距 (pp)；點擊科目卡可切換下方分布圖
+            </span>
+          </div>
+
+          <!-- 3 科目卡片 (點擊切換 Treemap 焦點科目) -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button
+              v-for="sub in gaotongSchoolStats.subjects"
+              :key="sub.id"
+              type="button"
+              @click="chooseTreemapSubject(sub.id)"
+              class="p-4 rounded-xl border text-left transition-all cursor-pointer relative"
+              :class="treemapSubjectKey === sub.id
+                ? 'border-[#52796f] ring-2 ring-[#52796f]/20 bg-slate-50/60 shadow-xs'
+                : 'border-slate-200 hover:border-slate-300 bg-white'"
+            >
+              <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2 font-bold text-sm text-slate-800">
+                  <span class="w-2.5 h-2.5 rounded-full" :style="{ background: sub.color }"></span>
+                  {{ sub.name }}
+                </div>
+                <span
+                  class="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                  :class="sub.delta < 0 ? 'bg-rose-100 text-rose-800' : sub.delta === 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'"
+                >
+                  {{ sub.delta < 0 ? '需要檢視' : sub.delta === 0 ? '基準線' : '高於縣均' }}
+                </span>
+              </div>
+
+              <!-- 指針儀表盤 -->
+              <NeedleGauge :value="sub.delta" :label="'與縣市差距'" :color="sub.color" :height="145" :compact="true" />
+
+              <div class="mt-2 pt-2 border-t border-slate-100 grid grid-cols-3 gap-1 text-center text-[10px]">
+                <div>
+                  <span class="text-slate-400 block">全校</span>
+                  <strong class="text-slate-700 font-mono text-xs">{{ sub.schoolAvg }}%</strong>
+                </div>
+                <div>
+                  <span class="text-slate-400 block">縣市</span>
+                  <strong class="text-slate-700 font-mono text-xs">{{ sub.countyAvg }}%</strong>
+                </div>
+                <div>
+                  <span class="text-slate-400 block">待加強</span>
+                  <strong class="text-rose-600 font-mono text-xs">{{ sub.supportCount }}人</strong>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-500 m-0 mt-2 leading-relaxed">{{ sub.note }}</p>
+            </button>
+          </div>
+
+          <!-- 各班待加強樹狀分布圖 (SupportTreemap) -->
+          <div class="p-4 bg-slate-50/70 border border-slate-100 rounded-xl space-y-2">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <h4 class="text-xs font-bold text-slate-700 m-0 flex items-center gap-1.5">
+                <span class="w-1.5 h-3 rounded-full" :style="{ background: treemapSubject.color }"></span>
+                目前焦點：{{ treemapSubject.name }} · 501–509 各班待加強人數分布
+              </h4>
+              <span class="text-[11px] text-slate-500">
+                點擊任一班級區塊直達班級向度診斷
+              </span>
+            </div>
+            <SupportTreemap :subject-key="treemapSubjectKey" @select-class="drillToClass($event)" />
+          </div>
+        </div>
+
+        <!-- 02 / 優先處理項目與行動建議抽屜 -->
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs space-y-3">
+          <div class="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-100">
+            <div>
+              <span class="text-[10px] font-black uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
+                02 / 後續支持行動
+              </span>
+              <h3 class="text-base font-bold text-slate-800 m-0 mt-1">
+                學年優先處理項目 · 教學支持與備課建議
+              </h3>
+            </div>
+            <span class="text-xs text-slate-400">點擊查看教務處觀課、教材與協同支援方案</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <button
+              v-for="(item, idx) in PRIORITY_ITEMS"
+              :key="item.key"
+              type="button"
+              @click="openAction(item.key)"
+              class="p-3.5 bg-slate-50/80 hover:bg-slate-100 border border-slate-200/80 rounded-xl text-left transition cursor-pointer flex flex-col justify-between group"
+            >
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <span class="w-5 h-5 rounded-full bg-slate-200 group-hover:bg-[#52796f] group-hover:text-white font-mono text-xs font-bold flex items-center justify-center transition">
+                    {{ idx + 1 }}
+                  </span>
+                  <span
+                    class="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                    :class="item.tone === 'danger' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'"
+                  >
+                    {{ item.tone === 'danger' ? '優先' : '關懷' }}
+                  </span>
+                </div>
+                <strong class="text-sm font-bold text-slate-800 block">{{ item.title }}</strong>
+                <p class="text-xs text-slate-500 m-0 mt-1">{{ item.reason }}</p>
+              </div>
+              <span class="text-[11px] text-[#52796f] font-bold mt-2.5 flex items-center gap-1">
+                查看建議措施 ➔
+              </span>
+            </button>
+          </div>
+        </div>
+      </section>
+
       <!-- 校級統計圖卡 (原圖二的現代化內嵌實作) -->
       <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs">
         <div class="flex items-center justify-between flex-wrap gap-3 mb-4 pb-3 border-b border-slate-100">
@@ -698,6 +854,38 @@
         </div>
       </div>
 
+      <!-- 五年級專屬：班級支持結構與到考指標卡 (引用 gaotong-dashboard) -->
+      <section v-if="isGaotongGrade(inquiryState.grade) && gaotongClassStats" class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="p-3.5 bg-white border border-slate-200/90 rounded-xl shadow-2xs space-y-0.5">
+          <span class="text-[11px] text-slate-400 font-medium">在籍學生</span>
+          <div class="text-lg font-mono font-black text-slate-800">
+            {{ gaotongClassStats.totalStudents }} <span class="text-xs font-normal text-slate-400">人</span>
+          </div>
+          <div class="text-[10px] text-slate-500">依座號順序</div>
+        </div>
+        <div class="p-3.5 bg-white border border-slate-200/90 rounded-xl shadow-2xs space-y-0.5">
+          <span class="text-[11px] text-slate-400 font-medium">到考率</span>
+          <div class="text-lg font-mono font-black text-emerald-600">
+            {{ gaotongClassStats.testedRate }}%
+          </div>
+          <div class="text-[10px] text-emerald-700/80">全數有效作答</div>
+        </div>
+        <div class="p-3.5 bg-white border border-slate-200/90 rounded-xl shadow-2xs space-y-0.5">
+          <span class="text-[11px] text-slate-400 font-medium">多科共同關注</span>
+          <div class="text-lg font-mono font-black text-rose-600">
+            {{ gaotongClassStats.multiSupportCount }} <span class="text-xs font-normal text-slate-400">人</span>
+          </div>
+          <div class="text-[10px] text-rose-700/80">2 科以上待加強</div>
+        </div>
+        <div class="p-3.5 bg-white border border-slate-200/90 rounded-xl shadow-2xs space-y-0.5">
+          <span class="text-[11px] text-slate-400 font-medium">跨科不一致</span>
+          <div class="text-lg font-mono font-black text-amber-600">
+            {{ gaotongClassStats.inconsistentCount }} <span class="text-xs font-normal text-slate-400">人</span>
+          </div>
+          <div class="text-[10px] text-amber-700/80">各科表現落差顯著</div>
+        </div>
+      </section>
+
       <!-- 該班學生名單清單 (點選即滑出右側診斷抽屜) -->
       <div class="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-xs">
         <div class="p-4 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between flex-wrap gap-2">
@@ -708,8 +896,30 @@
             <p class="text-[11px] text-slate-400 m-0 mt-0.5">點擊學生任一列或「個人診斷報告」按鈕，即可檢視該生向度與錯題清單。</p>
           </div>
           <div class="text-xs text-slate-500 font-medium">
-            全班共 <strong class="text-slate-800">{{ studentList.length }}</strong> 名學生
+            全班共 <strong class="text-slate-800">{{ allStudentsInClass.length }}</strong> 名學生
           </div>
+        </div>
+
+        <!-- 關注廣度與訊號篩選按鈕列 (引用自 gaotong-dashboard) -->
+        <div v-if="isGaotongGrade(inquiryState.grade)" class="p-3 bg-slate-50/40 border-b border-slate-200/70 flex items-center gap-1.5 flex-wrap">
+          <button
+            v-for="flt in filterOptions"
+            :key="flt.id"
+            type="button"
+            @click="currentFilter = flt.id"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer flex items-center gap-1.5"
+            :class="currentFilter === flt.id
+              ? 'bg-[#52796f] text-white shadow-2xs'
+              : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-100'"
+          >
+            <span>{{ flt.label }}</span>
+            <span
+              class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+              :class="currentFilter === flt.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'"
+            >
+              {{ filterCounts[flt.id] }}
+            </span>
+          </button>
         </div>
 
         <div class="overflow-x-auto">
@@ -741,16 +951,47 @@
                 <td class="py-3 px-4 text-center font-mono text-slate-600">PR {{ st.prCounty }}</td>
                 <td class="py-3 px-4 text-center font-mono text-slate-600">PR {{ st.prNation }}</td>
                 <td class="py-3 px-4">
-                  <span
-                    v-if="st.weak"
-                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200"
-                  >
-                    <svg class="w-3 h-3 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <span>{{ st.weak }}</span>
-                  </span>
-                  <span v-else class="text-[11px] text-emerald-600 font-medium">表現穩健</span>
+                  <template v-if="isGaotongGrade(inquiryState.grade)">
+                    <span
+                      v-if="st.supportBreadth?.breadth >= 2"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200"
+                    >
+                      多科關注 ({{ st.supportBreadth.breadth }}科)
+                    </span>
+                    <span
+                      v-else-if="st.supportBreadth?.breadth === 1"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200"
+                    >
+                      單科關注 (1科)
+                    </span>
+                    <span
+                      v-else-if="st.crossSubjectInconsistency?.isInconsistent"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200"
+                    >
+                      跨科不一致
+                    </span>
+                    <span
+                      v-else-if="st.dataCompleteness?.status !== 'COMPLETE'"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500"
+                    >
+                      缺考待補
+                    </span>
+                    <span v-else class="text-[11px] text-emerald-600 font-medium">
+                      未見關注訊號
+                    </span>
+                  </template>
+                  <template v-else>
+                    <span
+                      v-if="st.weak"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200"
+                    >
+                      <svg class="w-3 h-3 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <span>{{ st.weak }}</span>
+                    </span>
+                    <span v-else class="text-[11px] text-emerald-600 font-medium">表現穩健</span>
+                  </template>
                 </td>
                 <td class="py-3 px-4 text-center">
                   <button
@@ -786,6 +1027,18 @@
 <script setup>
 import { reactive, ref, computed, watch } from 'vue'
 import StudentReportDrawer from './report/StudentReportDrawer.vue'
+import NeedleGauge from './widgets/NeedleGauge.vue'
+import SupportTreemap from './widgets/SupportTreemap.vue'
+import ActionDrawer from './widgets/ActionDrawer.vue'
+import {
+  isGaotongGrade,
+  GAOTONG_SUBJECTS,
+  GAOTONG_CLASS_IDS,
+  getGaotongClassStudents,
+  getGaotongClassStats,
+  getActionPreset,
+  PRIORITY_ITEMS
+} from '../../composables/useGaotongData'
 import { useAuth } from '../../composables/useAuth'
 
 const { state } = useAuth()
@@ -841,6 +1094,9 @@ const availableClasses = computed(() => {
     return [{ value: inquiryState.classObj, label: `${inquiryState.classObj} 班` }]
   }
   const g = inquiryState.grade || '3'
+  if (isGaotongGrade(g)) {
+    return GAOTONG_CLASS_IDS.map(cId => ({ value: cId, label: `${cId} 班` }))
+  }
   return Array.from({ length: 8 }, (_, i) => {
     const code = `${g}0${i + 1}`
     return {
@@ -979,8 +1235,11 @@ const precisionTicks = computed(() => {
   })
 })
 
-// 各班學生名冊 (動態隨選定之班級計算)
-const studentList = computed(() => {
+// 各班學生名冊 (支援五年級真實數據庫 250 人與三年級示範)
+const allStudentsInClass = computed(() => {
+  if (isGaotongGrade(inquiryState.grade)) {
+    return getGaotongClassStudents(inquiryState.classObj)
+  }
   const cNum = parseInt(inquiryState.classObj?.slice(-2) || '1', 10)
   const lastNames = ['陳', '林', '黃', '張', '李', '王', '吳', '劉', '蔡', '楊']
   const firstNames = ['小明', '志豪', '雅晴', '佳穎', '宗憲', '冠宇', '子涵', '佩珊']
@@ -1000,14 +1259,69 @@ const studentList = computed(() => {
       rate,
       prCounty,
       prNation,
-      weak
+      weak,
+      filterTags: ['all', rate < 60 ? 'single_subject' : 'no_signal']
     }
   })
+})
+
+const filterCounts = computed(() => {
+  const all = allStudentsInClass.value
+  return Object.fromEntries(filterOptions.map(f => [
+    f.id,
+    f.id === 'all' ? all.length : all.filter(s => s.filterTags?.includes(f.id)).length
+  ]))
+})
+
+const studentList = computed(() => {
+  const all = allStudentsInClass.value
+  if (currentFilter.value === 'all') return all
+  return all.filter(s => s.filterTags?.includes(currentFilter.value))
 })
 
 // Drawer & Selection state
 const studentDrawerVisible = ref(false)
 const activeStudent = ref(null)
+
+// 高通真實數據庫狀態
+const treemapSubjectKey = ref('math')
+const selectedAction = ref(null)
+const currentFilter = ref('all')
+
+const treemapSubject = computed(() =>
+  GAOTONG_SUBJECTS.find(s => s.id === treemapSubjectKey.value) || GAOTONG_SUBJECTS[0]
+)
+
+const gaotongSchoolStats = computed(() => ({
+  totalStudents: 250,
+  completenessRate: 99.2,
+  priorityClassCount: 3,
+  testedRate: 98.8,
+  subjects: GAOTONG_SUBJECTS
+}))
+
+const gaotongClassStats = computed(() => {
+  if (!isGaotongGrade(inquiryState.grade)) return null
+  return getGaotongClassStats(inquiryState.classObj)
+})
+
+const filterOptions = [
+  { id: 'all', label: '全部學生' },
+  { id: 'no_signal', label: '未見關注訊號' },
+  { id: 'single_subject', label: '單科關注' },
+  { id: 'multi_subject', label: '多科共同關注' },
+  { id: 'inconsistent', label: '跨科不一致' },
+  { id: 'incomplete', label: '有缺考／缺資料' }
+]
+
+function chooseTreemapSubject(sId) {
+  treemapSubjectKey.value = sId
+}
+
+function openAction(key) {
+  selectedAction.value = getActionPreset(key)
+}
+
 
 function drillToClass(cName) {
   inquiryState.classObj = cName

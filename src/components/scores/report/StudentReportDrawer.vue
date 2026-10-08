@@ -118,6 +118,37 @@
             </div>
           </div>
         </section>
+
+        <!-- 區塊 ③：教師課堂客觀觀察指引與跨科協作對象 (引用自 gaotong-dashboard) -->
+        <section v-if="studentChecklist.length" class="border border-slate-200/80 rounded-xl p-4 bg-slate-50/50 space-y-3">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <h4 class="text-sm font-bold text-slate-800 m-0 flex items-center gap-2">
+              <span class="w-1.5 h-4 rounded-full bg-[#52796f]"></span>
+              教師課堂客觀觀察指引
+            </h4>
+            <div v-if="studentConsultPartners.length" class="text-xs text-slate-500 flex items-center gap-1.5">
+              <span class="text-slate-400">跨科會商協作：</span>
+              <span class="font-bold text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded-md">
+                {{ studentConsultPartners.join('、') }}
+              </span>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div
+              v-for="item in studentChecklist"
+              :key="item.id"
+              class="bg-white border border-slate-100 rounded-lg p-3 space-y-1 shadow-2xs"
+            >
+              <strong class="text-xs text-slate-800 font-bold block">{{ item.title }}</strong>
+              <p class="text-[11px] text-slate-500 m-0 leading-relaxed">{{ item.description }}</p>
+            </div>
+          </div>
+
+          <p class="text-[10px] text-slate-400 m-0 pt-1 text-right">
+            ※ 本觀察指引供校內教學支持與跨科對話使用，避免單一次評量標籤化。
+          </p>
+        </section>
       </div>
 
       <!-- 3. 抽屜底部座號導航列 (Navigation Footer) -->
@@ -191,6 +222,10 @@ const report = computed(() => {
     classObj: props.classObj
   })
 })
+
+// 客觀觀察清單與協作對象 (來自高通真實資料或預設)
+const studentChecklist = computed(() => props.student?.objectiveChecklist || [])
+const studentConsultPartners = computed(() => props.student?.consultPartners || [])
 
 // 互動聯動狀態
 const focusSubject = ref(null) // null = 跨科總覽; 'chinese' | 'math' | 'english'

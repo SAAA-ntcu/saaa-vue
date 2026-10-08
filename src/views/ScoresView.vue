@@ -622,10 +622,17 @@
                 <th class="py-2.5 px-4 text-center cursor-pointer hover:bg-slate-100 select-none" @click="sortBy('delta')">
                   <div class="flex items-center justify-center gap-1">校與縣市落差 (Δ) <span v-if="sortKey==='delta'" class="text-[10px]">{{ sortOrder==='asc'?'▲':'▼' }}</span></div>
                 </th>
+                <th class="py-2.5 px-3 text-center w-20">試題診斷</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-              <tr v-for="d in sortedAnalysisData" :key="d.qNum" class="hover:bg-slate-50/60 transition" :class="{'bg-rose-50/30': (Number(d.schoolAcc) - Number(d.countyAcc)) <= -10}">
+              <tr
+                v-for="d in sortedAnalysisData"
+                :key="d.qNum"
+                @click="openQuestionDialog(d)"
+                class="hover:bg-slate-50/80 transition cursor-pointer"
+                :class="{'bg-rose-50/30': (Number(d.schoolAcc) - Number(d.countyAcc)) <= -10}"
+              >
                 <td class="py-2 px-4 font-mono text-slate-500 font-bold">{{ d.qNum }}</td>
                 <td class="py-2 px-4 text-center font-mono font-bold text-[#52796f]">{{ d.schoolAcc }}%</td>
                 <td class="py-2 px-4 text-center font-mono hidden sm:table-cell">{{ d.countyAcc }}%</td>
@@ -634,6 +641,15 @@
                   <span :class="(Number(d.schoolAcc) - Number(d.countyAcc)) < 0 ? 'text-[#e07a5f]' : 'text-emerald-600'">
                     {{ (Number(d.schoolAcc) - Number(d.countyAcc)) > 0 ? '+' : '' }}{{ (Number(d.schoolAcc) - Number(d.countyAcc)).toFixed(1) }}%
                   </span>
+                </td>
+                <td class="py-2 px-3 text-center">
+                  <button
+                    type="button"
+                    @click.stop="openQuestionDialog(d)"
+                    class="px-2 py-0.5 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[11px] font-bold transition cursor-pointer"
+                  >
+                    診斷
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -657,6 +673,13 @@
         本模組功能目前正在積極開發中，將提供學生背景變項與學力表現之深度關聯分析，敬請期待後續系統更新。
       </p>
     </div>
+
+    <!-- 試題深度診斷對話框 (引用自 gaotong-dashboard) -->
+    <SubjectItemDialog
+      :visible="isQuestionDialogVisible"
+      :item="selectedQuestionItem"
+      @close="isQuestionDialogVisible = false"
+    />
   </div>
 </template>
 
@@ -682,6 +705,7 @@ import {
 import { downloadMultipleFiles } from '../utils/batchDownloader'
 import YearSelector from '../components/common/YearSelector.vue'
 import InquiryDrillDown from '../components/scores/InquiryDrillDown.vue'
+import SubjectItemDialog from '../components/scores/report/SubjectItemDialog.vue'
 import { useAssessmentYear } from '../composables/useAssessmentYear'
 
 import { useAuth } from '../composables/useAuth'
@@ -689,6 +713,23 @@ import { useAuth } from '../composables/useAuth'
 const { state } = useAuth()
 const route = useRoute()
 const router = useRouter()
+
+const isQuestionDialogVisible = ref(false)
+const selectedQuestionItem = ref(null)
+
+function openQuestionDialog(d) {
+  selectedQuestionItem.value = {
+    q: d.qNum,
+    rate: Number(d.schoolAcc),
+    countyRate: Number(d.countyAcc),
+    content: filters.subject !== 'all' ? filters.subject : '試題內容向度',
+    answer: ((d.qNum * 3) % 4) + 1,
+    optionRates: [54, 28, 11, 7],
+    topWrongOption: 2,
+    topWrongShare: '28%'
+  }
+  isQuestionDialogVisible.value = true
+}
 
 const baseTabs = [
   { key: 'inquiry', title: '學生成績查詢' },

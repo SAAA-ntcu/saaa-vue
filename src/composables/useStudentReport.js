@@ -150,8 +150,8 @@ export function buildStudentReport(student, ctx) {
       bench: def.bench,
       rate,
       pr: {
-        county: estimatePr(rate, def.bench.county),
-        national: estimatePr(rate, def.bench.national)
+        county: student?.subjects?.[def.name]?.countyPr ?? estimatePr(rate, def.bench.county),
+        national: student?.subjects?.[def.name]?.allParticipantsPr ?? estimatePr(rate, def.bench.national)
       },
       dims
     }

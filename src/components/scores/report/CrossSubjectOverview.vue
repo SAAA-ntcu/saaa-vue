@@ -15,17 +15,18 @@
 
     <!-- ① 各科落點表：一科一列 -->
     <div class="border border-slate-200 rounded-xl overflow-hidden">
-      <div class="hidden sm:grid grid-cols-[110px_1fr_72px_72px] gap-4 px-4 py-2 bg-slate-50 text-[11px] font-bold text-slate-500">
+      <div class="hidden sm:grid grid-cols-[110px_1fr_64px_64px_64px] gap-3 px-4 py-2 bg-slate-50 text-[11px] font-bold text-slate-500">
         <span>科目</span>
         <span>答對率落點（0–100%）</span>
         <span class="text-right">答對率</span>
         <span class="text-right">縣市 PR</span>
+        <span class="text-right">全體 PR</span>
       </div>
       <div class="divide-y divide-slate-100">
         <div
           v-for="s in subjects"
           :key="s.key"
-          class="grid grid-cols-[96px_1fr] sm:grid-cols-[110px_1fr_72px_72px] gap-x-4 gap-y-1.5 items-center px-4 py-3"
+          class="grid grid-cols-[96px_1fr] sm:grid-cols-[110px_1fr_64px_64px_64px] gap-x-3 gap-y-1.5 items-center px-4 py-3"
         >
           <div class="flex items-center gap-2 text-sm font-bold text-slate-800">
             <SubjectChip :subject="s" />
@@ -45,11 +46,14 @@
               :title="`個人 ${s.rate}%`"
             ></div>
           </div>
-          <div class="col-start-2 sm:col-start-auto flex sm:block items-center justify-end gap-3 text-right">
-            <span class="font-mono font-black text-lg text-slate-900">{{ s.rate }}%</span>
-            <span class="sm:hidden text-xs text-slate-500">PR <strong class="font-mono text-slate-700">{{ s.pr.county }}</strong></span>
+          <div class="col-start-2 sm:col-start-auto flex sm:block items-center justify-end gap-2 text-right">
+            <span class="font-mono font-black text-base text-slate-900">{{ s.rate }}%</span>
+            <span class="sm:hidden text-[11px] text-slate-500">
+              縣 PR <strong class="font-mono text-slate-700">{{ s.pr.county }}</strong> · 全 PR <strong class="font-mono text-slate-700">{{ s.pr.national }}</strong>
+            </span>
           </div>
-          <div class="hidden sm:block text-right font-mono font-bold text-slate-600">{{ s.pr.county }}</div>
+          <div class="hidden sm:block text-right font-mono font-bold text-slate-700">{{ s.pr.county }}</div>
+          <div class="hidden sm:block text-right font-mono font-medium text-slate-500">{{ s.pr.national }}</div>
         </div>
       </div>
     </div>
