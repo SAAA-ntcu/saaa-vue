@@ -3,3 +3,6 @@ export { useAssessmentYear, globalSelectedYear } from './useAssessmentYear'
 export { usePagination } from './usePagination'
 export { useTableSelection } from './useTableSelection'
 export { useMatrixSelection } from './useMatrixSelection'
+export * from './useGaotongData'
+export * from './useStudentReport'
+

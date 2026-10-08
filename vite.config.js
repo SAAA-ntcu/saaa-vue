@@ -29,6 +29,9 @@ export default defineConfig(({ command }) => ({
             }
             return 'vendor'
           }
+          if (id.includes('src/data/gaotong') || id.includes('src\\data\\gaotong')) {
+            return 'gaotong-dataset'
+          }
         }
       }
     }
