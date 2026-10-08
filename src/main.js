@@ -18,7 +18,6 @@ import 'element-plus/theme-chalk/el-popper.css'
 import 'element-plus/theme-chalk/el-popover.css'
 import 'element-plus/theme-chalk/el-message.css'
 import './style.css'
-import './styles/subject360.css'
 
 const app = createApp(App)
 
