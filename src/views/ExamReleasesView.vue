@@ -1,49 +1,11 @@
 <template>
-  <div class="w-full relative flex-1 flex flex-col pb-16">
+  <div class="w-full relative flex-1 flex flex-col">
     <!-- Header title -->
-    <div class="text-center mb-4 md:mb-5 shrink-0">
+    <div class="text-center mb-5 md:mb-6 shrink-0">
       <h2 class="text-2xl md:text-3xl font-bold text-slate-800 tracking-wide m-0">
         試題公告
       </h2>
       <div class="w-12 md:w-16 h-1 bg-[#52796f] mx-auto mt-2 rounded-full"></div>
-    </div>
-
-    <!-- 頂部政策情境狀態提示條 (由右上角「切換測試身分」統一設定) -->
-    <div
-      class="mb-4 px-4 py-3 rounded-2xl border transition-all shadow-2xs shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
-      :class="effectivePolicyMode === 'p6_login_required'
-        ? 'bg-amber-50/80 border-amber-200/90 text-amber-950'
-        : 'bg-[#edf2ee]/80 border-[#52796f]/25 text-[#243d32]'"
-    >
-      <div class="flex items-center gap-2.5 flex-wrap">
-        <span
-          class="px-2.5 py-1 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-2xs"
-          :class="effectivePolicyMode === 'p6_login_required'
-            ? 'bg-amber-100 text-amber-900 border border-amber-300'
-            : 'bg-[#52796f] text-white'"
-        >
-          <span>{{ effectivePolicyMode === 'p6_login_required' ? '🔒 情況二：國小 6 年級需登入' : '🌐 情況一：現行（全開放）' }}</span>
-        </span>
-        <span class="font-medium text-slate-700">
-          <template v-if="effectivePolicyMode === 'p6_login_required'">
-            <span v-if="!authState.isLoggedIn" class="text-amber-800 font-semibold">
-              最新 {{ latestExamYear }} 年國小 6 年級試題受保護需登入才能看；其他學段與歷年試題皆公開。
-            </span>
-            <span v-else class="text-emerald-700 font-semibold">
-              您已登入（{{ authState.username }}），最新 {{ latestExamYear }} 年國小 6 年級試題已解鎖。
-            </span>
-          </template>
-          <template v-else>
-            全學段試題皆全面公開，免登入即可查看、單檔下載及批次打包下載。
-          </template>
-        </span>
-      </div>
-
-      <div class="flex items-center gap-1.5 text-[11px] text-slate-500 shrink-0">
-        <span>💡 可於右上角</span>
-        <span class="font-bold text-[#52796f] bg-white px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs">切換測試身分</span>
-        <span>隨時切換情況一 / 情況二</span>
-      </div>
     </div>
 
     <!-- Year Selection & Batch Selection Controls Bar -->
@@ -79,7 +41,7 @@
     </div>
 
     <!-- Data Matrix Table -->
-    <div class="w-full overflow-x-auto border border-slate-200/80 shadow-md rounded-2xl bg-white mb-12">
+    <div class="w-full overflow-x-auto border border-slate-200/80 shadow-md rounded-2xl bg-white mb-6">
       <table class="w-full table-fixed text-center border-collapse min-w-[860px]">
         <thead>
           <tr class="text-xs md:text-sm font-bold text-white">
@@ -94,12 +56,11 @@
               class="w-[115px] bg-[#52796f] py-3.5 px-2 tracking-wider cursor-pointer hover:bg-[#43645b] transition select-none group"
               :title="isGradeLocked(grade.gradeName) ? '國小 6 年級需登入方可選取' : `點擊全選/取消 ${grade.label}`"
             >
-              <div class="flex items-center justify-center gap-1.5 flex-wrap">
+              <div class="flex items-center justify-center gap-1.5">
                 <span>{{ grade.label }}</span>
                 <span
-                  v-if="!isGradeLocked(grade.gradeName)"
-                  class="w-3.5 h-3.5 rounded border border-white/60 flex items-center justify-center text-[10px] transition-colors"
-                  :class="isGradeAllSelected(grade.gradeName) ? 'bg-white text-[#52796f]' : 'bg-transparent text-transparent'"
+                  v-if="isGradeAllSelected(grade.gradeName) && !isGradeLocked(grade.gradeName)"
+                  class="w-3.5 h-3.5 rounded bg-white text-[#52796f] flex items-center justify-center text-[10px] font-black shrink-0"
                 >
                   ✓
                 </span>
@@ -122,8 +83,8 @@
               <div class="flex items-center justify-between gap-2">
                 <span>{{ subject.name }}</span>
                 <span
-                  class="w-3.5 h-3.5 rounded border border-slate-300 flex items-center justify-center text-[10px] transition-colors"
-                  :class="isSubjectAllSelected(subject.name) ? 'bg-[#52796f] border-[#52796f] text-white' : 'bg-white text-transparent'"
+                  v-if="isSubjectAllSelected(subject.name)"
+                  class="w-3.5 h-3.5 rounded bg-[#52796f] text-white flex items-center justify-center text-[10px] font-black shrink-0"
                 >
                   ✓
                 </span>
@@ -189,7 +150,7 @@
     <transition name="slide-up">
       <div
         v-if="selectedCount > 0"
-        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-xl bg-slate-900/90 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center justify-between gap-4 border border-white/10"
+        class="fixed bottom-20 sm:bottom-24 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-xl bg-slate-900/95 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center justify-between gap-4 border border-white/10"
       >
         <div class="flex items-center gap-2.5 min-w-0">
           <span class="text-lg">📦</span>

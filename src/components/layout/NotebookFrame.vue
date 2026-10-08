@@ -44,7 +44,7 @@
           </div>
 
           <!-- Inner Notebook White Page (Content Area) -->
-          <div class="bg-[#fcfdfd] rounded-[2rem] px-4 py-8 sm:px-8 md:pl-20 md:pr-10 shadow-inner min-h-[650px] flex flex-col justify-between relative z-10 border border-slate-100">
+          <div class="bg-[#fcfdfd] rounded-[2rem] px-4 pt-8 pb-20 sm:px-8 md:pl-20 md:pr-10 shadow-inner min-h-[650px] flex flex-col justify-start relative z-10 border border-slate-100">
             <slot />
           </div>
 
