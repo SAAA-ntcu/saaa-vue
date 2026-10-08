@@ -1,61 +1,6 @@
 <template>
   <footer class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t-2 border-[#52796f] shadow-[0_-4px_20px_rgba(47,62,70,0.06)] py-2.5 transition-colors">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center gap-1.5 text-center">
-      <!-- Operation Manuals & Browser Recommendation Line -->
-      <div class="flex flex-wrap items-center justify-center gap-x-2 sm:gap-x-2.5 gap-y-1 text-slate-500 text-[11px] pt-0.5">
-        <span class="font-bold text-slate-600">操作說明：</span>
-        <button
-          type="button"
-          @click="handleDownloadManual('校長')"
-          class="hover:text-[#52796f] hover:underline cursor-pointer bg-transparent border-0 p-0 text-slate-600 font-medium transition"
-        >
-          校長
-        </button>
-        <span class="text-slate-300">·</span>
-        <button
-          type="button"
-          @click="handleDownloadManual('校管理者')"
-          class="hover:text-[#52796f] hover:underline cursor-pointer bg-transparent border-0 p-0 text-slate-600 font-medium transition"
-        >
-          校管理者
-        </button>
-        <span class="text-slate-300">·</span>
-        <button
-          type="button"
-          @click="handleDownloadManual('學年主任')"
-          class="hover:text-[#52796f] hover:underline cursor-pointer bg-transparent border-0 p-0 text-slate-600 font-medium transition"
-        >
-          學年主任
-        </button>
-        <span class="text-slate-300">·</span>
-        <button
-          type="button"
-          @click="handleDownloadManual('導師')"
-          class="hover:text-[#52796f] hover:underline cursor-pointer bg-transparent border-0 p-0 text-slate-600 font-medium transition"
-        >
-          導師
-        </button>
-        <span class="text-slate-300">·</span>
-        <button
-          type="button"
-          @click="handleDownloadManual('科任教師')"
-          class="hover:text-[#52796f] hover:underline cursor-pointer bg-transparent border-0 p-0 text-slate-600 font-medium transition"
-        >
-          科任教師
-        </button>
-        <span class="text-slate-300">·</span>
-        <button
-          type="button"
-          @click="showQaModal = true"
-          class="text-[#c47c5d] hover:text-[#a25a3d] hover:underline font-bold cursor-pointer bg-transparent border-0 p-0 transition"
-        >
-          登入 Q&A
-        </button>
-
-        <span class="text-slate-300 hidden sm:inline">|</span>
-        <span class="text-slate-400">建議使用 Chrome、Edge、Firefox 瀏覽器</span>
-      </div>
-
       <!-- Contact Details & Service Info (Centered) -->
       <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-slate-600 text-[11px] sm:text-xs">
         <!-- Phone -->
@@ -109,21 +54,9 @@
         </span>
       </div>
     </div>
-
-    <!-- 登入 Q&A 彈窗 -->
-    <LoginQaDialog v-model="showQaModal" />
   </footer>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { ElMessage } from 'element-plus'
-import LoginQaDialog from '../common/LoginQaDialog.vue'
 import logoIcon from '@/assets/logo/saaa-logo-icon.svg'
-
-const showQaModal = ref(false)
-
-function handleDownloadManual(type) {
-  ElMessage.success(`正在為您下載【${type}操作手冊.pdf】...`)
-}
 </script>
