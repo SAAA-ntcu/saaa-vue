@@ -364,91 +364,168 @@
             </p>
           </div>
 
-          <!-- 右側標籤與圖例 -->
+          <!-- 右側標籤與圖例 (100% 統一色彩與名稱) -->
           <div class="flex items-center gap-3 text-xs flex-wrap font-medium">
             <div class="flex items-center gap-1.5">
-              <span class="w-3.5 h-2.5 rounded-xs bg-gradient-to-r from-[#65a30d] to-[#84cc16]"></span>
-              <span class="text-slate-800 font-bold">本班實測 (長條)</span>
+              <span class="w-3.5 h-2.5 rounded-xs bg-[#16a34a]"></span>
+              <span class="text-slate-800 font-bold">本班實測 (綠條)</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <span class="w-3 h-1 rounded-xs bg-[#f59e0b]"></span>
-              <span class="text-slate-600">學校平均 (標線)</span>
+              <span class="w-3.5 h-3.5 rounded-full bg-[#f59e0b] text-[9px] text-white font-bold flex items-center justify-center shadow-2xs">校</span>
+              <span class="text-amber-800 font-bold">學校平均 (橘標)</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <span class="w-3 h-1 rounded-xs bg-[#2563eb]"></span>
-              <span class="text-slate-600">縣市平均 (標線)</span>
+              <span class="w-3.5 h-3.5 rounded-full bg-[#2563eb] text-[9px] text-white font-bold flex items-center justify-center shadow-2xs">縣</span>
+              <span class="text-blue-800 font-bold">縣市平均 (藍標)</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <span class="w-3 h-1 rounded-xs bg-[#9333ea]"></span>
-              <span class="text-slate-600">總參與平均 (標線)</span>
+              <span class="w-3.5 h-3.5 rounded-full bg-[#9333ea] text-[9px] text-white font-bold flex items-center justify-center shadow-2xs">全</span>
+              <span class="text-purple-800 font-bold">全體平均 (紫標)</span>
             </div>
           </div>
         </div>
 
-        <!-- 方案 A：向度全覽對齊長條圖 (Grouped Horizon Benchmark Bar Chart) -->
-        <div class="space-y-5 pt-1">
+        <!-- 主體內容：頂部總體儀表盤 + 下方向度全覽水平基準長條對齊圖 -->
+        <div class="space-y-6 pt-1">
 
-          <!-- 1. 頂部核心橫幅：【全科總答對率 · 基準指標速覽艙】 -->
+          <!-- 1. 頂部核心橫幅：【全科總答對率 · 儀表盤診斷艙 (依附圖實作)】 -->
           <div class="bg-gradient-to-r from-slate-50 via-white to-slate-50/80 border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs">
-            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <!-- 左側：總答對率數值與進度標尺 -->
-              <div class="flex items-center gap-4">
-                <div class="w-14 h-14 rounded-2xl bg-[#52796f]/10 border border-[#52796f]/20 flex flex-col items-center justify-center shrink-0">
-                  <span class="text-[10px] font-bold text-[#52796f]">本班總答對率</span>
-                  <span class="text-xl font-black font-mono text-slate-800 leading-none mt-0.5">{{ overallStat.classVal }}%</span>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              
+              <!-- 左側：儀表盤 (5 Cols) -->
+              <div class="lg:col-span-5 flex flex-col items-center justify-center p-3 bg-white rounded-xl border border-slate-100 shadow-2xs">
+                <div class="w-full max-w-[290px] aspect-[16/11] relative flex items-center justify-center">
+                  <svg viewBox="0 0 380 215" class="w-full h-full overflow-visible select-none">
+                    <!-- 4 等級彩色圓弧 (R = 130, cx = 190, cy = 180) -->
+                    <!-- Grade D: 180° -> 135° (Red) -->
+                    <path d="M 60,180 A 130,130 0 0,1 98.07,88.07" fill="none" stroke="#f43f5e" stroke-width="7" stroke-linecap="round" />
+                    <!-- Grade C: 135° -> 90° (Yellow) -->
+                    <path d="M 98.07,88.07 A 130,130 0 0,1 190,50" fill="none" stroke="#fbbf24" stroke-width="7" />
+                    <!-- Grade B: 90° -> 45° (Sky Blue) -->
+                    <path d="M 190,50 A 130,130 0 0,1 281.93,88.07" fill="none" stroke="#38bdf8" stroke-width="7" />
+                    <!-- Grade A: 45° -> 0° (Mint Green) -->
+                    <path d="M 281.93,88.07 A 130,130 0 0,1 320,180" fill="none" stroke="#4ade80" stroke-width="7" stroke-linecap="round" />
+
+                    <!-- 外側等級文字標籤 (對應附圖) -->
+                    <text x="65" y="80" text-anchor="middle" class="text-xs font-bold fill-slate-500 font-sans">Grade D</text>
+                    <text x="135" y="38" text-anchor="middle" class="text-xs font-bold fill-slate-500 font-sans">Grade C</text>
+                    <text x="245" y="38" text-anchor="middle" class="text-xs font-bold fill-slate-500 font-sans">Grade B</text>
+                    <text x="315" y="80" text-anchor="middle" class="text-xs font-bold fill-slate-500 font-sans">Grade A</text>
+
+                    <!-- 放射狀刻度線 (Ticks) -->
+                    <line
+                      v-for="(tick, idx) in gaugeTicks"
+                      :key="'tick-' + idx"
+                      :x1="tick.x1"
+                      :y1="tick.y1"
+                      :x2="tick.x2"
+                      :y2="tick.y2"
+                      :stroke="tick.color"
+                      :stroke-width="tick.isMajor ? 3 : 1.8"
+                      :opacity="tick.isMajor ? 1 : 0.8"
+                      stroke-linecap="round"
+                    />
+
+                    <!-- 箭頭指針 (Arrowhead Needle - 對應附圖三角形箭頭) -->
+                    <polygon :points="gaugePointerPath" fill="#38bdf8" class="transition-all duration-700 ease-out drop-shadow-xs" />
+
+                    <!-- 中央答對率數值 (70 號藍色字體風格) -->
+                    <text x="190" y="142" text-anchor="middle" class="font-mono text-4xl sm:text-5xl font-black fill-[#0284c7]">
+                      {{ overallStat.classVal }}
+                    </text>
+                    <!-- 中央副標題 (Grade Rating) -->
+                    <text x="190" y="168" text-anchor="middle" class="text-xs font-bold fill-slate-400">
+                      Grade Rating
+                    </text>
+                  </svg>
                 </div>
-                <div class="space-y-1.5">
+
+                <!-- 儀表盤下方等級說明膠囊 -->
+                <div class="mt-2 flex items-center gap-2">
+                  <span class="text-xs font-bold text-slate-500">本班評量評等：</span>
+                  <span
+                    class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold"
+                    :class="gaugeGrade.grade === 'Grade A' ? 'bg-emerald-100 text-emerald-800' :
+                            gaugeGrade.grade === 'Grade B' ? 'bg-sky-100 text-sky-800' :
+                            gaugeGrade.grade === 'Grade C' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'"
+                  >
+                    {{ gaugeGrade.grade }} · {{ gaugeGrade.label }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- 右側：全科綜合說明與 4 大基準指標卡 (7 Cols，無落差) -->
+              <div class="lg:col-span-7 space-y-3.5 flex flex-col justify-center">
+                <div>
                   <div class="flex items-center gap-2 flex-wrap">
-                    <h4 class="text-sm font-bold text-slate-800 m-0">
-                      {{ state.school }} {{ inquiryState.classObj }} 班 · 全科總答對率綜合指標
-                    </h4>
-                    <span
-                      class="px-2 py-0.5 rounded-full text-xs font-mono font-bold"
-                      :class="overallStat.classVal >= overallStat.school ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
-                    >
-                      {{ overallStat.classVal >= overallStat.school ? '+' : '' }}{{ overallStat.classVal - overallStat.school }}% 對比校均
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-[#52796f] text-white">
+                      🌟 全科總答對率 · 儀表診斷
                     </span>
+                    <h4 class="text-sm font-bold text-slate-800 m-0">
+                      {{ state.school }} {{ inquiryState.classObj }} 班 綜合指標
+                    </h4>
                   </div>
-                  <!-- 總答對率迷你基準刻度條 -->
-                  <div class="w-64 sm:w-80 relative h-3 bg-slate-100 rounded-full overflow-hidden flex items-center">
-                    <div
-                      class="h-full rounded-full transition-all duration-700"
-                      :class="overallStat.classVal >= overallStat.school ? 'bg-gradient-to-r from-[#65a30d] to-[#84cc16]' : 'bg-gradient-to-r from-[#e11d48] to-[#f43f5e]'"
-                      :style="{ width: `${overallStat.classVal}%` }"
-                    ></div>
-                    <!-- 學校線 -->
-                    <div class="absolute top-0 bottom-0 w-1 bg-[#f59e0b] z-20 shadow-xs" :style="{ left: `${overallStat.school}%` }" :title="`校均: ${overallStat.school}%`"></div>
-                    <!-- 縣市線 -->
-                    <div class="absolute top-0 bottom-0 w-1 bg-[#2563eb] z-15 opacity-85" :style="{ left: `${overallStat.county}%` }" :title="`縣市: ${overallStat.county}%`"></div>
-                    <!-- 全國線 -->
-                    <div class="absolute top-0 bottom-0 w-0.5 border-r border-dashed border-[#9333ea] z-10 opacity-75" :style="{ left: `${overallStat.national}%` }" :title="`全國: ${overallStat.national}%`"></div>
+                  <p class="text-xs text-slate-400 m-0 mt-1">
+                    依據標準常模儀表盤直觀呈現本班全科總答對率落點，並提供學校、縣市與全體平均數值對照。
+                  </p>
+                </div>
+
+                <!-- 4 欄獨立數值艙 (完全統一 4 色，無落差標籤) -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+                  <!-- 1. 本班實測 (綠色) -->
+                  <div class="p-3 rounded-xl bg-emerald-50/90 border-2 border-[#16a34a] shadow-2xs flex flex-col items-center">
+                    <span class="text-xs font-black text-emerald-950 flex items-center gap-1">
+                      <span class="w-2 h-2 rounded-full bg-[#16a34a]"></span>
+                      {{ inquiryState.classObj }} 班實測
+                    </span>
+                    <span class="mt-1 font-mono text-xl font-black text-emerald-950">
+                      {{ overallStat.classVal }}.0%
+                    </span>
+                    <span class="text-[10px] font-bold text-emerald-700 mt-0.5">本班常模</span>
+                  </div>
+
+                  <!-- 2. 學校平均 (琥珀橘) -->
+                  <div class="p-3 rounded-xl bg-amber-50/80 border border-amber-300 flex flex-col items-center">
+                    <span class="text-xs font-bold text-amber-900 flex items-center gap-1">
+                      <span class="w-2 h-2 rounded-full bg-[#f59e0b]"></span>
+                      學校平均
+                    </span>
+                    <span class="mt-1 font-mono text-xl font-black text-amber-950">
+                      {{ overallStat.school }}.0%
+                    </span>
+                    <span class="text-[10px] font-medium text-amber-700 mt-0.5">校內平均</span>
+                  </div>
+
+                  <!-- 3. 縣市平均 (蔚藍色) -->
+                  <div class="p-3 rounded-xl bg-blue-50/80 border border-blue-300 flex flex-col items-center">
+                    <span class="text-xs font-bold text-blue-900 flex items-center gap-1">
+                      <span class="w-2 h-2 rounded-full bg-[#2563eb]"></span>
+                      縣市平均
+                    </span>
+                    <span class="mt-1 font-mono text-xl font-black text-blue-950">
+                      {{ overallStat.county }}.0%
+                    </span>
+                    <span class="text-[10px] font-medium text-blue-700 mt-0.5">縣市常模</span>
+                  </div>
+
+                  <!-- 4. 全體平均 (質感紫) -->
+                  <div class="p-3 rounded-xl bg-purple-50/80 border border-purple-300 flex flex-col items-center">
+                    <span class="text-xs font-bold text-purple-900 flex items-center gap-1">
+                      <span class="w-2 h-2 rounded-full bg-[#9333ea]"></span>
+                      全體平均
+                    </span>
+                    <span class="mt-1 font-mono text-xl font-black text-purple-950">
+                      {{ overallStat.national }}.0%
+                    </span>
+                    <span class="text-[10px] font-medium text-purple-700 mt-0.5">全國總常模</span>
                   </div>
                 </div>
               </div>
 
-              <!-- 右側：4 欄數值對齊艙 -->
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-                <div class="p-2 rounded-xl bg-purple-50/70 border border-purple-200/60 min-w-[84px]">
-                  <span class="text-[11px] font-bold text-purple-900 block">總參與平均</span>
-                  <span class="font-mono text-sm font-black text-purple-950 mt-0.5 block">{{ overallStat.national }}.0%</span>
-                </div>
-                <div class="p-2 rounded-xl bg-blue-50/70 border border-blue-200/60 min-w-[84px]">
-                  <span class="text-[11px] font-bold text-blue-900 block">縣市平均</span>
-                  <span class="font-mono text-sm font-black text-blue-950 mt-0.5 block">{{ overallStat.county }}.0%</span>
-                </div>
-                <div class="p-2 rounded-xl bg-amber-50/70 border border-amber-200/60 min-w-[84px]">
-                  <span class="text-[11px] font-bold text-amber-900 block">學校平均</span>
-                  <span class="font-mono text-sm font-black text-amber-950 mt-0.5 block">{{ overallStat.school }}.0%</span>
-                </div>
-                <div class="p-2 rounded-xl bg-lime-50 border-2 border-lime-400 min-w-[84px] shadow-2xs">
-                  <span class="text-[11px] font-black text-lime-950 block">{{ inquiryState.classObj }} 班實測</span>
-                  <span class="font-mono text-sm font-black text-lime-950 mt-0.5 block">{{ overallStat.classVal }}.0%</span>
-                </div>
-              </div>
             </div>
           </div>
 
-          <!-- 2. 核心主體：各評量向度 · 水平基準長條對齊圖（方案 A） -->
+          <!-- 2. 核心主體：各評量向度 · 水平基準長條對齊圖（清楚標記 校/縣/全，拿掉落差） -->
           <div class="space-y-3">
             <div class="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-slate-200">
               <div class="flex items-center gap-2">
@@ -456,9 +533,6 @@
                 <h4 class="text-sm sm:text-base font-bold text-slate-800 m-0">
                   各評量向度 · 水平基準長條對齊圖（共 {{ sortedDimensionStats.length }} 項）
                 </h4>
-                <span class="text-xs text-slate-400 hidden md:inline">
-                  長條長度代表本班答對率，橘/藍/紫垂直標線為常模基準
-                </span>
               </div>
 
               <!-- 排序切換鈕群 -->
@@ -479,19 +553,18 @@
                   @click="dimensionSortMode = 'weak'"
                   class="px-2.5 py-1 rounded-lg font-bold transition cursor-pointer flex items-center gap-1"
                   :class="dimensionSortMode === 'weak'
-                    ? 'bg-rose-50 text-rose-700 shadow-2xs border border-rose-200 font-black'
+                    ? 'bg-[#52796f] text-white shadow-2xs font-bold'
                     : 'text-slate-500 hover:text-slate-800'"
                 >
-                  <span>⚠️</span>
-                  <span>弱勢向度置頂（優先補救）</span>
+                  <span>依本班得分由低至高 (優先加強)</span>
                 </button>
               </div>
             </div>
 
-            <!-- 標尺刻度列 (Ruler Header) -->
-            <div class="hidden sm:grid grid-cols-[100px_1fr_260px] gap-4 items-center text-[11px] text-slate-400 px-3 py-1 font-mono bg-slate-50/70 rounded-lg border border-slate-100">
-              <div class="font-bold">評量向度</div>
-              <div class="relative flex justify-between px-1">
+            <!-- 標尺刻度列 (Ruler Header) 與圖例欄位整合 -->
+            <div class="hidden sm:grid grid-cols-[110px_1fr_260px] gap-4 items-center text-[11px] text-slate-500 px-3 py-1.5 font-mono bg-slate-50/80 rounded-lg border border-slate-200/80">
+              <div class="font-bold text-slate-700">評量向度</div>
+              <div class="relative flex justify-between px-1 text-slate-400 font-medium">
                 <span>0%</span>
                 <span>25%</span>
                 <span>50%</span>
@@ -499,36 +572,29 @@
                 <span>75%</span>
                 <span>100%</span>
               </div>
-              <div class="text-right font-medium">四項基準數值 (本班 / 校 / 縣 / 全 / 落差)</div>
+              <div class="flex items-center justify-end gap-3 text-right font-medium">
+                <span class="text-[#16a34a] font-bold">本班</span>
+                <span class="text-[#f59e0b] font-bold">學校</span>
+                <span class="text-[#2563eb] font-bold">縣市</span>
+                <span class="text-[#9333ea] font-bold">全體</span>
+              </div>
             </div>
 
-            <!-- 向度長條圖列表 -->
-            <div class="space-y-1.5">
+            <!-- 向度長條圖列表 (統一 4 色，每個標線均有直觀「校/縣/全」徽章) -->
+            <div class="space-y-2">
               <div
                 v-for="item in sortedDimensionStats"
                 :key="item.name"
-                class="group grid grid-cols-1 sm:grid-cols-[100px_1fr_260px] gap-2 sm:gap-4 items-center p-2.5 rounded-xl border border-slate-200/80 hover:border-[#52796f]/40 hover:bg-slate-50/70 transition-all duration-200"
+                class="group grid grid-cols-1 sm:grid-cols-[110px_1fr_260px] gap-2 sm:gap-4 items-center p-2.5 rounded-xl border border-slate-200/80 hover:border-[#52796f]/40 hover:bg-slate-50/70 transition-all duration-200"
               >
-                <!-- 向度名稱 + 狀態燈號 -->
-                <div class="flex items-center justify-between sm:justify-start gap-1.5 shrink-0">
-                  <div class="flex items-center gap-1.5 truncate">
-                    <span
-                      class="w-2.5 h-2.5 rounded-full shrink-0"
-                      :class="item.classVal >= item.school ? 'bg-emerald-500' : 'bg-rose-500'"
-                    ></span>
-                    <strong class="text-xs sm:text-sm font-bold text-slate-800 truncate">{{ item.name }}</strong>
-                  </div>
-                  <!-- 行動端落差 Badge -->
-                  <span
-                    class="sm:hidden px-1.5 py-0.5 rounded text-[10px] font-mono font-bold"
-                    :class="item.classVal >= item.school ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'"
-                  >
-                    {{ item.classVal >= item.school ? '+' : '' }}{{ item.classVal - item.school }}%
-                  </span>
+                <!-- 向度名稱 -->
+                <div class="flex items-center gap-1.5 shrink-0 truncate">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#16a34a] shrink-0"></span>
+                  <strong class="text-xs sm:text-sm font-bold text-slate-800 truncate">{{ item.name }}</strong>
                 </div>
 
-                <!-- 長條軌道 (Track) + 3 垂直基準線 (Needles) -->
-                <div class="relative h-6 bg-slate-100 rounded-lg flex items-center px-1 overflow-visible">
+                <!-- 長條軌道 (Track) + 3 清楚可辨之基準標線 (校、縣、全) -->
+                <div class="relative h-7 bg-slate-100/90 rounded-lg flex items-center px-1 overflow-visible">
                   <!-- 背景刻度導引線 -->
                   <div class="absolute left-1/4 top-0 bottom-0 w-px bg-slate-200 pointer-events-none"></div>
                   <div class="absolute left-2/4 top-0 bottom-0 w-px bg-slate-200 pointer-events-none"></div>
@@ -536,69 +602,76 @@
                   <!-- 60% 及格線 -->
                   <div class="absolute top-0 bottom-0 w-px border-r border-dashed border-rose-300 pointer-events-none" style="left: 60%;"></div>
 
-                  <!-- 本班得分長條 (Main Bar) -->
+                  <!-- 本班得分長條 (Main Bar - 統一純粹翡翠綠) -->
                   <div
-                    class="h-4 rounded-md flex items-center justify-end pr-1.5 text-[10px] font-mono font-bold text-white shadow-2xs transition-all duration-500 z-5"
-                    :class="item.classVal >= item.school
-                      ? 'bg-gradient-to-r from-[#65a30d] to-[#84cc16]'
-                      : 'bg-gradient-to-r from-[#e11d48] to-[#f43f5e]'"
+                    class="h-4.5 rounded-md flex items-center justify-end pr-1.5 text-[10px] font-mono font-bold text-white shadow-2xs transition-all duration-500 z-5 bg-gradient-to-r from-[#16a34a] to-[#22c55e]"
                     :style="{ width: `${item.classVal}%` }"
                   >
                     <span v-if="item.classVal >= 15">{{ item.classVal }}%</span>
                   </div>
-                  <span v-if="item.classVal < 15" class="ml-1 text-[10px] font-mono font-black" :class="item.classVal >= item.school ? 'text-emerald-700' : 'text-rose-600'">
+                  <span v-if="item.classVal < 15" class="ml-1 text-[10px] font-mono font-black text-emerald-700">
                     {{ item.classVal }}%
                   </span>
 
-                  <!-- 學校平均垂直標線 (Orange Amber) -->
+                  <!-- 學校平均標線 (琥珀橘實線 + 頂部明確小圓標：校) -->
                   <div
                     class="absolute top-0 bottom-0 w-1 bg-[#f59e0b] rounded-full z-20 shadow-xs cursor-help"
                     :style="{ left: `${item.school}%` }"
                     :title="`學校平均: ${item.school}%`"
-                  ></div>
-
-                  <!-- 縣市平均垂直標線 (Royal Blue) -->
-                  <div
-                    class="absolute top-0 bottom-0 w-0.5 bg-[#2563eb] rounded-full z-15 opacity-85 cursor-help"
-                    :style="{ left: `${item.county}%` }"
-                    :title="`縣市平均: ${item.county}%`"
-                  ></div>
-
-                  <!-- 總參與全國標線 (Purple) -->
-                  <div
-                    class="absolute top-0 bottom-0 w-0.5 border-r border-dashed border-[#9333ea] z-10 opacity-75 cursor-help"
-                    :style="{ left: `${item.national}%` }"
-                    :title="`總參與平均: ${item.national}%`"
-                  ></div>
-                </div>
-
-                <!-- 右側數值標籤群 (班/校/縣/全/落差) -->
-                <div class="flex items-center justify-between sm:justify-end gap-2 text-xs font-mono shrink-0">
-                  <div class="flex items-center gap-1.5">
-                    <span
-                      class="font-black px-1.5 py-0.5 rounded"
-                      :class="item.classVal >= item.school ? 'bg-lime-50 text-lime-950 font-bold border border-lime-300' : 'bg-rose-50 text-rose-700 border border-rose-200'"
-                      title="本班實測"
-                    >
-                      班 {{ item.classVal }}%
+                  >
+                    <span class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#f59e0b] text-[8px] font-bold text-white flex items-center justify-center shadow-2xs select-none">
+                      校
                     </span>
-                    <span class="text-amber-800 font-medium" title="學校平均">校 {{ item.school }}%</span>
-                    <span class="text-blue-700 font-medium hidden md:inline" title="縣市平均">縣 {{ item.county }}%</span>
-                    <span class="text-purple-700 font-medium hidden lg:inline" title="總參與平均">全 {{ item.national }}%</span>
                   </div>
 
-                  <!-- 對比校平均落差 Badge -->
-                  <span
-                    class="px-2 py-0.5 rounded-full text-[11px] font-bold"
-                    :class="item.classVal >= item.school ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800 font-black'"
+                  <!-- 縣市平均標線 (蔚藍色實線 + 頂部明確小圓標：縣) -->
+                  <div
+                    class="absolute top-0 bottom-0 w-1 bg-[#2563eb] rounded-full z-15 shadow-xs cursor-help"
+                    :style="{ left: `${item.county}%` }"
+                    :title="`縣市平均: ${item.county}%`"
                   >
-                    {{ item.classVal >= item.school ? '+' : '' }}{{ item.classVal - item.school }}%
-                  </span>
+                    <span class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#2563eb] text-[8px] font-bold text-white flex items-center justify-center shadow-2xs select-none">
+                      縣
+                    </span>
+                  </div>
+
+                  <!-- 全體平均標線 (質感紫實線 + 頂部明確小圓標：全) -->
+                  <div
+                    class="absolute top-0 bottom-0 w-1 bg-[#9333ea] rounded-full z-10 shadow-xs cursor-help"
+                    :style="{ left: `${item.national}%` }"
+                    :title="`全體平均: ${item.national}%`"
+                  >
+                    <span class="absolute -top-3.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-[#9333ea] text-[8px] font-bold text-white flex items-center justify-center shadow-2xs select-none">
+                      全
+                    </span>
+                  </div>
+                </div>
+
+                <!-- 右側 4 項純粹基準數值 (本班 / 學校 / 縣市 / 全體) - 完全無落差 -->
+                <div class="flex items-center justify-between sm:justify-end gap-1.5 sm:gap-2 text-xs font-mono shrink-0">
+                  <!-- 本班 -->
+                  <div class="px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-300 text-emerald-950 font-black flex items-center gap-1" title="本班實測">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#16a34a]"></span>
+                    <span>{{ item.classVal }}%</span>
+                  </div>
+                  <!-- 學校 -->
+                  <div class="px-1.5 py-0.5 rounded-md bg-amber-50/80 border border-amber-200 text-amber-900 font-bold flex items-center gap-1" title="學校平均">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#f59e0b]"></span>
+                    <span>{{ item.school }}%</span>
+                  </div>
+                  <!-- 縣市 -->
+                  <div class="px-1.5 py-0.5 rounded-md bg-blue-50/80 border border-blue-200 text-blue-900 font-bold flex items-center gap-1" title="縣市平均">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#2563eb]"></span>
+                    <span>{{ item.county }}%</span>
+                  </div>
+                  <!-- 全體 -->
+                  <div class="px-1.5 py-0.5 rounded-md bg-purple-50/80 border border-purple-200 text-purple-900 font-bold flex items-center gap-1" title="全體平均">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#9333ea]"></span>
+                    <span>{{ item.national }}%</span>
+                  </div>
                 </div>
               </div>
             </div>
-
-
           </div>
 
         </div>
@@ -1040,14 +1113,72 @@ const classDimensions = computed(() => {
 const overallStat = computed(() => classDimensions.value[0] || { name: '總答對率', national: 70, county: 72, school: 77, classVal: 75 })
 const dimensionStats = computed(() => classDimensions.value.slice(1))
 
-// 方案 A 向度排序模式 ('default': 標準向度序; 'weak': 弱勢向度置頂/優先補救)
+// 向度排序模式 ('default': 標準向度序; 'weak': 本班得分由低至高)
 const dimensionSortMode = ref('default')
 const sortedDimensionStats = computed(() => {
   const list = [...dimensionStats.value]
   if (dimensionSortMode.value === 'weak') {
-    return list.sort((a, b) => (a.classVal - a.school) - (b.classVal - b.school))
+    return list.sort((a, b) => a.classVal - b.classVal)
   }
   return list
+})
+
+// 總體儀表盤計算 (對應 Grade D, C, B, A 四分位與附圖儀表盤)
+const gaugeScore = computed(() => Number(overallStat.value?.classVal) || 70)
+
+const gaugeGrade = computed(() => {
+  const score = gaugeScore.value
+  if (score >= 75) return { grade: 'Grade A', label: '精熟', color: '#4ade80' }
+  if (score >= 50) return { grade: 'Grade B', label: '熟練', color: '#38bdf8' }
+  if (score >= 25) return { grade: 'Grade C', label: '基礎', color: '#fbbf24' }
+  return { grade: 'Grade D', label: '待加強', color: '#f43f5e' }
+})
+
+// 儀表盤箭頭指針角度與頂點計算 (cx=190, cy=180)
+const gaugePointerPath = computed(() => {
+  const score = Math.max(0, Math.min(100, gaugeScore.value))
+  const cx = 190, cy = 180
+  const angleDeg = 180 - (score * 1.8)
+  const angleRad = (angleDeg * Math.PI) / 180
+
+  const tipR = 85
+  const tipX = (cx + tipR * Math.cos(angleRad)).toFixed(1)
+  const tipY = (cy - tipR * Math.sin(angleRad)).toFixed(1)
+
+  const baseR = 65
+  const leftAngleRad = ((angleDeg + 7.5) * Math.PI) / 180
+  const rightAngleRad = ((angleDeg - 7.5) * Math.PI) / 180
+
+  const leftX = (cx + baseR * Math.cos(leftAngleRad)).toFixed(1)
+  const leftY = (cy - baseR * Math.sin(leftAngleRad)).toFixed(1)
+  const rightX = (cx + baseR * Math.cos(rightAngleRad)).toFixed(1)
+  const rightY = (cy - baseR * Math.sin(rightAngleRad)).toFixed(1)
+
+  return `${tipX},${tipY} ${leftX},${leftY} ${rightX},${rightY}`
+})
+
+// 儀表盤 41 條放射刻度線 (由 180° 遞減至 0°)
+const gaugeTicks = computed(() => {
+  const ticks = []
+  const cx = 190, cy = 180
+  for (let d = 180; d >= 0; d -= 4.5) {
+    const rad = (d * Math.PI) / 180
+    const isMajor = d % 45 === 0
+    const rOuter = 122
+    const rInner = isMajor ? 106 : 114
+    const x1 = (cx + rInner * Math.cos(rad)).toFixed(1)
+    const y1 = (cy - rInner * Math.sin(rad)).toFixed(1)
+    const x2 = (cx + rOuter * Math.cos(rad)).toFixed(1)
+    const y2 = (cy - rOuter * Math.sin(rad)).toFixed(1)
+
+    let color = '#f43f5e'
+    if (d < 45) color = '#4ade80'
+    else if (d < 90) color = '#38bdf8'
+    else if (d < 135) color = '#fbbf24'
+
+    ticks.push({ x1, y1, x2, y2, color, isMajor })
+  }
+  return ticks
 })
 
 // 各班學生名冊 (動態隨選定之班級計算)
