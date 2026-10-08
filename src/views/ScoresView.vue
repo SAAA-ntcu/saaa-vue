@@ -18,7 +18,8 @@
         </div>
       </div>
 
-      <div class="flex flex-col items-end gap-2">
+      <div class="flex flex-col sm:flex-row items-end sm:items-center gap-2.5">
+        <RoleScopeSwitcher />
         <!-- Notice Alert -->
         <div class="bg-amber-50/80 border border-amber-200/80 rounded-xl px-3.5 py-1.5 flex items-center gap-2 text-xs text-amber-800">
           <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,6 +49,11 @@
     <!-- TAB 1: 學生成績查詢 (預設) -->
     <div v-if="activeTab === 'inquiry'">
       <InquiryDrillDown />
+    </div>
+
+    <!-- TAB: 領域 360 診斷 (引用自 gaotong-dashboard) -->
+    <div v-else-if="activeTab === 'subject360'" class="p-3 sm:p-5 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
+      <Subject360View />
     </div>
 
     <!-- TAB 2: 各級報表下載 (方案 A: 報表矩陣下載總覽) -->
@@ -456,17 +462,53 @@
 
       <!-- Chart Section -->
       <div class="p-5 border-b border-slate-100 relative">
-        <div class="flex items-center justify-between mb-4">
-          <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-            <svg class="w-4 h-4 text-[#52796f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
-            校級答對率圖
-          </h4>
-          <div class="flex items-center gap-4 text-xs font-medium">
+        <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <div class="flex items-center gap-3">
+            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2 m-0">
+              <svg class="w-4 h-4 text-[#52796f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+              校級答對率與誘答分析
+            </h4>
+            <!-- 切換檢視模式 -->
+            <div class="flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-bold">
+              <button
+                type="button"
+                class="px-2.5 py-1 rounded-md transition"
+                :class="analysisSubView === 'line' ? 'bg-white text-slate-800 shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                @click="analysisSubView = 'line'"
+              >
+                答對率折線
+              </button>
+              <button
+                type="button"
+                class="px-2.5 py-1 rounded-md transition"
+                :class="analysisSubView === 'heatmap' ? 'bg-white text-slate-800 shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                @click="analysisSubView = 'heatmap'"
+              >
+                選項誘答熱圖
+              </button>
+            </div>
+          </div>
+          <div v-if="analysisSubView === 'line'" class="flex items-center gap-4 text-xs font-medium">
             <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-[#52796f]"></span>學校</div>
             <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-[#e07a5f]"></span>縣市</div>
             <div class="flex items-center gap-1.5"><span class="w-3 h-0.5 bg-slate-300" style="border-top: 2px dashed #94a3b8"></span>整體</div>
           </div>
         </div>
+
+        <!-- 模式 2: 題目 × 選項 2D 誘答熱圖 (引用自 gaotong-dashboard) -->
+        <div v-if="analysisSubView === 'heatmap'" class="pt-1">
+          <SubjectItems
+            v-if="activeSubject360Data"
+            :subject="activeSubject360Data"
+            :selected-classes="['501','502','503','504','505','506','507','508','509']"
+          />
+          <div v-else class="p-8 text-center text-slate-400">
+            正在載入試題選項誘答力矩陣…
+          </div>
+        </div>
+
+        <!-- 模式 1: 答對率折線圖 -->
+        <div v-show="analysisSubView === 'line'">
 
         <div class="w-full overflow-x-auto scrollbar-thin py-2" @mouseleave="hoveredPoint = null">
           <div class="min-w-[720px] relative px-1">
@@ -598,6 +640,7 @@
         <div class="mt-2 text-center text-[11px] text-slate-400">
           <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#e07a5f]"></span> 題號上方的紅點表示該題本校答對率顯著低於縣市平均 (相差 > 10%)</span>
         </div>
+        </div>
       </div>
 
       <!-- Data Table Section -->
@@ -658,20 +701,30 @@
       </div>
     </div>
 
-    <!-- TAB 5: 背景資料分析 -->
-    <div v-else-if="activeTab === 'background'" class="p-8 md:p-16 bg-white rounded-2xl border border-slate-200/80 shadow-xs flex flex-col items-center justify-center min-h-[400px]">
-      <div class="w-20 h-20 mb-6 bg-slate-50 rounded-full flex items-center justify-center border-4 border-slate-100 shadow-inner">
-        <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-        </svg>
+    <!-- TAB 5: 歷年趨勢與教學策略庫 (引用自 gaotong-dashboard 歷年官方報告與知識庫) -->
+    <div v-else-if="activeTab === 'background'" class="space-y-4">
+      <div class="p-4 sm:p-6 bg-white rounded-2xl border border-slate-200/80 shadow-xs">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4 flex-wrap gap-2">
+          <div>
+            <h3 class="text-xl font-bold text-slate-800 m-0">歷年學力趨勢與教學策略庫</h3>
+            <p class="text-xs text-slate-500 m-0 pt-0.5">對照 112–114 年官方五年級評量研究報告，提供本期教學循環與迷思概念防護</p>
+          </div>
+          <span class="text-xs font-bold px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg">
+            全領域歷年知識庫
+          </span>
+        </div>
+
+        <SubjectAdvice
+          v-if="activeSubject360Data"
+          :subject="activeSubject360Data"
+          :selected-classes="['501','502','503','504','505','506','507','508','509']"
+          scope-label="全校五年級 9 班"
+        />
+        <div v-else class="p-12 text-center text-slate-400">
+          <div class="inline-block w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+          <p class="text-xs font-medium">正在載入歷年知識庫資料…</p>
+        </div>
       </div>
-      <h3 class="text-xl md:text-2xl font-bold text-slate-700 mb-3 tracking-wider">背景資料分析（學習特質問卷）</h3>
-      <div class="bg-slate-100 text-slate-500 px-4 py-1.5 rounded-full text-sm font-semibold mb-4 tracking-wide border border-slate-200">
-        開發中 / 尚待更新
-      </div>
-      <p class="text-sm text-slate-400 max-w-md text-center leading-relaxed">
-        本模組功能目前正在積極開發中，將提供學生背景變項與學力表現之深度關聯分析，敬請期待後續系統更新。
-      </p>
     </div>
 
     <!-- 試題深度診斷對話框 (引用自 gaotong-dashboard) -->
@@ -706,6 +759,11 @@ import { downloadMultipleFiles } from '../utils/batchDownloader'
 import YearSelector from '../components/common/YearSelector.vue'
 import InquiryDrillDown from '../components/scores/InquiryDrillDown.vue'
 import SubjectItemDialog from '../components/scores/report/SubjectItemDialog.vue'
+import RoleScopeSwitcher from '../components/scores/common/RoleScopeSwitcher.vue'
+import Subject360View from '../components/scores/subject360/Subject360View.vue'
+import SubjectAdvice from '../components/scores/subject360/SubjectAdvice.vue'
+import SubjectItems from '../components/scores/subject360/SubjectItems.vue'
+import { loadSubject360 } from '../composables/useSubject360'
 import { useAssessmentYear } from '../composables/useAssessmentYear'
 
 import { useAuth } from '../composables/useAuth'
@@ -713,6 +771,18 @@ import { useAuth } from '../composables/useAuth'
 const { state } = useAuth()
 const route = useRoute()
 const router = useRouter()
+
+const analysisSubView = ref('line')
+const gaotongSubjectData = ref(null)
+const activeSubject360Data = computed(() => gaotongSubjectData.value?.subjects?.math || null)
+
+onMounted(async () => {
+  try {
+    gaotongSubjectData.value = await loadSubject360()
+  } catch (err) {
+    console.warn('Subject360 load error:', err)
+  }
+})
 
 const isQuestionDialogVisible = ref(false)
 const selectedQuestionItem = ref(null)
@@ -733,13 +803,14 @@ function openQuestionDialog(d) {
 
 const baseTabs = [
   { key: 'inquiry', title: '學生成績查詢' },
+  { key: 'subject360', title: '領域 360 診斷' },
   { key: 'reports', title: '各級報表下載' }
 ]
 
 const adminTabs = [
   { key: 'annual', title: '年度成果報告' },
   { key: 'analysis', title: '試題分析結果' },
-  { key: 'background', title: '背景資料分析' }
+  { key: 'background', title: '歷年趨勢與教學策略' }
 ]
 
 const visibleScoreTabs = computed(() => {

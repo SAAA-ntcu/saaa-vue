@@ -945,7 +945,7 @@
               >
                 <td class="py-3 px-4 text-center font-mono text-slate-500">{{ st.seat }}</td>
                 <td class="py-3 px-4 font-bold text-slate-800">{{ st.name }}</td>
-                <td class="py-3 px-4 text-center font-mono font-bold" :class="st.rate < 60 ? 'text-rose-600' : 'text-[#52796f]'">
+                <td class="py-3 px-4 text-center font-mono font-bold" :class="st.supportBreadth?.breadth >= 1 ? 'text-rose-700' : 'text-slate-800'">
                   {{ st.rate }}%
                 </td>
                 <td class="py-3 px-4 text-center font-mono text-slate-600">PR {{ st.prCounty }}</td>
