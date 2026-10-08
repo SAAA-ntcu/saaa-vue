@@ -356,15 +356,6 @@
                     >
                       重設密碼
                     </button>
-                    <span class="text-slate-300">|</span>
-                    <button
-                      type="button"
-                      @click="handleDeleteTeacher(t)"
-                      class="text-rose-500 hover:text-rose-700 font-semibold hover:underline cursor-pointer"
-                      title="刪除此教師帳號"
-                    >
-                      刪除
-                    </button>
                   </div>
                 </td>
               </tr>
@@ -1103,7 +1094,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { useAuth } from '../../composables/useAuth'
 import { teacherService } from '../../services/teacherService'
 import { usePagination } from '../../composables/usePagination'
@@ -1742,38 +1733,6 @@ async function saveTeacher() {
   createDialogVisible.value = false
 }
 
-// 刪除教師帳號
-async function handleDeleteTeacher(t) {
-  if (t.role === '校長') {
-    ElMessage.warning('校長帳號為系統管理預設核心帳號，無法刪除！')
-    return
-  }
-
-  try {
-    await ElMessageBox.confirm(
-      `確定要刪除 ${t.year || '115'} 學年度教師【${t.name}】（帳號：${t.username || t.adminCode}）嗎？此操作將同時移除其所有班級權限與關聯紀錄。`,
-      '刪除教師帳號確認',
-      {
-        confirmButtonText: '確定刪除',
-        cancelButtonText: '取消',
-        confirmButtonClass: 'el-button--danger',
-        type: 'warning'
-      }
-    )
-
-    const res = await teacherService.deleteTeacher(t.id)
-    if (res.success) {
-      allTeacherList.value = allTeacherList.value.filter(item => item.id !== t.id)
-      ElMessage.success(`已成功刪除教師帳號：【${t.name}】`)
-    } else {
-      ElMessage.error(res.message || '刪除教師帳號失敗')
-    }
-  } catch (err) {
-    if (err !== 'cancel') {
-      console.error(err)
-    }
-  }
-}
 
 // ==========================================
 // 方案 D：行內快速編輯模式 (Inline Quick Edit)
