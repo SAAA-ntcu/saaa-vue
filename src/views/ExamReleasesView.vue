@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-1 flex flex-col max-h-[620px] overflow-y-auto pr-2 w-full relative">
+  <div class="w-full relative flex-1 flex flex-col pb-16">
     <!-- Header title -->
     <div class="text-center mb-4 md:mb-5 shrink-0">
       <h2 class="text-2xl md:text-3xl font-bold text-slate-800 tracking-wide m-0">
@@ -8,129 +8,42 @@
       <div class="w-12 md:w-16 h-1 bg-[#52796f] mx-auto mt-2 rounded-full"></div>
     </div>
 
-    <!-- 政策情境模擬切換控制台 (Simulation Switcher) - 僅在最新年度（115年）提供模擬 -->
+    <!-- 頂部政策情境狀態提示條 (由右上角「切換測試身分」統一設定) -->
     <div
-      v-if="isLatestYearSelected"
-      class="bg-gradient-to-r from-slate-50 via-white to-slate-50 border border-slate-200/90 rounded-2xl p-4 mb-5 shadow-xs shrink-0"
+      class="mb-4 px-4 py-3 rounded-2xl border transition-all shadow-2xs shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
+      :class="effectivePolicyMode === 'p6_login_required'
+        ? 'bg-amber-50/80 border-amber-200/90 text-amber-950'
+        : 'bg-[#edf2ee]/80 border-[#52796f]/25 text-[#243d32]'"
     >
-      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
-        <!-- 左側：情境模式切換 -->
-        <div>
-          <div class="flex items-center gap-2 mb-1.5 flex-wrap">
-            <span class="text-[11px] font-black uppercase tracking-wider text-[#52796f] bg-[#52796f]/10 px-2.5 py-0.5 rounded-md flex items-center gap-1">
-              <span>⚖️</span>
-              <span>最新 {{ latestExamYear }} 年度政策模擬</span>
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <span
+          class="px-2.5 py-1 rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-2xs"
+          :class="effectivePolicyMode === 'p6_login_required'
+            ? 'bg-amber-100 text-amber-900 border border-amber-300'
+            : 'bg-[#52796f] text-white'"
+        >
+          <span>{{ effectivePolicyMode === 'p6_login_required' ? '🔒 情況二：國小 6 年級需登入' : '🌐 情況一：現行（全開放）' }}</span>
+        </span>
+        <span class="font-medium text-slate-700">
+          <template v-if="effectivePolicyMode === 'p6_login_required'">
+            <span v-if="!authState.isLoggedIn" class="text-amber-800 font-semibold">
+              最新 {{ latestExamYear }} 年國小 6 年級試題受保護需登入才能看；其他學段與歷年試題皆公開。
             </span>
-            <span class="text-[11px] text-slate-400 font-medium">切換比對最新年度資安與授權保護機制（歷年試題維持全開放）</span>
-          </div>
-
-          <!-- 雙情境切換 Segmented Switch -->
-          <div class="inline-flex p-1 bg-slate-100/90 rounded-xl border border-slate-200/80">
-            <button
-              type="button"
-              @click="setPolicyMode('current')"
-              class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 cursor-pointer"
-              :class="policyMode === 'current'
-                ? 'bg-white text-slate-800 shadow-2xs'
-                : 'text-slate-500 hover:text-slate-800'"
-            >
-              <span class="w-2 h-2 rounded-full" :class="policyMode === 'current' ? 'bg-emerald-500' : 'bg-slate-300'"></span>
-              <span>情況一：現行（全開放）</span>
-            </button>
-            <button
-              type="button"
-              @click="setPolicyMode('p6_login_required')"
-              class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 cursor-pointer"
-              :class="policyMode === 'p6_login_required'
-                ? 'bg-[#52796f] text-white shadow-2xs'
-                : 'text-slate-500 hover:text-slate-800'"
-            >
-              <span class="w-2 h-2 rounded-full" :class="policyMode === 'p6_login_required' ? 'bg-amber-300' : 'bg-slate-300'"></span>
-              <span>情況二：國小 6 年級需登入才能看</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 右側：身分模擬切換 (針對情況二測試未登入與已登入差異) -->
-        <div class="flex flex-col sm:flex-row sm:items-center gap-3 pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-100">
-          <div class="text-xs">
-            <span class="text-slate-400 text-[10px] block font-medium">當前有效身分視角</span>
-            <div class="flex items-center gap-1.5 font-bold" :class="isEffectiveLoggedIn ? 'text-emerald-700' : 'text-amber-700'">
-              <span class="w-2 h-2 rounded-full" :class="isEffectiveLoggedIn ? 'bg-emerald-500' : 'bg-amber-500'"></span>
-              <span>{{ isEffectiveLoggedIn ? `已登入 (${currentDisplayName})` : '未登入 (訪客視角)' }}</span>
-            </div>
-          </div>
-
-          <!-- 快速模擬切換按鈕群 -->
-          <div class="flex items-center gap-1 bg-slate-100/90 p-0.5 rounded-lg border border-slate-200/70 text-xs">
-            <button
-              type="button"
-              @click="simulationIdentity = 'guest'"
-              class="px-2.5 py-1 rounded-md font-semibold transition cursor-pointer"
-              :class="simulationIdentity === 'guest' ? 'bg-white text-amber-800 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
-              title="模擬未登入訪客視角（國小6年級鎖定）"
-            >
-              訪客 (未登入)
-            </button>
-            <button
-              type="button"
-              @click="simulationIdentity = 'auth'"
-              class="px-2.5 py-1 rounded-md font-semibold transition cursor-pointer"
-              :class="simulationIdentity === 'auth' ? 'bg-white text-emerald-800 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
-              title="模擬已登入學校人員視角（國小6年級解鎖）"
-            >
-              已登入教師
-            </button>
-            <button
-              type="button"
-              @click="simulationIdentity = 'real'"
-              class="px-2.5 py-1 rounded-md font-medium transition cursor-pointer"
-              :class="simulationIdentity === 'real' ? 'bg-white text-[#52796f] shadow-2xs font-bold' : 'text-slate-400 hover:text-slate-700'"
-              title="恢復跟隨系統真實登入狀態"
-            >
-              跟隨真實
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- 政策說明小導覽 -->
-      <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2 text-[11px]">
-        <div v-if="policyMode === 'current'" class="text-slate-500 flex items-center gap-1.5">
-          <span class="text-emerald-600 font-bold">● 現行開放政策：</span>
-          <span>國小 3~6 年級及國中 7~8 年級全部公開，無需登入即可查看與單檔/批次下載。</span>
-        </div>
-        <div v-else class="text-slate-600 flex items-center gap-1.5">
-          <span class="text-amber-700 font-bold">● 最新 {{ latestExamYear }} 年 6 年級需登入政策：</span>
-          <span v-if="!isEffectiveLoggedIn" class="text-amber-800 font-medium">
-            目前為<strong>未登入狀態</strong>，最新 {{ latestExamYear }} 年國小 6 年級試題受保護 🔒 需登入才能看；其他年級與歷年試題仍自由開放。
-          </span>
-          <span v-else class="text-emerald-700 font-medium">
-            您已處於<strong>登入狀態</strong> 🔓，國小 6 年級試題已成功授權解鎖，享有完整檢視與下載權限！
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- 歷年試題全開放提示（非最新年度顯示） -->
-    <div
-      v-else
-      class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 mb-5 shadow-2xs shrink-0 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
-    >
-      <div class="flex items-center gap-2 text-slate-600">
-        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
-        <span>
-          <strong>{{ selectedYear }} 年度歷年試題：</strong>全學段試題皆全面公開提供查閱與下載（政策情境模擬僅套用於最新 <strong>{{ latestExamYear }}</strong> 年度）。
+            <span v-else class="text-emerald-700 font-semibold">
+              您已登入（{{ authState.username }}），最新 {{ latestExamYear }} 年國小 6 年級試題已解鎖。
+            </span>
+          </template>
+          <template v-else>
+            全學段試題皆全面公開，免登入即可查看、單檔下載及批次打包下載。
+          </template>
         </span>
       </div>
-      <button
-        type="button"
-        @click="changeYear(latestExamYear)"
-        class="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-[#52796f] border border-[#52796f]/40 hover:border-[#52796f] rounded-xl font-bold transition shadow-2xs cursor-pointer whitespace-nowrap active:scale-95 flex items-center gap-1"
-      >
-        <span>前往最新 {{ latestExamYear }} 年度體驗政策模擬</span>
-        <span>→</span>
-      </button>
+
+      <div class="flex items-center gap-1.5 text-[11px] text-slate-500 shrink-0">
+        <span>💡 可於右上角</span>
+        <span class="font-bold text-[#52796f] bg-white px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs">切換測試身分</span>
+        <span>隨時切換情況一 / 情況二</span>
+      </div>
     </div>
 
     <!-- Year Selection & Batch Selection Controls Bar -->
@@ -166,11 +79,11 @@
     </div>
 
     <!-- Data Matrix Table -->
-    <div class="w-full overflow-x-auto border border-slate-200/80 shadow-md rounded-xl bg-white mb-20">
-      <table class="w-full text-center border-collapse min-w-[850px]">
+    <div class="w-full overflow-x-auto border border-slate-200/80 shadow-md rounded-2xl bg-white mb-12">
+      <table class="w-full table-fixed text-center border-collapse min-w-[860px]">
         <thead>
           <tr class="text-xs md:text-sm font-bold text-white">
-            <th class="bg-[#52796f] py-3 px-3 tracking-wider text-left pl-4">
+            <th class="w-36 md:w-44 bg-[#52796f] py-3.5 px-3 tracking-wider text-left pl-4">
               科目
               <span class="text-[10px] font-normal opacity-80 block font-mono">點擊列首可全選</span>
             </th>
@@ -178,7 +91,7 @@
               v-for="grade in examGradesHeader"
               :key="grade.key"
               @click="toggleSelectGrade(grade.gradeName)"
-              class="bg-[#52796f] py-3 px-2 tracking-wider cursor-pointer hover:bg-[#43645b] transition select-none group"
+              class="w-[115px] bg-[#52796f] py-3.5 px-2 tracking-wider cursor-pointer hover:bg-[#43645b] transition select-none group"
               :title="isGradeLocked(grade.gradeName) ? '國小 6 年級需登入方可選取' : `點擊全選/取消 ${grade.label}`"
             >
               <div class="flex items-center justify-center gap-1.5 flex-wrap">
@@ -203,7 +116,7 @@
             <!-- Subject Row Header (Clickable to select whole row) -->
             <td
               @click="toggleSelectSubject(subject.name)"
-              class="font-bold py-3 px-4 text-slate-800 bg-slate-50/70 hover:bg-[#52796f]/10 cursor-pointer transition select-none text-left"
+              class="w-36 md:w-44 font-bold py-3 px-4 text-slate-800 bg-slate-50/70 hover:bg-[#52796f]/10 cursor-pointer transition select-none text-left"
               :title="`點擊全選/取消 ${subject.name}`"
             >
               <div class="flex items-center justify-between gap-2">
@@ -221,7 +134,7 @@
             <td
               v-for="grade in examGradesHeader"
               :key="grade.key"
-              class="py-2.5 px-2 transition-colors relative"
+              class="w-[115px] py-2.5 px-2 transition-colors relative"
               :class="[
                 isSelected(grade.gradeName, subject.name) ? 'bg-[#52796f]/10 ring-1 ring-inset ring-[#52796f]/25' : '',
                 isGradeLocked(grade.gradeName) ? 'bg-amber-50/30' : ''
@@ -276,7 +189,7 @@
     <transition name="slide-up">
       <div
         v-if="selectedCount > 0"
-        class="sticky bottom-2 left-0 right-0 z-20 mx-auto max-w-xl bg-slate-900/90 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-xl flex items-center justify-between gap-4 border border-white/10"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-xl bg-slate-900/90 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center justify-between gap-4 border border-white/10"
       >
         <div class="flex items-center gap-2.5 min-w-0">
           <span class="text-lg">📦</span>
@@ -388,7 +301,7 @@ import {
 import { downloadMultipleFiles } from '../utils/batchDownloader'
 
 const router = useRouter()
-const { state: authState } = useAuth()
+const { state: authState, login } = useAuth()
 const { activeYear: selectedYear, setYear: changeYear } = useAssessmentYear(examYears)
 
 // ----------------------------------------------------
@@ -405,58 +318,26 @@ const isLatestYearSelected = computed(() => {
 
 // ----------------------------------------------------
 // 政策情境模擬狀態 (Policy Simulation State)
+// 由右上角「切換測試身分」統一控制，全站共享
 // ----------------------------------------------------
-// 模式：'current' (情況一：現行全開放) | 'p6_login_required' (情況二：國小6年級需登入才能看)
-const policyMode = ref('current')
-
-// 測試身分覆寫：'real' (跟隨真實狀態) | 'guest' (強制模擬未登入) | 'auth' (強制模擬已登入)
-const simulationIdentity = ref('real')
+const effectivePolicyMode = computed(() => {
+  return authState.policyMode || 'current'
+})
 
 // 登入提示彈窗狀態
 const showLoginPromptDialog = ref(false)
 const loginPromptTarget = ref({ subject: '國語文', grade: '國小6年級' })
 
-// 計算當前有效登入狀態
-const isEffectiveLoggedIn = computed(() => {
-  if (simulationIdentity.value === 'guest') return false
-  if (simulationIdentity.value === 'auth') return true
-  return Boolean(authState.isLoggedIn)
-})
-
-const currentDisplayName = computed(() => {
-  if (simulationIdentity.value === 'auth') return '模擬教師身分'
-  if (simulationIdentity.value === 'guest') return '未登入訪客'
-  return authState.isLoggedIn ? (authState.username || '已登入人員') : '未登入訪客'
-})
-
-// 判斷特定年級是否處於鎖定狀態 (需登入且當前未登入，且【只有最新年度】才需模擬與保護)
+// 判斷特定年級是否處於鎖定狀態 (需登入且當前未登入，且【只有最新年度】才需遵循政策保護)
 function isGradeLocked(gradeName) {
-  // 依要求：歷年試題維持全面開放，只有最新的那一年才需模擬
+  // 歷年試題維持全面開放，只有最新年度才需遵循政策模擬
   if (!isLatestYearSelected.value) return false
-  if (policyMode.value === 'current') return false
-  // 情況二：國小 6 年級受保護
+  if (effectivePolicyMode.value === 'current') return false
+  // 情況二：國小 6 年級需登入才能看
   if (gradeName === '六年級') {
-    return !isEffectiveLoggedIn.value
+    return !authState.isLoggedIn
   }
   return false
-}
-
-// 切換政策情境
-function setPolicyMode(mode) {
-  policyMode.value = mode
-  if (mode === 'p6_login_required' && !isEffectiveLoggedIn.value && isLatestYearSelected.value) {
-    // 若切換為受限模式且未登入，清除最新年度已勾選的 6 年級試題
-    examSubjects.forEach((s) => {
-      selectedMap.delete(getItemKey(latestExamYear.value, '六年級', s.name))
-    })
-    ElMessage({
-      message: `已切換為【情況二：最新 ${latestExamYear.value} 年國小 6 年級需登入模式】（歷年試題維持全開放）`,
-      type: 'warning',
-      duration: 3500
-    })
-  } else {
-    ElMessage.success('已切換為【情況一：現行公開模式】（全學段試題皆開放檢視與下載）')
-  }
 }
 
 // 點擊受限項目時跳出登入引導彈窗
@@ -471,9 +352,9 @@ function handleLockedClick(subjectName) {
 
 // 彈窗內一鍵模擬登入
 function handleQuickMockLogin() {
-  simulationIdentity.value = 'auth'
+  login({ role: '導師' })
   showLoginPromptDialog.value = false
-  ElMessage.success('🎉 已為您模擬登入！國小 6 年級試題已解鎖，現在可自由下載')
+  ElMessage.success('🎉 已為您快速登入為導師！國小 6 年級試題已解鎖，現在可自由下載')
 }
 
 // 彈窗內前往登入頁
@@ -482,18 +363,9 @@ function goToLoginPage() {
   router.push('/logins')
 }
 
-// 監聽身分切換，若是未登入且處於最新年度，則自動清除已選 6 年級試題
-watch(isEffectiveLoggedIn, (isLogged) => {
-  if (policyMode.value === 'p6_login_required' && !isLogged && isLatestYearSelected.value) {
-    examSubjects.forEach((s) => {
-      selectedMap.delete(getItemKey(latestExamYear.value, '六年級', s.name))
-    })
-  }
-})
-
-// 監聽年度切換
-watch(selectedYear, (newYear) => {
-  if (newYear === latestExamYear.value && policyMode.value === 'p6_login_required' && !isEffectiveLoggedIn.value) {
+// 監聽政策情境、登入狀態或年度變化，若未登入且處於受限狀態，則自動清除已選 6 年級試題
+watch([effectivePolicyMode, () => authState.isLoggedIn, selectedYear], () => {
+  if (effectivePolicyMode.value === 'p6_login_required' && !authState.isLoggedIn && isLatestYearSelected.value) {
     examSubjects.forEach((s) => {
       selectedMap.delete(getItemKey(latestExamYear.value, '六年級', s.name))
     })

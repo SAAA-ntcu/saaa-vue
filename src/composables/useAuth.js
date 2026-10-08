@@ -37,7 +37,8 @@ const defaultInitial = {
   ip: '172.16.113.107',
   realPublicIp: '',
   isRealIpMode: false,
-  countdownSeconds: 3600
+  countdownSeconds: 3600,
+  policyMode: 'current'
 }
 
 const STORAGE_KEY = 'saaa_auth_state_v3'
@@ -113,7 +114,8 @@ function saveState() {
     ip: state.ip,
     realPublicIp: state.realPublicIp,
     isRealIpMode: state.isRealIpMode,
-    countdownSeconds: state.countdownSeconds
+    countdownSeconds: state.countdownSeconds,
+    policyMode: state.policyMode || 'current'
   }))
 }
 
@@ -163,6 +165,7 @@ export function useAuth() {
   }
 
   function switchRole(newRole, extra = {}) {
+    state.isLoggedIn = true
     state.role = newRole
     if (extra.city) state.city = extra.city
     if (extra.school) state.school = extra.school
@@ -175,6 +178,9 @@ export function useAuth() {
       grade: state.grade,
       classroom: state.classroom
     })
+    if (!timer) {
+      startTimer()
+    }
     saveState()
   }
 
@@ -205,11 +211,17 @@ export function useAuth() {
     }
   }
 
+  function setPolicyMode(mode) {
+    state.policyMode = mode
+    saveState()
+  }
+
   return {
     state,
     formattedCountdown,
     login,
     switchRole,
+    setPolicyMode,
     toggleIpMode,
     logout,
     toggleLogin

@@ -160,7 +160,7 @@
                     <span>切換測試身分</span>
                     <span class="text-[10px] text-slate-500 font-semibold">{{ state.school }}</span>
                   </div>
-                  <div class="grid grid-cols-2 gap-1">
+                  <div class="grid grid-cols-2 gap-1 mb-2">
                     <button
                       v-for="r in roleOptions"
                       :key="r"
@@ -174,6 +174,58 @@
                       <span class="truncate">{{ r }}</span>
                       <span v-if="state.role === r" class="w-1.5 h-1.5 rounded-full bg-[#52796f] shrink-0"></span>
                     </button>
+                    <!-- Switch to Guest button -->
+                    <button
+                      type="button"
+                      @click="handleSwitchToGuest"
+                      class="px-2 py-1.5 rounded-lg text-xs font-medium text-left transition cursor-pointer flex items-center justify-between text-amber-700 hover:bg-amber-50/70 border border-transparent"
+                      title="切換為訪客視角"
+                    >
+                      <span class="truncate">訪客(未登入)</span>
+                      <span class="text-[10px] text-amber-600">👤</span>
+                    </button>
+                  </div>
+
+                  <!-- 試題公告政策模擬 (情況一 / 情況二) -->
+                  <div class="pt-2 border-t border-slate-100">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                      <span>試題公告政策情境</span>
+                      <span class="text-[9px] px-1.5 py-0.5 rounded font-bold"
+                        :class="state.policyMode === 'p6_login_required' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'">
+                        {{ state.policyMode === 'p6_login_required' ? '情況二' : '情況一' }}
+                      </span>
+                    </div>
+                    <div class="space-y-1">
+                      <button
+                        type="button"
+                        @click="handleSwitchPolicy('current')"
+                        class="w-full px-2 py-1.5 rounded-lg text-xs font-medium text-left transition cursor-pointer flex items-center justify-between"
+                        :class="state.policyMode === 'current'
+                          ? 'bg-[#edf2ee] text-[#354f52] font-bold border border-[#52796f]/30 shadow-2xs'
+                          : 'text-slate-600 hover:bg-slate-50 border border-transparent'"
+                      >
+                        <span class="flex items-center gap-1.5">
+                          <span class="w-2 h-2 rounded-full" :class="state.policyMode === 'current' ? 'bg-emerald-500' : 'bg-slate-300'"></span>
+                          <span>情況一：現行（全開放）</span>
+                        </span>
+                        <span v-if="state.policyMode === 'current'" class="text-[10px] text-emerald-600 font-bold">✓</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        @click="handleSwitchPolicy('p6_login_required')"
+                        class="w-full px-2 py-1.5 rounded-lg text-xs font-medium text-left transition cursor-pointer flex items-center justify-between"
+                        :class="state.policyMode === 'p6_login_required'
+                          ? 'bg-amber-50 text-amber-900 font-bold border border-amber-300 shadow-2xs'
+                          : 'text-slate-600 hover:bg-slate-50 border border-transparent'"
+                      >
+                        <span class="flex items-center gap-1.5">
+                          <span class="w-2 h-2 rounded-full" :class="state.policyMode === 'p6_login_required' ? 'bg-amber-500' : 'bg-slate-300'"></span>
+                          <span>情況二：國小 6 年級需登入</span>
+                        </span>
+                        <span v-if="state.policyMode === 'p6_login_required'" class="text-[10px] text-amber-700 font-bold">✓</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -206,8 +258,110 @@
             </transition>
           </div>
 
-          <!-- Unauthenticated / Guest state: 系統登入 Button -->
-          <div v-else class="flex items-center">
+          <!-- Unauthenticated / Guest state: 切換測試身分 + 系統登入 Button -->
+          <div v-else class="flex items-center gap-2" ref="guestDropdownRef">
+            <!-- 訪客切換測試身分 Dropdown Trigger -->
+            <div class="relative">
+              <button
+                type="button"
+                @click="isGuestDropdownOpen = !isGuestDropdownOpen"
+                class="flex items-center gap-1.5 border border-slate-200/90 hover:border-[#52796f]/60 rounded-xl px-2.5 py-1.5 bg-white hover:bg-slate-50/80 transition-all shadow-2xs cursor-pointer select-none text-xs font-bold text-slate-700 focus:outline-none"
+                :class="{ 'ring-2 ring-[#52796f]/20 border-[#52796f]': isGuestDropdownOpen }"
+                aria-label="切換測試身分選單"
+              >
+                <span class="w-2 h-2 rounded-full" :class="state.policyMode === 'p6_login_required' ? 'bg-amber-500' : 'bg-emerald-500'"></span>
+                <span>切換測試身分</span>
+                <svg
+                  class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
+                  :class="{ 'rotate-180': isGuestDropdownOpen }"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <!-- Guest Dropdown Popover Menu -->
+              <transition name="dropdown-fade">
+                <div
+                  v-if="isGuestDropdownOpen"
+                  class="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 p-2.5 z-50 origin-top-right text-left"
+                >
+                  <!-- Status Info -->
+                  <div class="px-2.5 py-2 bg-slate-50 rounded-xl mb-2 border border-slate-100">
+                    <div class="text-[11px] text-slate-400 font-medium flex items-center justify-between">
+                      <span>當前身分狀態</span>
+                      <span class="text-amber-700 font-bold">訪客（未登入）</span>
+                    </div>
+                    <div class="text-xs text-slate-500 mt-1">點擊下方任一身分即可快速登入體驗</div>
+                  </div>
+
+                  <!-- Quick Role Switcher section -->
+                  <div class="mb-2 px-1">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                      <span>快速身分登入</span>
+                      <span class="text-[10px] text-slate-500 font-semibold">{{ state.school }}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1 mb-2">
+                      <button
+                        v-for="r in roleOptions"
+                        :key="r"
+                        type="button"
+                        @click="handleGuestSwitchRole(r)"
+                        class="px-2 py-1.5 rounded-lg text-xs font-medium text-left transition cursor-pointer flex items-center justify-between text-slate-600 hover:bg-slate-100 border border-transparent"
+                      >
+                        <span class="truncate">{{ r }}</span>
+                        <span class="text-[10px] text-slate-400">登入</span>
+                      </button>
+                    </div>
+
+                    <!-- 試題公告政策模擬 (情況一 / 情況二) -->
+                    <div class="pt-2 border-t border-slate-100">
+                      <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                        <span>試題公告政策情境</span>
+                        <span class="text-[9px] px-1.5 py-0.5 rounded font-bold"
+                          :class="state.policyMode === 'p6_login_required' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'">
+                          {{ state.policyMode === 'p6_login_required' ? '情況二' : '情況一' }}
+                        </span>
+                      </div>
+                      <div class="space-y-1">
+                        <button
+                          type="button"
+                          @click="handleSwitchPolicy('current')"
+                          class="w-full px-2 py-1.5 rounded-lg text-xs font-medium text-left transition cursor-pointer flex items-center justify-between"
+                          :class="state.policyMode === 'current'
+                            ? 'bg-[#edf2ee] text-[#354f52] font-bold border border-[#52796f]/30 shadow-2xs'
+                            : 'text-slate-600 hover:bg-slate-50 border border-transparent'"
+                        >
+                          <span class="flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full" :class="state.policyMode === 'current' ? 'bg-emerald-500' : 'bg-slate-300'"></span>
+                            <span>情況一：現行（全開放）</span>
+                          </span>
+                          <span v-if="state.policyMode === 'current'" class="text-[10px] text-emerald-600 font-bold">✓</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          @click="handleSwitchPolicy('p6_login_required')"
+                          class="w-full px-2 py-1.5 rounded-lg text-xs font-medium text-left transition cursor-pointer flex items-center justify-between"
+                          :class="state.policyMode === 'p6_login_required'
+                            ? 'bg-amber-50 text-amber-900 font-bold border border-amber-300 shadow-2xs'
+                            : 'text-slate-600 hover:bg-slate-50 border border-transparent'"
+                        >
+                          <span class="flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full" :class="state.policyMode === 'p6_login_required' ? 'bg-amber-500' : 'bg-slate-300'"></span>
+                            <span>情況二：國小 6 年級需登入</span>
+                          </span>
+                          <span v-if="state.policyMode === 'p6_login_required'" class="text-[10px] text-amber-700 font-bold">✓</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </transition>
+            </div>
+
             <router-link
               to="/logins"
               class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs lg:text-sm font-semibold text-white bg-[#52796f] hover:bg-[#354f52] rounded-xl shadow-xs hover:shadow-md transition-all duration-200 no-underline cursor-pointer active:scale-95 ring-1 ring-[#52796f]/30"
@@ -289,8 +443,11 @@
 
             <!-- Role switcher in mobile -->
             <div class="pt-2 border-t border-slate-200/60">
-              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">切換測試身分</div>
-              <div class="flex flex-wrap gap-1">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                <span>切換測試身分</span>
+                <span class="text-[10px] text-slate-500 font-semibold">{{ state.school }}</span>
+              </div>
+              <div class="flex flex-wrap gap-1 mb-2">
                 <button
                   v-for="r in roleOptions"
                   :key="r"
@@ -303,6 +460,44 @@
                 >
                   {{ r }}
                 </button>
+                <button
+                  type="button"
+                  @click="handleSwitchToGuest"
+                  class="px-2 py-1 rounded-md text-[11px] font-medium transition cursor-pointer bg-amber-50 text-amber-800 border border-amber-200"
+                >
+                  訪客視角
+                </button>
+              </div>
+
+              <!-- 試題公告政策模擬 (情況一 / 情況二) -->
+              <div class="pt-2 border-t border-slate-200/60">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  試題公告政策情境
+                </div>
+                <div class="grid grid-cols-1 gap-1">
+                  <button
+                    type="button"
+                    @click="handleSwitchPolicy('current')"
+                    class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-left transition cursor-pointer flex items-center justify-between"
+                    :class="state.policyMode === 'current'
+                      ? 'bg-[#edf2ee] text-[#354f52] font-bold border border-[#52796f]/40'
+                      : 'bg-white text-slate-600 border border-slate-200'"
+                  >
+                    <span>情況一：現行（全開放）</span>
+                    <span v-if="state.policyMode === 'current'" class="text-xs text-emerald-600 font-bold">✓</span>
+                  </button>
+                  <button
+                    type="button"
+                    @click="handleSwitchPolicy('p6_login_required')"
+                    class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-left transition cursor-pointer flex items-center justify-between"
+                    :class="state.policyMode === 'p6_login_required'
+                      ? 'bg-amber-50 text-amber-900 font-bold border border-amber-300'
+                      : 'bg-white text-slate-600 border border-slate-200'"
+                  >
+                    <span>情況二：國小 6 年級需登入</span>
+                    <span v-if="state.policyMode === 'p6_login_required'" class="text-xs text-amber-700 font-bold">✓</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -315,9 +510,51 @@
               </span>
               <span class="text-xs font-bold text-slate-500">待登入</span>
             </div>
-            <p class="text-[11px] text-slate-400 m-0 leading-relaxed">
-              尚未登入系統。登入後可存取成績專區、報表下載與管理功能。
+            <p class="text-[11px] text-slate-400 m-0 leading-relaxed mb-3">
+              尚未登入系統。可快速切換測試身分或切換試題公告政策。
             </p>
+
+            <!-- Quick login & Policy Switcher for Guest in Mobile -->
+            <div class="pt-2 border-t border-slate-200/60">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">切換測試身分 (快速登入)</div>
+              <div class="flex flex-wrap gap-1 mb-2.5">
+                <button
+                  v-for="r in roleOptions"
+                  :key="r"
+                  type="button"
+                  @click="handleGuestSwitchRole(r)"
+                  class="px-2 py-1 rounded-md text-[11px] font-medium bg-white text-slate-600 border border-slate-200 hover:border-[#52796f] transition cursor-pointer"
+                >
+                  {{ r }}
+                </button>
+              </div>
+
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">試題公告政策情境</div>
+              <div class="grid grid-cols-1 gap-1">
+                <button
+                  type="button"
+                  @click="handleSwitchPolicy('current')"
+                  class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-left transition cursor-pointer flex items-center justify-between"
+                  :class="state.policyMode === 'current'
+                    ? 'bg-[#edf2ee] text-[#354f52] font-bold border border-[#52796f]/40'
+                    : 'bg-white text-slate-600 border border-slate-200'"
+                >
+                  <span>情況一：現行（全開放）</span>
+                  <span v-if="state.policyMode === 'current'" class="text-xs text-emerald-600 font-bold">✓</span>
+                </button>
+                <button
+                  type="button"
+                  @click="handleSwitchPolicy('p6_login_required')"
+                  class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-left transition cursor-pointer flex items-center justify-between"
+                  :class="state.policyMode === 'p6_login_required'
+                    ? 'bg-amber-50 text-amber-900 font-bold border border-amber-300'
+                    : 'bg-white text-slate-600 border border-slate-200'"
+                >
+                  <span>情況二：國小 6 年級需登入</span>
+                  <span v-if="state.policyMode === 'p6_login_required'" class="text-xs text-amber-700 font-bold">✓</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Nav Items with Expandable Submenus -->
@@ -432,6 +669,8 @@ const router = useRouter()
 const isMobileMenuOpen = ref(false)
 const isDropdownOpen = ref(false)
 const profileDropdownRef = ref(null)
+const isGuestDropdownOpen = ref(false)
+const guestDropdownRef = ref(null)
 
 const activeHoverMenu = ref(null)
 const activeSubHover = ref(null)
@@ -458,13 +697,36 @@ function toggleMobileSubmenu(title) {
   openMobileSubs[title] = !openMobileSubs[title]
 }
 
-const { state, formattedCountdown, logout, switchRole, toggleIpMode } = useAuth()
+const { state, formattedCountdown, logout, switchRole, setPolicyMode, toggleIpMode } = useAuth()
 
 const roleOptions = ['校長', '校管理者', '學年主任', '導師', '科任教師']
 
 function handleSwitchRole(r) {
   switchRole(r)
   ElMessage.success(`已切換身分為：【${state.username}】`)
+}
+
+function handleGuestSwitchRole(r) {
+  switchRole(r)
+  isGuestDropdownOpen.value = false
+  isMobileMenuOpen.value = false
+  ElMessage.success(`已為您登入並切換身分為：【${state.username}】`)
+}
+
+function handleSwitchToGuest() {
+  isDropdownOpen.value = false
+  isMobileMenuOpen.value = false
+  logout()
+  ElMessage.info('已切換為：【未登入訪客視角】')
+}
+
+function handleSwitchPolicy(mode) {
+  setPolicyMode(mode)
+  if (mode === 'current') {
+    ElMessage.success('已切換試題公告政策：【情況一：現行（全開放）】')
+  } else {
+    ElMessage.warning('已切換試題公告政策：【情況二：國小 6 年級需登入才能看】')
+  }
 }
 
 function handleToggleIp() {
@@ -540,10 +802,13 @@ function handleLogout() {
   router.push('/')
 }
 
-// Click outside to close dropdown
+// Click outside to close dropdowns
 function handleClickOutside(event) {
   if (profileDropdownRef.value && !profileDropdownRef.value.contains(event.target)) {
     isDropdownOpen.value = false
+  }
+  if (guestDropdownRef.value && !guestDropdownRef.value.contains(event.target)) {
+    isGuestDropdownOpen.value = false
   }
 }
 
