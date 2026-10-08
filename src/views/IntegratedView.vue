@@ -52,15 +52,48 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
 import TeacherManagement from '../components/integrated/TeacherManagement.vue'
 import AbsenteeList from '../components/integrated/AbsenteeList.vue'
 
+const route = useRoute()
+const router = useRouter()
 const { state } = useAuth()
-const mainTab = ref(state.role === '校管理者' ? 'teachers' : 'absentee')
+
+function getInitialTab() {
+  if (route.query.tab === 'absentee') return 'absentee'
+  if (route.query.tab === 'teachers' && state.role === '校管理者') return 'teachers'
+  return state.role === '校管理者' ? 'teachers' : 'absentee'
+}
+
+const mainTab = ref(getInitialTab())
+
+watch(() => route.query.tab, (newTab) => {
+  if (newTab === 'absentee') {
+    mainTab.value = 'absentee'
+  } else if (newTab === 'teachers' && state.role === '校管理者') {
+    mainTab.value = 'teachers'
+  }
+})
+
+// 身分切換時防呆：若非校管理者且停留在教師帳號管理，自動切換至缺考名單
+watch(() => state.role, (newRole) => {
+  if (newRole !== '校管理者' && mainTab.value === 'teachers') {
+    switchMainTab('absentee')
+  }
+})
 
 function switchMainTab(tab) {
   mainTab.value = tab
+  router.replace({ query: { ...route.query, tab } })
 }
+
+onMounted(() => {
+  // 進入時若 query 尚未設定，自動補齊 query 以保持 URL 與選單狀態同步
+  if (!route.query.tab) {
+    router.replace({ query: { ...route.query, tab: mainTab.value } })
+  }
+})
 </script>

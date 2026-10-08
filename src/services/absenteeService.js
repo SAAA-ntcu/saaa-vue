@@ -15,7 +15,7 @@ export const absenteeService = {
     return apiClient.request(() => {
       let result = [...absenteeDatabase]
 
-      if (filters.year) {
+      if (filters.year && filters.year !== 'all') {
         result = result.filter(item => item.year === String(filters.year))
       }
 

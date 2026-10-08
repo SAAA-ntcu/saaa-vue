@@ -38,7 +38,8 @@
                 @change="handleFilterChange"
                 class="w-full h-9 px-2.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f] cursor-pointer"
               >
-                <option value="115">115 年度</option>
+                <option value="all">全部年度</option>
+                <option value="115">115 年度 (最新)</option>
                 <option value="114">114 年度</option>
                 <option value="113">113 年度</option>
               </select>
@@ -135,7 +136,7 @@
                   class="hover:bg-slate-50/70 transition"
                 >
                   <td class="py-3 px-3 text-center font-mono font-bold text-slate-700">
-                    {{ st.year || absenteeFilters.year }}
+                    {{ st.year || '115' }}
                   </td>
                   <td class="py-3 px-4 font-bold text-slate-800">{{ st.class }}</td>
                   <td class="py-3 px-4 text-center font-mono text-slate-500">{{ st.seatNo }}</td>
@@ -196,11 +197,12 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { absenteeService } from '../../services/absenteeService'
 import { usePagination } from '../../composables/usePagination'
+import { globalSelectedYear } from '../../composables/useAssessmentYear'
 
 // 2. 缺考名單下載 (年級、班級、科目篩選與分頁)
 // ==========================================
 const absenteeFilters = reactive({
-  year: '115',
+  year: globalSelectedYear?.value || '115',
   grade: 'all',
   classroom: 'all',
   subject: 'all',
@@ -227,8 +229,10 @@ const totalAbsenteeSubjectCount = computed(() => {
 const filteredAbsenteeList = computed(() => {
   return allAbsenteeList.value.filter(item => {
     // Year filter
-    if (absenteeFilters.year && item.year && item.year !== absenteeFilters.year) {
-      return false
+    if (absenteeFilters.year !== 'all') {
+      if (item.year && item.year !== absenteeFilters.year) {
+        return false
+      }
     }
     // Grade filter
     if (absenteeFilters.grade !== 'all' && item.grade !== absenteeFilters.grade) {

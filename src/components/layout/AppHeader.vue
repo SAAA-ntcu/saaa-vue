@@ -504,10 +504,8 @@ const currentNavItems = computed(() => {
     if (state.role === '校管理者') {
       integratedChildren.push({ title: '教師帳號管理', path: '/integrated?tab=teachers' })
     }
-    // 導師、科任教師不顯示缺考名單
-    if (state.role !== '導師' && state.role !== '科任教師') {
-      integratedChildren.push({ title: '缺考名單下載', path: '/integrated?tab=absentee' })
-    }
+    // 所有已登入學校人員（校長、校管理者、學年主任、導師、科任教師）皆可查看缺考名單下載
+    integratedChildren.push({ title: '缺考名單下載', path: '/integrated?tab=absentee' })
 
     if (integratedChildren.length > 0) {
       baseNav.push({

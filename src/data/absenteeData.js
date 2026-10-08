@@ -28,5 +28,19 @@ export const defaultAbsenteeList = [
   { id: 16, year: '115', grade: '6', classroom: '1', class: '六年1班', seatNo: '22', name: '陳○翔', subjects: ['國語文'] },
   { id: 17, year: '115', grade: '6', classroom: '2', class: '六年2班', seatNo: '14', name: '謝○睿', subjects: ['英語文'] },
   { id: 18, year: '115', grade: '6', classroom: '3', class: '六年3班', seatNo: '19', name: '楊○萱', subjects: ['國語文'] },
-  { id: 19, year: '115', grade: '6', classroom: '3', class: '六年3班', seatNo: '27', name: '郭○豪', subjects: ['數學'] }
+  { id: 19, year: '115', grade: '6', classroom: '3', class: '六年3班', seatNo: '27', name: '郭○豪', subjects: ['數學'] },
+
+  // ================= 114 年度 =================
+  { id: 20, year: '114', grade: '3', classroom: '1', class: '三年1班', seatNo: '08', name: '方○德', subjects: ['國語文', '數學'] },
+  { id: 21, year: '114', grade: '3', classroom: '2', class: '三年2班', seatNo: '14', name: '洪○文', subjects: ['英語文'] },
+  { id: 22, year: '114', grade: '4', classroom: '1', class: '四年1班', seatNo: '03', name: '郭○妤', subjects: ['數學', '英語文'] },
+  { id: 23, year: '114', grade: '5', classroom: '1', class: '五年1班', seatNo: '19', name: '宋○辰', subjects: ['國語文'] },
+  { id: 24, year: '114', grade: '5', classroom: '2', class: '五年2班', seatNo: '22', name: '江○宇', subjects: ['數學'] },
+  { id: 25, year: '114', grade: '6', classroom: '1', class: '六年1班', seatNo: '11', name: '彭○晴', subjects: ['國語文', '數學', '英語文'] },
+
+  // ================= 113 年度 =================
+  { id: 26, year: '113', grade: '3', classroom: '1', class: '三年1班', seatNo: '06', name: '鄧○華', subjects: ['國語文'] },
+  { id: 27, year: '113', grade: '4', classroom: '2', class: '四年2班', seatNo: '18', name: '盧○恩', subjects: ['數學'] },
+  { id: 28, year: '113', grade: '5', classroom: '1', class: '五年1班', seatNo: '25', name: '柯○豪', subjects: ['英語文'] },
+  { id: 29, year: '113', grade: '6', classroom: '2', class: '六年2班', seatNo: '09', name: '鐘○哲', subjects: ['國語文', '數學'] }
 ]
