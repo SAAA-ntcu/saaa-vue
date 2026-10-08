@@ -392,12 +392,12 @@
           <div class="bg-gradient-to-r from-slate-50 via-white to-slate-50/80 border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
               
-              <!-- 左側：全新浮島環形進度儀表盤 (5 Cols - 依附圖實作) -->
-              <div class="lg:col-span-5 flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl border border-slate-100 shadow-2xs">
-                <div class="w-full max-w-[280px] aspect-square relative flex items-center justify-center">
-                  <svg viewBox="0 0 300 300" class="w-full h-full overflow-visible select-none">
+              <!-- 左側：全新極簡浮島環形儀表盤 (5 Cols - 100% 對標附圖，零壓圖) -->
+              <div class="lg:col-span-5 flex flex-col items-center justify-center p-4 bg-white rounded-2xl border border-slate-100 shadow-2xs">
+                <div class="w-full max-w-[270px] aspect-square relative flex items-center justify-center">
+                  <svg viewBox="0 0 320 320" class="w-full h-full overflow-visible select-none">
                     <defs>
-                      <!-- 藍紫漸層 (依附圖深藍至藍紫漸變) -->
+                      <!-- 藍紫漸層 (100% 依附圖深藍至藍紫漸變) -->
                       <linearGradient id="ringGradient" x1="100%" y1="20%" x2="10%" y2="90%">
                         <stop offset="0%" stop-color="#c7d2fe" stop-opacity="0.85" />
                         <stop offset="50%" stop-color="#6366f1" />
@@ -406,103 +406,58 @@
 
                       <!-- 浮島中央白圓陰影 -->
                       <filter id="discShadow" x="-30%" y="-30%" width="160%" height="160%">
-                        <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#1e3a8a" flood-opacity="0.14" />
-                        <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#000000" flood-opacity="0.05" />
+                        <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#1e3a8a" flood-opacity="0.12" />
+                        <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#000000" flood-opacity="0.04" />
                       </filter>
                     </defs>
 
                     <!-- 1. 背景底軌淺灰色圓環 (0~100%) -->
                     <circle
-                      cx="150"
-                      cy="150"
-                      r="108"
+                      cx="160"
+                      cy="160"
+                      r="110"
                       fill="none"
                       stroke="#f1f5f9"
-                      stroke-width="24"
+                      stroke-width="22"
                     />
 
-                    <!-- 2. 本班進度漸層動態環 (依附圖風格) -->
+                    <!-- 2. 本班進度漸層動態環 (依附圖風格，無任何壓圖) -->
                     <circle
-                      cx="150"
-                      cy="150"
-                      r="108"
+                      cx="160"
+                      cy="160"
+                      r="110"
                       fill="none"
                       stroke="url(#ringGradient)"
-                      stroke-width="24"
+                      stroke-width="22"
                       stroke-linecap="round"
                       :stroke-dasharray="ringCircumference"
                       :stroke-dashoffset="ringProgressOffset"
                       class="transition-all duration-700 ease-out drop-shadow-sm"
                     />
 
-                    <!-- 3. 學校、縣市、全體 刻度融合標記點 (融合至環形軌道上) -->
-                    <g>
-                      <template v-for="bm in gaugeBenchmarks" :key="'ring-bm-' + bm.key">
-                        <g
-                          class="cursor-pointer transition-transform duration-300"
-                          :class="activeHoverBenchmark === bm.key ? 'scale-125' : ''"
-                          @mouseenter="activeHoverBenchmark = bm.key"
-                          @mouseleave="activeHoverBenchmark = null"
-                        >
-                          <!-- 導引線 -->
-                          <line
-                            :x1="bm.pTrack.x"
-                            :y1="bm.pTrack.y"
-                            :x2="bm.pBadge.x"
-                            :y2="bm.pBadge.y"
-                            :stroke="bm.color"
-                            :stroke-width="activeHoverBenchmark === bm.key ? 2.5 : 1.5"
-                            stroke-dasharray="2,2"
-                            :opacity="activeHoverBenchmark === bm.key ? 1 : 0.8"
-                          />
-                          <!-- 圓形指標徽章 -->
-                          <circle
-                            :cx="bm.pBadge.x"
-                            :cy="bm.pBadge.y"
-                            :r="activeHoverBenchmark === bm.key ? 10.5 : 8.5"
-                            :fill="bm.color"
-                            stroke="#ffffff"
-                            :stroke-width="activeHoverBenchmark === bm.key ? 2.5 : 1.8"
-                            class="drop-shadow-xs transition-all duration-300"
-                          />
-                          <text
-                            :x="bm.pBadge.x"
-                            :y="bm.pBadge.y + 3.2"
-                            text-anchor="middle"
-                            fill="#ffffff"
-                            font-size="8.5"
-                            font-weight="900"
-                            class="select-none font-sans"
-                          >
-                            {{ bm.label }}
-                          </text>
-                        </g>
-                      </template>
-                    </g>
-
-                    <!-- 4. 中央浮島純白圓形卡片 (完全對標附圖) -->
+                    <!-- 3. 中央浮島純白圓形卡片 (直徑與環形保留 13px 安全間距，絕對不壓圖) -->
                     <circle
-                      cx="150"
-                      cy="150"
-                      r="88"
+                      cx="160"
+                      cy="160"
+                      r="86"
                       fill="#ffffff"
                       filter="url(#discShadow)"
                     />
 
-                    <!-- 5. 中央數值文字 (對標附圖深藍色大字 40% 風格) -->
+                    <!-- 4. 中央數值文字 (100% 依附圖純粹大字風格) -->
                     <text
-                      x="150"
-                      y="152"
+                      x="160"
+                      y="162"
                       text-anchor="middle"
                       class="font-mono text-4xl sm:text-5xl font-black fill-[#1d4ed8] select-none"
                     >
                       {{ overallStat.classVal }}%
                     </text>
                     <text
-                      x="150"
-                      y="178"
+                      x="160"
+                      y="188"
                       text-anchor="middle"
-                      class="text-[11px] font-bold fill-slate-400 tracking-wider select-none"
+                      class="text-xs font-bold fill-slate-400 tracking-wider select-none"
                     >
                       全科總答對率
                     </text>
@@ -510,8 +465,8 @@
                 </div>
               </div>
 
-              <!-- 右側：全科綜合說明與 4 大基準指標卡 (7 Cols，支援 Hover 聯動刻度高亮) -->
-              <div class="lg:col-span-7 space-y-3.5 flex flex-col justify-center">
+              <!-- 右側：全科綜合說明與 4 大基準指標卡 (7 Cols，無任何冗餘重複) -->
+              <div class="lg:col-span-7 space-y-4 flex flex-col justify-center">
                 <div>
                   <div class="flex items-center gap-2 flex-wrap">
                     <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-[#52796f] text-white">
@@ -521,104 +476,60 @@
                       {{ state.school }} {{ inquiryState.classObj }} 班 綜合指標
                     </h4>
                   </div>
-                  <p class="text-xs text-slate-400 m-0 mt-1">
-                    依據標準常模儀表盤直觀呈現本班全科總答對率落點，並提供學校、縣市與全體平均數值對照。
+                  <p class="text-xs text-slate-400 m-0 mt-1.5">
+                    依據標準常模儀表盤直觀呈現本班全科總答對率落點，並提供學校、縣市與全國平均對照。
                   </p>
                 </div>
 
-                <!-- 4 欄獨立數值艙 (Hover 連動刻度高亮標針) -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-                  <!-- 1. 本班實測 (綠色) -->
-                  <div
-                    @mouseenter="activeHoverBenchmark = 'class'"
-                    @mouseleave="activeHoverBenchmark = null"
-                    class="p-3 rounded-xl bg-emerald-50/90 border-2 border-[#16a34a] shadow-2xs flex flex-col items-center transition-all duration-200 cursor-pointer"
-                    :class="activeHoverBenchmark === 'class' ? 'ring-2 ring-emerald-500 scale-102 bg-emerald-100/90' : ''"
-                  >
-                    <span class="text-xs font-black text-emerald-950 flex items-center gap-1">
-                      <span class="w-2 h-2 rounded-full bg-[#16a34a]"></span>
+                <!-- 4 欄獨立數值艙 (純粹乾淨、精準對齊、零冗餘) -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                  <!-- 1. 本班實測 (藍色主環) -->
+                  <div class="p-3.5 rounded-xl bg-blue-50/70 border-2 border-[#1d4ed8] shadow-2xs flex flex-col items-center transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
+                    <span class="text-xs font-black text-blue-950 flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full bg-[#1d4ed8]"></span>
                       {{ inquiryState.classObj }} 班實測
                     </span>
-                    <span class="mt-1 font-mono text-xl font-black text-emerald-950">
+                    <span class="mt-1.5 font-mono text-2xl font-black text-blue-950">
                       {{ overallStat.classVal }}.0%
                     </span>
-                    <span class="text-[10px] font-bold text-emerald-700 mt-0.5">本班常模 (綠針)</span>
+                    <span class="text-[10px] font-bold text-blue-700 mt-1">本班常模</span>
                   </div>
 
                   <!-- 2. 學校平均 (琥珀橘) -->
-                  <div
-                    @mouseenter="activeHoverBenchmark = 'school'"
-                    @mouseleave="activeHoverBenchmark = null"
-                    class="p-3 rounded-xl bg-amber-50/80 border border-amber-300 flex flex-col items-center transition-all duration-200 cursor-pointer"
-                    :class="activeHoverBenchmark === 'school' ? 'ring-2 ring-amber-400 scale-102 bg-amber-100/90' : ''"
-                  >
-                    <span class="text-xs font-bold text-amber-900 flex items-center gap-1">
+                  <div class="p-3.5 rounded-xl bg-amber-50/70 border border-amber-300 shadow-2xs flex flex-col items-center transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
+                    <span class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
                       <span class="w-2 h-2 rounded-full bg-[#f59e0b]"></span>
                       學校平均
                     </span>
-                    <span class="mt-1 font-mono text-xl font-black text-amber-950">
+                    <span class="mt-1.5 font-mono text-2xl font-black text-amber-950">
                       {{ overallStat.school }}.0%
                     </span>
-                    <span class="text-[10px] font-medium text-amber-700 mt-0.5">校內平均 (橘標)</span>
+                    <span class="text-[10px] font-medium text-amber-700 mt-1">校內平均</span>
                   </div>
 
                   <!-- 3. 縣市平均 (蔚藍色) -->
-                  <div
-                    @mouseenter="activeHoverBenchmark = 'county'"
-                    @mouseleave="activeHoverBenchmark = null"
-                    class="p-3 rounded-xl bg-blue-50/80 border border-blue-300 flex flex-col items-center transition-all duration-200 cursor-pointer"
-                    :class="activeHoverBenchmark === 'county' ? 'ring-2 ring-blue-400 scale-102 bg-blue-100/90' : ''"
-                  >
-                    <span class="text-xs font-bold text-blue-900 flex items-center gap-1">
+                  <div class="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200 shadow-2xs flex flex-col items-center transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
+                    <span class="text-xs font-bold text-blue-900 flex items-center gap-1.5">
                       <span class="w-2 h-2 rounded-full bg-[#2563eb]"></span>
                       縣市平均
                     </span>
-                    <span class="mt-1 font-mono text-xl font-black text-blue-950">
+                    <span class="mt-1.5 font-mono text-2xl font-black text-blue-950">
                       {{ overallStat.county }}.0%
                     </span>
-                    <span class="text-[10px] font-medium text-blue-700 mt-0.5">縣市常模 (藍標)</span>
+                    <span class="text-[10px] font-medium text-blue-700 mt-1">縣市常模</span>
                   </div>
 
                   <!-- 4. 全體平均 (質感紫) -->
-                  <div
-                    @mouseenter="activeHoverBenchmark = 'national'"
-                    @mouseleave="activeHoverBenchmark = null"
-                    class="p-3 rounded-xl bg-purple-50/80 border border-purple-300 flex flex-col items-center transition-all duration-200 cursor-pointer"
-                    :class="activeHoverBenchmark === 'national' ? 'ring-2 ring-purple-400 scale-102 bg-purple-100/90' : ''"
-                  >
-                    <span class="text-xs font-bold text-purple-900 flex items-center gap-1">
+                  <div class="p-3.5 rounded-xl bg-purple-50/60 border border-purple-200 shadow-2xs flex flex-col items-center transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
+                    <span class="text-xs font-bold text-purple-900 flex items-center gap-1.5">
                       <span class="w-2 h-2 rounded-full bg-[#9333ea]"></span>
                       全體平均
                     </span>
-                    <span class="mt-1 font-mono text-xl font-black text-purple-950">
+                    <span class="mt-1.5 font-mono text-2xl font-black text-purple-950">
                       {{ overallStat.national }}.0%
                     </span>
-                    <span class="text-[10px] font-medium text-purple-700 mt-0.5">全國總常模 (紫標)</span>
+                    <span class="text-[10px] font-medium text-purple-700 mt-1">全國總常模</span>
                   </div>
-                </div>
-
-                <!-- 環形標記圖例列 (直觀指引環上之標竿徽章) -->
-                <div class="flex items-center justify-between text-xs text-slate-500 pt-1">
-                  <div class="flex items-center gap-1.5 flex-wrap">
-                    <span class="font-bold text-slate-600">環形標記：</span>
-                    <span class="inline-flex items-center gap-1 text-[11px] text-blue-800 font-bold bg-blue-50 px-2 py-0.5 rounded">
-                      <span class="w-2 h-2 rounded-full bg-[#1d4ed8]"></span>
-                      藍紫弧環：本班 {{ overallStat.classVal }}%
-                    </span>
-                    <span class="inline-flex items-center gap-1 text-[11px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded">
-                      <span class="w-2 h-2 rounded-full bg-[#f59e0b]"></span>
-                      橘標：學校 {{ overallStat.school }}%
-                    </span>
-                    <span class="inline-flex items-center gap-1 text-[11px] text-blue-800 font-bold bg-blue-50 px-2 py-0.5 rounded">
-                      <span class="w-2 h-2 rounded-full bg-[#2563eb]"></span>
-                      藍標：縣市 {{ overallStat.county }}%
-                    </span>
-                    <span class="inline-flex items-center gap-1 text-[11px] text-purple-800 font-bold bg-purple-50 px-2 py-0.5 rounded">
-                      <span class="w-2 h-2 rounded-full bg-[#9333ea]"></span>
-                      紫標：全體 {{ overallStat.national }}%
-                    </span>
-                  </div>
-                  <span class="text-[11px] text-slate-400 hidden xl:inline">💡 滑鼠懸停卡片可高亮該標記</span>
                 </div>
               </div>
 
@@ -1220,48 +1131,12 @@ const sortedDimensionStats = computed(() => {
   return list
 })
 
-// 環形儀表盤進度與基準融合 (依附圖浮島環形設計)
-const activeHoverBenchmark = ref(null)
-const ringCircumference = 2 * Math.PI * 108 // 約 678.58
+// 環形儀表盤進度計算 (依附圖浮島環形設計，純粹極簡無遮蔽)
+const ringCircumference = 2 * Math.PI * 110 // 約 691.15
 
 const ringProgressOffset = computed(() => {
   const score = Math.max(0, Math.min(100, Number(overallStat.value?.classVal) || 76))
   return ringCircumference * (1 - score / 100)
-})
-
-const gaugeBenchmarks = computed(() => {
-  const cx = 150, cy = 150, r = 108
-  const stat = overallStat.value || { classVal: 76, school: 77, county: 72, national: 70 }
-
-  const toPolar = (radius, angleDeg) => {
-    const rad = (angleDeg * Math.PI) / 180
-    return {
-      x: Number((cx + radius * Math.cos(rad)).toFixed(1)),
-      y: Number((cy + radius * Math.sin(rad)).toFixed(1))
-    }
-  }
-
-  // 360° 環形角度計算：從 3 點鐘 (0°) 順時針轉動 (與 SVG 進度環起訖完全一致)
-  const getAngle = (score) => (Math.max(0, Math.min(100, Number(score) || 0)) * 3.6)
-
-  // 階梯分軌防止 70, 72, 77 密集時文字遮蔽
-  const items = [
-    { key: 'national', label: '全', name: '全體平均', val: Number(stat.national) || 70, color: '#9333ea', rBadge: 132 },
-    { key: 'county', label: '縣', name: '縣市平均', val: Number(stat.county) || 72, color: '#2563eb', rBadge: 84 },
-    { key: 'school', label: '校', name: '學校平均', val: Number(stat.school) || 77, color: '#f59e0b', rBadge: 134 }
-  ]
-
-  return items.map(item => {
-    const angle = getAngle(item.val)
-    const pTrack = toPolar(r, angle)
-    const pBadge = toPolar(item.rBadge, angle)
-    return {
-      ...item,
-      angle,
-      pTrack,
-      pBadge
-    }
-  })
 })
 
 // 各班學生名冊 (動態隨選定之班級計算)
