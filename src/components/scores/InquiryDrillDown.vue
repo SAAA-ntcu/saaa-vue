@@ -115,6 +115,31 @@
     <div v-if="inquiryState.level === 'school'" class="space-y-5">
       <!-- 五年級專屬：高通真實學力資料總覽、問題定位儀表、待加強分布樹狀圖與優先行動方案 (引用 gaotong-dashboard) -->
       <section v-if="isGaotongGrade(inquiryState.grade)" class="space-y-5">
+        <!-- 5 大教育學深度學力診斷快速體驗引導列 -->
+        <div class="p-3.5 bg-gradient-to-r from-emerald-50 via-teal-50/50 to-amber-50/60 border border-emerald-200/80 rounded-2xl flex items-center justify-between flex-wrap gap-2 text-xs shadow-2xs">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded-md bg-[#52796f] text-white font-bold text-[10px]">全新上線</span>
+            <span class="font-bold text-slate-800">5 大教育學深度學力診斷報告已全面實裝！</span>
+            <span class="text-slate-500 hidden md:inline">點擊任一班級進入學生清單，或直接點選右側範例一秒滑出報告</span>
+          </div>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button
+              type="button"
+              @click="quickOpenStudent('18', '501')"
+              class="px-3 py-1 rounded-lg bg-white border border-amber-300 hover:border-amber-500 text-amber-950 font-bold transition shadow-2xs cursor-pointer flex items-center gap-1 hover:bg-amber-50/50"
+            >
+              <span>🌟 點此看 501 班 18 號 (偏科雙軌 & 認知遷移)</span>
+            </button>
+            <button
+              type="button"
+              @click="quickOpenStudent('14', '501')"
+              class="px-3 py-1 rounded-lg bg-white border border-blue-300 hover:border-blue-500 text-blue-950 font-bold transition shadow-2xs cursor-pointer flex items-center gap-1 hover:bg-blue-50/50"
+            >
+              <span>👥 點此看 501 班 14 號 (跨科教師會商名單)</span>
+            </button>
+          </div>
+        </div>
+
         <!-- 頂部 4 大校務指標卡 -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div class="p-4 bg-white border border-slate-200/90 rounded-2xl shadow-2xs space-y-1">
@@ -900,6 +925,31 @@
           </div>
         </div>
 
+        <!-- 5 大教育學深度診斷報告亮點引導 -->
+        <div v-if="isGaotongGrade(inquiryState.grade)" class="p-3.5 bg-gradient-to-r from-[#edf2ee] via-white to-amber-50/50 border-b border-slate-200/80 flex items-center justify-between flex-wrap gap-2 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded-md bg-[#52796f] text-white font-bold text-[10px]">診斷指引</span>
+            <span class="font-bold text-slate-800">點擊任一學生即可滑出完整綜合成績單：</span>
+            <span class="text-slate-500 hidden md:inline">已內建認知向度雷達、學習遷移警示、雙常模 PR 階梯與難題粗心題剖析</span>
+          </div>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button
+              type="button"
+              @click="quickOpenStudent('18', inquiryState.classObj)"
+              class="px-2.5 py-1 rounded-lg bg-white border border-amber-300 hover:border-amber-500 text-amber-950 font-bold transition shadow-2xs cursor-pointer flex items-center gap-1 hover:bg-amber-50/50"
+            >
+              <span>⚡ 點此看 18 號 (偏科雙軌 & 認知遷移)</span>
+            </button>
+            <button
+              type="button"
+              @click="quickOpenStudent('14', inquiryState.classObj)"
+              class="px-2.5 py-1 rounded-lg bg-white border border-blue-300 hover:border-blue-500 text-blue-950 font-bold transition shadow-2xs cursor-pointer flex items-center gap-1 hover:bg-blue-50/50"
+            >
+              <span>👥 點此看 14 號 (跨科教師會商名單)</span>
+            </button>
+          </div>
+        </div>
+
         <!-- 關注廣度與訊號篩選按鈕列 (引用自 gaotong-dashboard) -->
         <div v-if="isGaotongGrade(inquiryState.grade)" class="p-3 bg-slate-50/40 border-b border-slate-200/70 flex items-center gap-1.5 flex-wrap">
           <button
@@ -952,33 +1002,38 @@
                 <td class="py-3 px-4 text-center font-mono text-slate-600">PR {{ st.prNation }}</td>
                 <td class="py-3 px-4">
                   <template v-if="isGaotongGrade(inquiryState.grade)">
-                    <span
-                      v-if="st.supportBreadth?.breadth >= 2"
-                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200"
-                    >
-                      多科關注 ({{ st.supportBreadth.breadth }}科)
-                    </span>
-                    <span
-                      v-else-if="st.supportBreadth?.breadth === 1"
-                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200"
-                    >
-                      單科關注 (1科)
-                    </span>
-                    <span
-                      v-else-if="st.crossSubjectInconsistency?.isInconsistent"
-                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200"
-                    >
-                      跨科不一致
-                    </span>
-                    <span
-                      v-else-if="st.dataCompleteness?.status !== 'COMPLETE'"
-                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500"
-                    >
-                      缺考待補
-                    </span>
-                    <span v-else class="text-[11px] text-emerald-600 font-medium">
-                      未見關注訊號
-                    </span>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <span
+                        v-if="st.supportBreadth?.breadth >= 2"
+                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200"
+                      >
+                        多科關注 ({{ st.supportBreadth.breadth }}科)
+                      </span>
+                      <span
+                        v-else-if="st.supportBreadth?.breadth === 1"
+                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200"
+                      >
+                        單科關注 (1科)
+                      </span>
+                      <span
+                        v-if="st.crossSubjectInconsistency?.isInconsistent"
+                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-orange-100 text-orange-900 border border-orange-300 shadow-2xs"
+                      >
+                        ⚡ 偏科高度不一致
+                      </span>
+                      <span
+                        v-if="st.dataCompleteness?.status !== 'COMPLETE'"
+                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500"
+                      >
+                        缺考待補
+                      </span>
+                      <span
+                        v-else-if="st.supportBreadth?.breadth === 0 && !st.crossSubjectInconsistency?.isInconsistent"
+                        class="text-[11px] text-emerald-600 font-medium"
+                      >
+                        未見關注訊號
+                      </span>
+                    </div>
                   </template>
                   <template v-else>
                     <span
@@ -997,9 +1052,10 @@
                   <button
                     type="button"
                     @click.stop="openStudentDrawer(st)"
-                    class="px-2.5 py-1 bg-[#52796f] hover:bg-[#354f52] text-white rounded-lg text-xs font-semibold shadow-2xs transition cursor-pointer"
+                    class="px-2.5 py-1 bg-[#52796f] hover:bg-[#354f52] text-white rounded-lg text-xs font-semibold shadow-2xs transition cursor-pointer flex items-center gap-1 mx-auto"
                   >
-                    診斷報告
+                    <span>診斷報告</span>
+                    <span class="text-[10px]">➔</span>
                   </button>
                 </td>
               </tr>
@@ -1336,6 +1392,18 @@ function drillUp(lvl) {
 function openStudentDrawer(st) {
   activeStudent.value = st
   studentDrawerVisible.value = true
+}
+
+function quickOpenStudent(seatNum = '18', classId = '501') {
+  inquiryState.grade = '5'
+  inquiryState.classObj = classId
+  inquiryState.level = 'class'
+  const students = getGaotongClassStudents(classId)
+  const norm = String(parseInt(seatNum, 10))
+  const target = students.find(s => String(parseInt(s.seat, 10)) === norm)
+  if (target) {
+    openStudentDrawer(target)
+  }
 }
 </script>
 

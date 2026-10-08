@@ -26,10 +26,13 @@
           v-if="cognitiveProfile"
           type="button"
           @click="selectView('cognitive')"
-          class="px-2.5 py-1 rounded-md transition cursor-pointer flex items-center gap-1"
-          :class="selectedView === 'cognitive' ? 'bg-[#52796f] text-white shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
+          class="px-2.5 py-1 rounded-md transition cursor-pointer flex items-center gap-1.5 text-xs"
+          :class="selectedView === 'cognitive'
+            ? 'bg-[#52796f] text-white shadow-xs font-black ring-1 ring-[#52796f]'
+            : 'bg-amber-100 text-amber-900 font-bold hover:bg-amber-200 border border-amber-300 shadow-2xs'"
         >
           <span>🧠 認知向度</span>
+          <span v-if="selectedView !== 'cognitive'" class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span>
         </button>
         <button
           v-for="s in subjects"
