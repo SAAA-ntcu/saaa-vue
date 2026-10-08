@@ -314,75 +314,53 @@
     <div v-else-if="inquiryState.level === 'class'" class="space-y-6">
       <!-- 班級向度長條圖 (原圖三的現代化內嵌實作) -->
       <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-xs">
-        <div class="flex items-center justify-between flex-wrap gap-3 mb-4 pb-3 border-b border-slate-100">
-          <div>
-            <div class="flex items-center gap-2 flex-wrap">
+        <div class="mb-4 pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2 flex-wrap">
+            <button
+              v-if="!isHomeroomTeacher"
+              type="button"
+              @click="drillUp('school')"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition cursor-pointer"
+            >
+              <svg class="w-3.5 h-3.5 text-[#52796f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+              </svg>
+              <span>返回各班比較</span>
+            </button>
+            <h3 class="text-base font-bold text-slate-800 m-0">
+              班級成績統計 · {{ state.school }}
+              <span class="text-[#52796f] font-black">{{ inquiryState.classObj }} 班</span>
+              答對率向度分析
+            </h3>
+          </div>
+
+          <!-- 校長、校管理者快捷切換班級按鈕群 (Class Switcher Pills) -->
+          <div v-if="!isHomeroomTeacher" class="flex items-center gap-2 mt-2.5 flex-wrap">
+            <span class="text-xs font-bold text-slate-500 flex items-center gap-1">
+              <svg class="w-3.5 h-3.5 text-[#52796f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              切換班級：
+            </span>
+            <div class="flex items-center gap-1 bg-slate-100/90 p-0.5 rounded-lg border border-slate-200/70 flex-wrap">
               <button
-                v-if="!isHomeroomTeacher"
+                v-for="cls in availableClasses"
+                :key="'pill-' + cls.value"
                 type="button"
-                @click="drillUp('school')"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition cursor-pointer"
+                @click="drillToClass(cls.value)"
+                class="px-2 py-0.5 rounded-md text-xs font-bold transition cursor-pointer"
+                :class="inquiryState.classObj === cls.value
+                  ? 'bg-[#52796f] text-white shadow-2xs'
+                  : 'text-slate-600 hover:bg-white hover:text-slate-900'"
               >
-                <svg class="w-3.5 h-3.5 text-[#52796f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-                <span>返回各班比較</span>
+                {{ cls.value }} 班
               </button>
-              <h3 class="text-base font-bold text-slate-800 m-0">
-                班級成績統計 · {{ state.school }}
-                <span class="text-[#52796f] font-black">{{ inquiryState.classObj }} 班</span>
-                答對率向度分析
-              </h3>
-            </div>
-
-            <!-- 校長、校管理者快捷切換班級按鈕群 (Class Switcher Pills) -->
-            <div v-if="!isHomeroomTeacher" class="flex items-center gap-2 mt-2.5 flex-wrap">
-              <span class="text-xs font-bold text-slate-500 flex items-center gap-1">
-                <svg class="w-3.5 h-3.5 text-[#52796f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-                切換班級：
-              </span>
-              <div class="flex items-center gap-1 bg-slate-100/90 p-0.5 rounded-lg border border-slate-200/70 flex-wrap">
-                <button
-                  v-for="cls in availableClasses"
-                  :key="'pill-' + cls.value"
-                  type="button"
-                  @click="drillToClass(cls.value)"
-                  class="px-2 py-0.5 rounded-md text-xs font-bold transition cursor-pointer"
-                  :class="inquiryState.classObj === cls.value
-                    ? 'bg-[#52796f] text-white shadow-2xs'
-                    : 'text-slate-600 hover:bg-white hover:text-slate-900'"
-                >
-                  {{ cls.value }} 班
-                </button>
-              </div>
-            </div>
-
-            <p class="text-xs text-slate-400 mt-1.5 m-0">
-              包含全校、縣市與總參與平均對照，可快速鎖定本班需補救加強之關鍵向度。
-            </p>
-          </div>
-
-          <!-- 右側標籤與圖例 (100% 統一色彩與名稱) -->
-          <div class="flex items-center gap-3 text-xs flex-wrap font-medium">
-            <div class="flex items-center gap-1.5">
-              <span class="w-3.5 h-2.5 rounded-xs bg-[#16a34a]"></span>
-              <span class="text-slate-800 font-bold">本班實測 (綠條)</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span class="w-3.5 h-3.5 rounded-full bg-[#f59e0b] text-[9px] text-white font-bold flex items-center justify-center shadow-2xs">校</span>
-              <span class="text-amber-800 font-bold">學校平均 (橘標)</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span class="w-3.5 h-3.5 rounded-full bg-[#2563eb] text-[9px] text-white font-bold flex items-center justify-center shadow-2xs">縣</span>
-              <span class="text-blue-800 font-bold">縣市平均 (藍標)</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <span class="w-3.5 h-3.5 rounded-full bg-[#9333ea] text-[9px] text-white font-bold flex items-center justify-center shadow-2xs">全</span>
-              <span class="text-purple-800 font-bold">全體平均 (紫標)</span>
             </div>
           </div>
+
+          <p class="text-xs text-slate-400 mt-1.5 m-0">
+            包含全校、縣市與總參與平均對照，可快速鎖定本班需補救加強之關鍵向度。
+          </p>
         </div>
 
         <!-- 主體內容：頂部總體儀表盤 + 下方向度全覽水平基準長條對齊圖 -->
