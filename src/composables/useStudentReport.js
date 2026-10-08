@@ -1,4 +1,4 @@
-import { paperGrades } from '../data/reportsMatrixData'
+import { paperGrades } from '../data/reportsMatrixData.js'
 import {
   isGaotongGrade,
   getStudentInconsistencyDiagnostic,
@@ -6,7 +6,7 @@ import {
   getCrossSubjectCognitiveTaxonomy,
   getStudentItemDiagnostics,
   getStudentDualPrScores
-} from './useGaotongData'
+} from './useGaotongData.js'
 
 /**
  * 綜合成績單資料組裝
