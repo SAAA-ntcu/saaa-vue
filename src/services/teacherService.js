@@ -86,6 +86,18 @@ export const teacherService = {
   },
 
   /**
+   * 刪除教師帳號
+   */
+  async deleteTeacher(id) {
+    return apiClient.request(() => {
+      const index = teacherDatabase.findIndex(t => t.id === id)
+      if (index === -1) throw new Error(`找不到 ID 為 ${id} 的教師`)
+      const deleted = teacherDatabase.splice(index, 1)[0]
+      return deleted
+    })
+  },
+
+  /**
    * 批次更新帳號啟用/停用狀態
    */
   async batchUpdateStatus(ids = [], isActive = true) {

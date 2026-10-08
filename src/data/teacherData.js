@@ -85,6 +85,7 @@ export function getInitialTeachers(schoolName = '測試國小') {
     {
       id: 7,
       selected: false,
+      year: '115',
       username: 'TAdmin_401003',
       name: '黃○宏',
       adminCode: 'TAdmin_401003',
@@ -98,6 +99,7 @@ export function getInitialTeachers(schoolName = '測試國小') {
     {
       id: 8,
       selected: false,
+      year: '115',
       username: 'TAdmin_501004',
       name: '趙○芬',
       adminCode: 'TAdmin_501004',
@@ -110,6 +112,7 @@ export function getInitialTeachers(schoolName = '測試國小') {
     {
       id: 9,
       selected: false,
+      year: '115',
       username: 'TAdmin_502005',
       name: '周○翔',
       adminCode: 'TAdmin_502005',
@@ -122,6 +125,7 @@ export function getInitialTeachers(schoolName = '測試國小') {
     {
       id: 10,
       selected: false,
+      year: '115',
       username: 'SAdmin_300006',
       name: '蔡○安',
       adminCode: 'SAdmin_300006',
@@ -134,6 +138,7 @@ export function getInitialTeachers(schoolName = '測試國小') {
     {
       id: 11,
       selected: false,
+      year: '114',
       username: 'SAdmin_400007',
       name: '吳○嘉',
       adminCode: 'SAdmin_400007',
@@ -146,6 +151,7 @@ export function getInitialTeachers(schoolName = '測試國小') {
     {
       id: 12,
       selected: false,
+      year: '114',
       username: 'TAdmin_602008',
       name: '郭○妤',
       adminCode: 'TAdmin_602008',
@@ -159,6 +165,7 @@ export function getInitialTeachers(schoolName = '測試國小') {
     {
       id: 13,
       selected: false,
+      year: '114',
       username: 'TAdmin_303009',
       name: '洪○文',
       adminCode: 'TAdmin_303009',
@@ -167,6 +174,19 @@ export function getInitialTeachers(schoolName = '測試國小') {
       grade: '3',
       assignedClass: '三年 3 班兼【英文2班】',
       email: 'hung@ntcu.edu.tw',
+      isActive: true
+    },
+    {
+      id: 14,
+      selected: false,
+      year: '113',
+      username: 'TAdmin_201010',
+      name: '方○德',
+      adminCode: 'TAdmin_201010',
+      role: '班級導師',
+      grade: '2',
+      assignedClass: '二年 1 班',
+      email: 'fang@ntcu.edu.tw',
       isActive: true
     }
   ]

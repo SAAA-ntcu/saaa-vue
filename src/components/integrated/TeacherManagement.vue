@@ -55,7 +55,23 @@
 
       <!-- Filter Bar (現代卡片式篩選) -->
       <div class="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-3.5 sm:p-4">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <!-- 學年度 -->
+          <div>
+            <label class="block text-[11px] font-bold text-slate-600 mb-1">學年度</label>
+            <select
+              v-model="teacherFilters.year"
+              @change="handleTeacherFilterChange"
+              class="w-full h-9 px-2.5 text-xs font-bold text-slate-800 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f] cursor-pointer font-mono"
+            >
+              <option value="all">全部學年度</option>
+              <option value="115">115 學年度 (最新)</option>
+              <option value="114">114 學年度</option>
+              <option value="113">113 學年度</option>
+              <option value="112">112 學年度</option>
+            </select>
+          </div>
+
           <!-- 組別身分 -->
           <div>
             <label class="block text-[11px] font-bold text-slate-600 mb-1">組別身分</label>
@@ -113,7 +129,7 @@
                 v-model="teacherFilters.keyword"
                 @input="handleTeacherFilterChange"
                 type="text"
-                placeholder="搜尋：使用者名稱、姓名或信箱"
+                placeholder="搜尋帳號、姓名或信箱"
                 class="w-full h-9 px-2.5 text-xs bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f]"
               />
               <button
@@ -208,6 +224,7 @@
                   />
                 </th>
                 <th class="py-3 px-2 text-center w-10">No.</th>
+                <th class="py-3 px-3 text-center w-24">學年度</th>
                 <th class="py-3 px-4">使用者名稱</th>
                 <th class="py-3 px-4">教師姓名</th>
                 <th class="py-3 px-4">組別身分</th>
@@ -240,6 +257,13 @@
                 <!-- No. -->
                 <td class="py-3 px-2 text-center font-mono text-slate-400">
                   {{ (teacherCurrentPage - 1) * teacherPageSize + index + 1 }}
+                </td>
+
+                <!-- 學年度 -->
+                <td class="py-3 px-3 text-center whitespace-nowrap">
+                  <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-mono font-bold border border-slate-200/80">
+                    {{ t.year || '115' }} 學年度
+                  </span>
                 </td>
 
                 <!-- 使用者名稱 -->
@@ -332,13 +356,22 @@
                     >
                       重設密碼
                     </button>
+                    <span class="text-slate-300">|</span>
+                    <button
+                      type="button"
+                      @click="handleDeleteTeacher(t)"
+                      class="text-rose-500 hover:text-rose-700 font-semibold hover:underline cursor-pointer"
+                      title="刪除此教師帳號"
+                    >
+                      刪除
+                    </button>
                   </div>
                 </td>
               </tr>
 
               <!-- Empty state -->
               <tr v-if="filteredTeacherList.length === 0">
-                <td colspan="10" class="py-12 text-center text-slate-400">
+                <td colspan="11" class="py-12 text-center text-slate-400">
                   <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
@@ -429,8 +462,23 @@
               <span>📋 基本帳號資料</span>
             </div>
 
-            <!-- 教師姓名 & 使用者名稱 -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- 學年度、教師姓名 & 使用者名稱 -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">
+                  學年度 <span class="text-rose-500">*</span>
+                </label>
+                <select
+                  v-model="teacherForm.year"
+                  required
+                  class="w-full h-9 px-2.5 bg-white border border-slate-300 rounded-lg outline-none focus:border-[#52796f] font-mono font-bold text-slate-800 cursor-pointer"
+                >
+                  <option value="115">115 學年度</option>
+                  <option value="114">114 學年度</option>
+                  <option value="113">113 學年度</option>
+                  <option value="112">112 學年度</option>
+                </select>
+              </div>
               <div>
                 <label class="block font-bold text-slate-700 mb-1">
                   教師姓名 <span class="text-rose-500">*</span>
@@ -1055,7 +1103,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { useAuth } from '../../composables/useAuth'
 import { teacherService } from '../../services/teacherService'
 import { usePagination } from '../../composables/usePagination'
@@ -1065,6 +1113,7 @@ const { state } = useAuth()
 // 1. 教師帳號管理 (新舊融合旗艦版)
 // ==========================================
 const teacherFilters = reactive({
+  year: 'all',
   role: 'all',
   grade: 'all',
   status: 'all', // 'all' | 'active' | 'inactive'
@@ -1165,6 +1214,12 @@ function getRoleBadgeClass(teacherOrRole) {
 // 篩選後名單
 const filteredTeacherList = computed(() => {
   return allTeacherList.value.filter(t => {
+    // 學年度篩選
+    if (teacherFilters.year !== 'all') {
+      if (String(t.year || '115') !== String(teacherFilters.year)) {
+        return false
+      }
+    }
     // 身分群組篩選
     if (teacherFilters.role !== 'all') {
       if (teacherFilters.role === '專科兼導師') {
@@ -1231,6 +1286,7 @@ function handleTeacherFilterChange() {
 }
 
 function resetTeacherFilters() {
+  teacherFilters.year = 'all'
   teacherFilters.role = 'all'
   teacherFilters.grade = 'all'
   teacherFilters.status = 'all'
@@ -1340,6 +1396,7 @@ const gradeClassStructure = [
 ]
 
 const teacherForm = reactive({
+  year: '115',
   isSystemPreset: false,
   role: '班級導師',
   directorGrade: '1',
@@ -1475,6 +1532,7 @@ function openCreateTeacherModal() {
   isEditMode.value = false
   currentEditingId.value = null
 
+  teacherForm.year = teacherFilters.year !== 'all' ? teacherFilters.year : '115'
   teacherForm.isSystemPreset = false
   teacherForm.role = '班級導師'
   teacherForm.directorGrade = '1'
@@ -1502,6 +1560,7 @@ function openEditTeacherModal(t) {
   isEditMode.value = true
   currentEditingId.value = t.id
 
+  teacherForm.year = t.year || '115'
   teacherForm.name = t.name || ''
   teacherForm.username = t.username || t.adminCode || ''
   teacherForm.email = t.email || ''
@@ -1652,6 +1711,7 @@ async function saveTeacher() {
 
   const activeSubList = teacherForm.isSubject ? availableSubjects.filter(s => (teacherForm.classMatrix[s] || []).length > 0) : []
   const payload = {
+    year: teacherForm.year || '115',
     name: teacherForm.name.trim(),
     username: teacherForm.username.trim(),
     adminCode: teacherForm.username.trim(),
@@ -1671,10 +1731,7 @@ async function saveTeacher() {
     }
     ElMessage.success(`已更新【${payload.name}】教師帳號與任課設定！`)
   } else {
-    const res = await teacherService.createTeacher({
-      ...payload,
-      year: '115'
-    })
+    const res = await teacherService.createTeacher(payload)
     allTeacherList.value.unshift({
       ...res.data,
       selected: false
@@ -1683,6 +1740,39 @@ async function saveTeacher() {
   }
 
   createDialogVisible.value = false
+}
+
+// 刪除教師帳號
+async function handleDeleteTeacher(t) {
+  if (t.role === '校長') {
+    ElMessage.warning('校長帳號為系統管理預設核心帳號，無法刪除！')
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm(
+      `確定要刪除 ${t.year || '115'} 學年度教師【${t.name}】（帳號：${t.username || t.adminCode}）嗎？此操作將同時移除其所有班級權限與關聯紀錄。`,
+      '刪除教師帳號確認',
+      {
+        confirmButtonText: '確定刪除',
+        cancelButtonText: '取消',
+        confirmButtonClass: 'el-button--danger',
+        type: 'warning'
+      }
+    )
+
+    const res = await teacherService.deleteTeacher(t.id)
+    if (res.success) {
+      allTeacherList.value = allTeacherList.value.filter(item => item.id !== t.id)
+      ElMessage.success(`已成功刪除教師帳號：【${t.name}】`)
+    } else {
+      ElMessage.error(res.message || '刪除教師帳號失敗')
+    }
+  } catch (err) {
+    if (err !== 'cancel') {
+      console.error(err)
+    }
+  }
 }
 
 // ==========================================
@@ -1969,7 +2059,10 @@ const rolloverPreviewList = computed(() => {
 })
 
 async function applyYearRollover() {
-  ElMessage.success('新學年滾動轉移完成！已成功將 114 年度教師名單升學年帶班並更新至新年度。')
+  allTeacherList.value.forEach(t => {
+    t.year = '115'
+  })
+  ElMessage.success('新學年滾動轉移完成！已成功將教師名單升學年帶班並更新至 115 新學年度。')
   rolloverDialogVisible.value = false
 }
 
