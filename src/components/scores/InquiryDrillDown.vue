@@ -392,124 +392,121 @@
           <div class="bg-gradient-to-r from-slate-50 via-white to-slate-50/80 border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
               
-              <!-- 左側：儀表盤 (5 Cols) -->
-              <div class="lg:col-span-5 flex flex-col items-center justify-center p-3 bg-white rounded-xl border border-slate-100 shadow-2xs">
-                <div class="w-full max-w-[310px] aspect-[16/11] relative flex items-center justify-center">
-                  <svg viewBox="0 0 380 215" class="w-full h-full overflow-visible select-none">
-                    <!-- 4 等級彩色圓弧 (R = 130, cx = 190, cy = 180) -->
-                    <!-- Grade D: 180° -> 135° (Red) -->
-                    <path d="M 60,180 A 130,130 0 0,1 98.07,88.07" fill="none" stroke="#f43f5e" stroke-width="7" stroke-linecap="round" />
-                    <!-- Grade C: 135° -> 90° (Yellow) -->
-                    <path d="M 98.07,88.07 A 130,130 0 0,1 190,50" fill="none" stroke="#fbbf24" stroke-width="7" />
-                    <!-- Grade B: 90° -> 45° (Sky Blue) -->
-                    <path d="M 190,50 A 130,130 0 0,1 281.93,88.07" fill="none" stroke="#38bdf8" stroke-width="7" />
-                    <!-- Grade A: 45° -> 0° (Mint Green) -->
-                    <path d="M 281.93,88.07 A 130,130 0 0,1 320,180" fill="none" stroke="#4ade80" stroke-width="7" stroke-linecap="round" />
+              <!-- 左側：全新浮島環形進度儀表盤 (5 Cols - 依附圖實作) -->
+              <div class="lg:col-span-5 flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-xl border border-slate-100 shadow-2xs">
+                <div class="w-full max-w-[280px] aspect-square relative flex items-center justify-center">
+                  <svg viewBox="0 0 300 300" class="w-full h-full overflow-visible select-none">
+                    <defs>
+                      <!-- 藍紫漸層 (依附圖深藍至藍紫漸變) -->
+                      <linearGradient id="ringGradient" x1="100%" y1="20%" x2="10%" y2="90%">
+                        <stop offset="0%" stop-color="#c7d2fe" stop-opacity="0.85" />
+                        <stop offset="50%" stop-color="#6366f1" />
+                        <stop offset="100%" stop-color="#1d4ed8" />
+                      </linearGradient>
 
-                    <!-- 刻度起訖端點標籤 (0% 與 100%) -->
-                    <text x="46" y="184" text-anchor="middle" class="text-[11px] font-mono font-bold fill-slate-400">0%</text>
-                    <text x="334" y="184" text-anchor="middle" class="text-[11px] font-mono font-bold fill-slate-400">100%</text>
+                      <!-- 浮島中央白圓陰影 -->
+                      <filter id="discShadow" x="-30%" y="-30%" width="160%" height="160%">
+                        <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#1e3a8a" flood-opacity="0.14" />
+                        <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#000000" flood-opacity="0.05" />
+                      </filter>
+                    </defs>
 
-                    <!-- 基礎放射狀刻度線 (Ticks) -->
-                    <line
-                      v-for="(tick, idx) in gaugeTicks"
-                      :key="'tick-' + idx"
-                      :x1="tick.x1"
-                      :y1="tick.y1"
-                      :x2="tick.x2"
-                      :y2="tick.y2"
-                      :stroke="tick.color"
-                      :stroke-width="tick.isMajor ? 3 : 1.8"
-                      :opacity="tick.isMajor ? 0.9 : 0.6"
-                      stroke-linecap="round"
+                    <!-- 1. 背景底軌淺灰色圓環 (0~100%) -->
+                    <circle
+                      cx="150"
+                      cy="150"
+                      r="108"
+                      fill="none"
+                      stroke="#f1f5f9"
+                      stroke-width="24"
                     />
 
-                    <!-- 4 基準刻度融合針（全體、縣市、學校、本班 穿透刻度帶） -->
-                    <line
-                      v-for="bm in gaugeBenchmarks"
-                      :key="'bm-tick-' + bm.key"
-                      :x1="bm.pInner.x"
-                      :y1="bm.pInner.y"
-                      :x2="bm.pOuter.x"
-                      :y2="bm.pOuter.y"
-                      :stroke="bm.color"
-                      :stroke-width="activeHoverBenchmark === bm.key ? 5 : 3.5"
+                    <!-- 2. 本班進度漸層動態環 (依附圖風格) -->
+                    <circle
+                      cx="150"
+                      cy="150"
+                      r="108"
+                      fill="none"
+                      stroke="url(#ringGradient)"
+                      stroke-width="24"
                       stroke-linecap="round"
-                      class="transition-all duration-300 drop-shadow-xs"
-                    />
-
-                    <!-- 刻度標記徽章與虛線導引（全、校在外環階梯分軌，縣在內環，100% 防文字重疊） -->
-                    <template v-for="bm in gaugeBenchmarks" :key="'bm-badge-' + bm.key">
-                      <g
-                        v-if="bm.track !== 'needle'"
-                        class="cursor-pointer transition-opacity duration-300"
-                        @mouseenter="activeHoverBenchmark = bm.key"
-                        @mouseleave="activeHoverBenchmark = null"
-                      >
-                        <!-- 虛線引線 -->
-                        <line
-                          :x1="bm.pArc.x"
-                          :y1="bm.pArc.y"
-                          :x2="bm.pBadge.x"
-                          :y2="bm.pBadge.y"
-                          :stroke="bm.color"
-                          :stroke-width="activeHoverBenchmark === bm.key ? 2 : 1.5"
-                          stroke-dasharray="2,2"
-                          :opacity="activeHoverBenchmark === bm.key ? 1 : 0.8"
-                        />
-                        <!-- 圓形指標徽章 -->
-                        <circle
-                          :cx="bm.pBadge.x"
-                          :cy="bm.pBadge.y"
-                          :r="activeHoverBenchmark === bm.key ? 10.5 : 8.5"
-                          :fill="bm.color"
-                          stroke="#ffffff"
-                          :stroke-width="activeHoverBenchmark === bm.key ? 2.5 : 1.8"
-                          class="drop-shadow-xs transition-all duration-300"
-                        />
-                        <text
-                          :x="bm.pBadge.x"
-                          :y="bm.pBadge.y + 3.2"
-                          text-anchor="middle"
-                          fill="#ffffff"
-                          font-size="8.5"
-                          font-weight="900"
-                          class="select-none font-sans"
-                        >
-                          {{ bm.label }}
-                        </text>
-                      </g>
-                    </template>
-
-                    <!-- 本班實測專屬箭頭指針 (採用本班標準綠色，與本班常模 100% 呼應) -->
-                    <polygon
-                      :points="gaugePointerPath"
-                      :fill="activeHoverBenchmark === 'class' ? '#15803d' : '#16a34a'"
+                      :stroke-dasharray="ringCircumference"
+                      :stroke-dashoffset="ringProgressOffset"
                       class="transition-all duration-700 ease-out drop-shadow-sm"
                     />
 
-                    <!-- 中央答對率數值 -->
-                    <text x="190" y="142" text-anchor="middle" class="font-mono text-4xl sm:text-5xl font-black fill-[#0284c7]">
-                      {{ overallStat.classVal }}
+                    <!-- 3. 學校、縣市、全體 刻度融合標記點 (融合至環形軌道上) -->
+                    <g>
+                      <template v-for="bm in gaugeBenchmarks" :key="'ring-bm-' + bm.key">
+                        <g
+                          class="cursor-pointer transition-transform duration-300"
+                          :class="activeHoverBenchmark === bm.key ? 'scale-125' : ''"
+                          @mouseenter="activeHoverBenchmark = bm.key"
+                          @mouseleave="activeHoverBenchmark = null"
+                        >
+                          <!-- 導引線 -->
+                          <line
+                            :x1="bm.pTrack.x"
+                            :y1="bm.pTrack.y"
+                            :x2="bm.pBadge.x"
+                            :y2="bm.pBadge.y"
+                            :stroke="bm.color"
+                            :stroke-width="activeHoverBenchmark === bm.key ? 2.5 : 1.5"
+                            stroke-dasharray="2,2"
+                            :opacity="activeHoverBenchmark === bm.key ? 1 : 0.8"
+                          />
+                          <!-- 圓形指標徽章 -->
+                          <circle
+                            :cx="bm.pBadge.x"
+                            :cy="bm.pBadge.y"
+                            :r="activeHoverBenchmark === bm.key ? 10.5 : 8.5"
+                            :fill="bm.color"
+                            stroke="#ffffff"
+                            :stroke-width="activeHoverBenchmark === bm.key ? 2.5 : 1.8"
+                            class="drop-shadow-xs transition-all duration-300"
+                          />
+                          <text
+                            :x="bm.pBadge.x"
+                            :y="bm.pBadge.y + 3.2"
+                            text-anchor="middle"
+                            fill="#ffffff"
+                            font-size="8.5"
+                            font-weight="900"
+                            class="select-none font-sans"
+                          >
+                            {{ bm.label }}
+                          </text>
+                        </g>
+                      </template>
+                    </g>
+
+                    <!-- 4. 中央浮島純白圓形卡片 (完全對標附圖) -->
+                    <circle
+                      cx="150"
+                      cy="150"
+                      r="88"
+                      fill="#ffffff"
+                      filter="url(#discShadow)"
+                    />
+
+                    <!-- 5. 中央數值文字 (對標附圖深藍色大字 40% 風格) -->
+                    <text
+                      x="150"
+                      y="152"
+                      text-anchor="middle"
+                      class="font-mono text-4xl sm:text-5xl font-black fill-[#1d4ed8] select-none"
+                    >
+                      {{ overallStat.classVal }}%
                     </text>
-                    <!-- 中央副標題 (全科總答對率) -->
-                    <text x="190" y="168" text-anchor="middle" class="text-xs font-bold fill-slate-400">
+                    <text
+                      x="150"
+                      y="178"
+                      text-anchor="middle"
+                      class="text-[11px] font-bold fill-slate-400 tracking-wider select-none"
+                    >
                       全科總答對率
                     </text>
                   </svg>
-                </div>
-
-                <!-- 儀表盤下方等級說明膠囊 -->
-                <div class="mt-2 flex items-center gap-2">
-                  <span class="text-xs font-bold text-slate-500">本班表現水準：</span>
-                  <span
-                    class="px-2.5 py-0.5 rounded-full text-xs font-bold"
-                    :class="gaugeGrade.label === '精熟' ? 'bg-emerald-100 text-emerald-800' :
-                            gaugeGrade.label === '熟練' ? 'bg-sky-100 text-sky-800' :
-                            gaugeGrade.label === '基礎' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'"
-                  >
-                    {{ gaugeGrade.label }}
-                  </span>
                 </div>
               </div>
 
@@ -600,13 +597,13 @@
                   </div>
                 </div>
 
-                <!-- 刻度標記圖例列 (直觀指引刻度上之四色針位) -->
+                <!-- 環形標記圖例列 (直觀指引環上之標竿徽章) -->
                 <div class="flex items-center justify-between text-xs text-slate-500 pt-1">
                   <div class="flex items-center gap-1.5 flex-wrap">
-                    <span class="font-bold text-slate-600">刻度融合標記：</span>
-                    <span class="inline-flex items-center gap-1 text-[11px] text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded">
-                      <span class="w-2 h-2 rounded-full bg-[#16a34a]"></span>
-                      綠針：本班 {{ overallStat.classVal }}%
+                    <span class="font-bold text-slate-600">環形標記：</span>
+                    <span class="inline-flex items-center gap-1 text-[11px] text-blue-800 font-bold bg-blue-50 px-2 py-0.5 rounded">
+                      <span class="w-2 h-2 rounded-full bg-[#1d4ed8]"></span>
+                      藍紫弧環：本班 {{ overallStat.classVal }}%
                     </span>
                     <span class="inline-flex items-center gap-1 text-[11px] text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded">
                       <span class="w-2 h-2 rounded-full bg-[#f59e0b]"></span>
@@ -621,7 +618,7 @@
                       紫標：全體 {{ overallStat.national }}%
                     </span>
                   </div>
-                  <span class="text-[11px] text-slate-400 hidden xl:inline">💡 滑鼠懸停卡片可高亮該刻度針</span>
+                  <span class="text-[11px] text-slate-400 hidden xl:inline">💡 滑鼠懸停卡片可高亮該標記</span>
                 </div>
               </div>
 
@@ -1223,138 +1220,48 @@ const sortedDimensionStats = computed(() => {
   return list
 })
 
-// 儀表盤刻度基準融合 (學校、縣市、全體、本班)
+// 環形儀表盤進度與基準融合 (依附圖浮島環形設計)
 const activeHoverBenchmark = ref(null)
+const ringCircumference = 2 * Math.PI * 108 // 約 678.58
+
+const ringProgressOffset = computed(() => {
+  const score = Math.max(0, Math.min(100, Number(overallStat.value?.classVal) || 76))
+  return ringCircumference * (1 - score / 100)
+})
 
 const gaugeBenchmarks = computed(() => {
-  const cx = 190, cy = 180
+  const cx = 150, cy = 150, r = 108
   const stat = overallStat.value || { classVal: 76, school: 77, county: 72, national: 70 }
 
-  const toPolar = (r, angleDeg) => {
+  const toPolar = (radius, angleDeg) => {
     const rad = (angleDeg * Math.PI) / 180
     return {
-      x: Number((cx + r * Math.cos(rad)).toFixed(1)),
-      y: Number((cy - r * Math.sin(rad)).toFixed(1))
+      x: Number((cx + radius * Math.cos(rad)).toFixed(1)),
+      y: Number((cy + radius * Math.sin(rad)).toFixed(1))
     }
   }
-  const getAngle = (score) => 180 - (Math.max(0, Math.min(100, Number(score) || 0)) * 1.8)
 
-  // 4 大基準常模配置：
-  // - 全體 (70%): 紫色，外軌 R=142
-  // - 縣市 (72%): 藍色，內軌 R=97 (內外分軌，保證與 70% 絕不重疊)
-  // - 本班 (76%): 綠色，專屬中央箭頭指針 + 刻度針
-  // - 學校 (77%): 琥珀橙，外軌高位 R=154 (階梯分軌，保證與 76% 絕不重疊)
+  // 360° 環形角度計算：從 3 點鐘 (0°) 順時針轉動 (與 SVG 進度環起訖完全一致)
+  const getAngle = (score) => (Math.max(0, Math.min(100, Number(score) || 0)) * 3.6)
+
+  // 階梯分軌防止 70, 72, 77 密集時文字遮蔽
   const items = [
-    {
-      key: 'national',
-      label: '全',
-      name: '全體平均',
-      val: Number(stat.national) || 70,
-      color: '#9333ea',
-      track: 'outer',
-      rBadge: 142
-    },
-    {
-      key: 'county',
-      label: '縣',
-      name: '縣市平均',
-      val: Number(stat.county) || 72,
-      color: '#2563eb',
-      track: 'inner',
-      rBadge: 97
-    },
-    {
-      key: 'class',
-      label: '班',
-      name: `${inquiryState.classObj}班實測`,
-      val: Number(stat.classVal) || 76,
-      color: '#16a34a',
-      track: 'needle'
-    },
-    {
-      key: 'school',
-      label: '校',
-      name: '學校平均',
-      val: Number(stat.school) || 77,
-      color: '#f59e0b',
-      track: 'outer',
-      rBadge: 154
-    }
+    { key: 'national', label: '全', name: '全體平均', val: Number(stat.national) || 70, color: '#9333ea', rBadge: 132 },
+    { key: 'county', label: '縣', name: '縣市平均', val: Number(stat.county) || 72, color: '#2563eb', rBadge: 84 },
+    { key: 'school', label: '校', name: '學校平均', val: Number(stat.school) || 77, color: '#f59e0b', rBadge: 134 }
   ]
 
   return items.map(item => {
     const angle = getAngle(item.val)
-    const pInner = toPolar(102, angle)
-    const pOuter = toPolar(128, angle)
-    const pArc = toPolar(item.track === 'inner' ? 102 : 128, angle)
-    const pBadge = toPolar(item.rBadge || 145, angle)
+    const pTrack = toPolar(r, angle)
+    const pBadge = toPolar(item.rBadge, angle)
     return {
       ...item,
       angle,
-      pInner,
-      pOuter,
-      pArc,
+      pTrack,
       pBadge
     }
   })
-})
-
-// 總體儀表盤計算 (對應 4 表現水準)
-const gaugeScore = computed(() => Number(overallStat.value?.classVal) || 70)
-
-const gaugeGrade = computed(() => {
-  const score = gaugeScore.value
-  if (score >= 75) return { label: '精熟', color: '#4ade80' }
-  if (score >= 50) return { label: '熟練', color: '#38bdf8' }
-  if (score >= 25) return { label: '基礎', color: '#fbbf24' }
-  return { label: '待加強', color: '#f43f5e' }
-})
-
-// 儀表盤箭頭指針角度與頂點計算 (cx=190, cy=180)
-const gaugePointerPath = computed(() => {
-  const score = Math.max(0, Math.min(100, gaugeScore.value))
-  const cx = 190, cy = 180
-  const angleDeg = 180 - (score * 1.8)
-  const angleRad = (angleDeg * Math.PI) / 180
-
-  const tipR = 85
-  const tipX = (cx + tipR * Math.cos(angleRad)).toFixed(1)
-  const tipY = (cy - tipR * Math.sin(angleRad)).toFixed(1)
-
-  const baseR = 65
-  const leftAngleRad = ((angleDeg + 7.5) * Math.PI) / 180
-  const rightAngleRad = ((angleDeg - 7.5) * Math.PI) / 180
-
-  const leftX = (cx + baseR * Math.cos(leftAngleRad)).toFixed(1)
-  const leftY = (cy - baseR * Math.sin(leftAngleRad)).toFixed(1)
-  const rightX = (cx + baseR * Math.cos(rightAngleRad)).toFixed(1)
-  const rightY = (cy - baseR * Math.sin(rightAngleRad)).toFixed(1)
-
-  return `${tipX},${tipY} ${leftX},${leftY} ${rightX},${rightY}`
-})
-
-// 儀表盤 41 條放射刻度線 (由 180° 遞減至 0°)
-const gaugeTicks = computed(() => {
-  const ticks = []
-  const cx = 190, cy = 180
-  for (let d = 180; d >= 0; d -= 4.5) {
-    const rad = (d * Math.PI) / 180
-    const isMajor = d % 45 === 0
-    const rOuter = 122
-    const rInner = isMajor ? 106 : 114
-    const x1 = (cx + rInner * Math.cos(rad)).toFixed(1)
-    const y1 = (cy - rInner * Math.sin(rad)).toFixed(1)
-    const x2 = (cx + rOuter * Math.cos(rad)).toFixed(1)
-    const y2 = (cy - rOuter * Math.sin(rad)).toFixed(1)
-
-    let color = '#f43f5e'
-    if (d < 45) color = '#4ade80'
-    else if (d < 90) color = '#38bdf8'
-    else if (d < 135) color = '#fbbf24'
-
-    ticks.push({ x1, y1, x2, y2, color, isMajor })
-  }
-  return ticks
 })
 
 // 各班學生名冊 (動態隨選定之班級計算)
