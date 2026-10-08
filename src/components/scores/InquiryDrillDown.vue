@@ -784,15 +784,35 @@
     >
       <div v-if="activeStudent" class="h-full flex flex-col bg-white text-slate-800">
         <!-- 1. 抽屜頂部固定標題列 (Pinned Header) -->
-        <div class="shrink-0 px-6 py-3.5 border-b border-slate-100 bg-white/95 backdrop-blur-xs flex items-center justify-between z-10 shadow-2xs">
+        <div class="shrink-0 px-5 sm:px-6 py-3.5 border-b border-slate-100 bg-white/95 backdrop-blur-xs flex items-center justify-between z-10 shadow-2xs gap-3 flex-wrap">
           <div class="flex items-center gap-2.5">
             <span class="text-[10px] font-bold uppercase tracking-wider text-[#52796f] bg-[#52796f]/10 px-2.5 py-1 rounded-md">
               個別診斷報告
             </span>
             <h3 class="text-lg font-black text-slate-800 m-0 flex items-center gap-2">
               <span>{{ activeStudent.name }}</span>
-              <span class="text-xs font-mono font-medium text-slate-400">({{ inquiryState.classObj }}班 · {{ activeStudent.seat }}號)</span>
+              <span class="text-xs font-mono font-medium text-slate-400">({{ inquiryState.classObj }} 班 · {{ activeStudent.seat }} 號)</span>
             </h3>
+          </div>
+
+          <!-- 報告視圖切換鈕 (360° 全景網 vs 向度錯題清冊) -->
+          <div class="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl text-xs font-bold">
+            <button
+              type="button"
+              @click="activeDrawerTab = 'panorama'"
+              class="px-3 py-1.5 rounded-lg transition cursor-pointer"
+              :class="activeDrawerTab === 'panorama' ? 'bg-white text-slate-800 shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+            >
+              🌟 360° 跨領域能力全景網
+            </button>
+            <button
+              type="button"
+              @click="activeDrawerTab = 'breakdown'"
+              class="px-3 py-1.5 rounded-lg transition cursor-pointer"
+              :class="activeDrawerTab === 'breakdown' ? 'bg-white text-slate-800 shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+            >
+              📋 評量向度與錯題清冊
+            </button>
           </div>
 
           <div class="flex items-center gap-1.5">
@@ -829,149 +849,448 @@
         <!-- 2. 可平滑捲動的主體內容區 (Scrollable Main Body) -->
         <div
           ref="drawerBodyRef"
-          class="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 py-5 space-y-5 scrollbar-thin"
+          class="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 sm:px-6 py-5 space-y-5 scrollbar-thin"
           @touchstart="handleTouchStart"
           @touchend="handleTouchEnd"
         >
-          <!-- 學生基本資訊卡片 (精確對應圖一上方欄位) -->
-          <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-xs">
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div>
-                <span class="text-slate-400 text-[11px] block">所屬學校</span>
-                <strong class="font-bold text-slate-700">{{ state.school }}</strong>
-              </div>
-              <div>
-                <span class="text-slate-400 text-[11px] block">班級 / 座號</span>
-                <strong class="font-bold text-slate-700">{{ inquiryState.classObj }} 班 · {{ activeStudent.seat }} 號</strong>
-              </div>
-              <div>
-                <span class="text-slate-400 text-[11px] block">學生姓名</span>
-                <strong class="font-bold text-slate-800 text-sm">{{ activeStudent.name }}</strong>
-              </div>
-              <div>
-                <span class="text-slate-400 text-[11px] block">評量科目</span>
-                <strong class="font-bold text-[#52796f]">{{ inquiryState.subject }}</strong>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-slate-200/60 text-center">
-              <div class="bg-white p-2 rounded-xl border border-slate-200/70">
-                <span class="text-slate-400 text-[10px] block font-medium">個人答對率</span>
-                <span class="text-base font-black font-mono" :class="activeStudent.rate < 60 ? 'text-rose-600' : 'text-[#52796f]'">
-                  {{ activeStudent.rate }}%
-                </span>
-              </div>
-              <div class="bg-white p-2 rounded-xl border border-slate-200/70">
-                <span class="text-slate-400 text-[10px] block font-medium">PR 值 (縣市)</span>
-                <span class="text-base font-black font-mono text-slate-700">{{ activeStudent.prCounty }}</span>
-              </div>
-              <div class="bg-white p-2 rounded-xl border border-slate-200/70">
-                <span class="text-slate-400 text-[10px] block font-medium">PR 值 (全國)</span>
-                <span class="text-base font-black font-mono text-slate-700">{{ activeStudent.prNation }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 水平答對率對照長條圖 (精確對應圖一中間橫條圖) -->
-          <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs space-y-3">
-            <div class="flex items-center justify-between text-xs font-bold text-slate-700">
-              <span>平均答對率(%) 橫向對比</span>
-              <span class="text-[10px] text-slate-400 font-mono">0% ~ 100%</span>
-            </div>
-
-            <!-- 5 條水平 Bar (個人, 班級, 學校, 縣市, 總平均) -->
-            <div class="space-y-2 text-xs">
-              <!-- 1. 個人 -->
-              <div class="flex items-center gap-3">
-                <span class="w-12 text-slate-500 font-bold shrink-0 text-right">個人</span>
-                <div class="flex-1 bg-slate-100 rounded-full h-5 overflow-hidden relative">
-                  <div
-                    class="h-full rounded-full flex items-center justify-end pr-2 text-[10px] font-bold font-mono text-white transition-all duration-500"
-                    :class="activeStudent.rate < 60 ? 'bg-rose-500' : 'bg-[#52796f]'"
-                    :style="{ width: `${Math.max(12, activeStudent.rate)}%` }"
-                  >
-                    {{ activeStudent.rate }}%
+          <!-- ============================================================== -->
+          <!-- 分頁 1：360° 跨領域三科能力全景網 (依附圖全景架構設計)           -->
+          <!-- ============================================================== -->
+          <div v-if="activeDrawerTab === 'panorama' && studentSubjectReport" class="space-y-5">
+            <!-- 學生頂部綜述條 -->
+            <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-xs">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-[#52796f]/10 border border-[#52796f]/20 flex items-center justify-center text-[#52796f] font-black text-base shadow-2xs">
+                    {{ activeStudent.name.charAt(0) }}
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-slate-800 text-sm">{{ activeStudent.name }}</span>
+                      <span class="text-xs font-mono font-bold text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded">座號 {{ activeStudent.seat }}</span>
+                      <span class="text-xs font-mono text-slate-400">{{ studentSubjectReport.studentId }}</span>
+                    </div>
+                    <p class="text-xs text-slate-500 m-0 mt-0.5">
+                      {{ state.school }} · {{ inquiryState.classObj }} 班 | 跨領域三科學力檢測全景診斷
+                    </p>
                   </div>
                 </div>
-              </div>
 
-              <!-- 2. 班級 -->
-              <div class="flex items-center gap-3">
-                <span class="w-12 text-slate-500 font-medium shrink-0 text-right">班級</span>
-                <div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden relative">
-                  <div class="h-full bg-[#6096ba] rounded-full flex items-center justify-end pr-2 text-[10px] font-bold font-mono text-white" style="width: 76%">
-                    76%
+                <!-- 三科 PR 速覽膠囊 -->
+                <div class="flex items-center gap-2 text-xs">
+                  <div class="px-3 py-1 bg-blue-50/80 border border-blue-200 rounded-xl text-center">
+                    <span class="text-[10px] text-blue-600 font-medium block">國語文 PR</span>
+                    <strong class="font-mono text-sm font-black text-blue-900">{{ studentSubjectReport.chinese.pr }}</strong>
                   </div>
-                </div>
-              </div>
-
-              <!-- 3. 學校 -->
-              <div class="flex items-center gap-3">
-                <span class="w-12 text-slate-500 font-medium shrink-0 text-right">學校</span>
-                <div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden relative">
-                  <div class="h-full bg-[#83c5be] rounded-full flex items-center justify-end pr-2 text-[10px] font-bold font-mono text-white" style="width: 77%">
-                    77%
+                  <div class="px-3 py-1 bg-emerald-50/80 border border-emerald-200 rounded-xl text-center">
+                    <span class="text-[10px] text-emerald-600 font-medium block">數學科 PR</span>
+                    <strong class="font-mono text-sm font-black text-emerald-900">{{ studentSubjectReport.math.pr }}</strong>
                   </div>
-                </div>
-              </div>
-
-              <!-- 4. 縣市 -->
-              <div class="flex items-center gap-3">
-                <span class="w-12 text-slate-500 font-medium shrink-0 text-right">縣市</span>
-                <div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden relative">
-                  <div class="h-full bg-[#94d2bd] rounded-full flex items-center justify-end pr-2 text-[10px] font-bold font-mono text-white" style="width: 72%">
-                    72%
-                  </div>
-                </div>
-              </div>
-
-              <!-- 5. 總平均 -->
-              <div class="flex items-center gap-3">
-                <span class="w-12 text-slate-500 font-medium shrink-0 text-right">總平均</span>
-                <div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden relative">
-                  <div class="h-full bg-[#e9d8a6] rounded-full flex items-center justify-end pr-2 text-[10px] font-bold font-mono text-slate-700" style="width: 70%">
-                    70%
+                  <div class="px-3 py-1 bg-purple-50/80 border border-purple-200 rounded-xl text-center">
+                    <span class="text-[10px] text-purple-600 font-medium block">英語文 PR</span>
+                    <strong class="font-mono text-sm font-black text-purple-900">{{ studentSubjectReport.english.pr }}</strong>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- 評量向度表現與錯題診斷表 (精確對應圖一下方清冊，自然展開隨主體滾動) -->
-          <div class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-2xs">
-            <div class="p-3 bg-slate-50 border-b border-slate-200/70 flex items-center justify-between text-xs font-bold text-slate-700">
-              <span>各評量向度答對率與錯題清冊</span>
-              <span class="text-[10px] text-rose-500 font-normal">紅色題號為答錯題目，建議優先輔導</span>
-            </div>
+            <!-- 左右雙欄主體 (12 欄格線佈局) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr class="border-b border-slate-200 bg-slate-50/60 text-slate-500 text-[11px] font-semibold">
-                    <th class="py-2.5 px-3">評量向度</th>
-                    <th class="py-2.5 px-2 text-center w-14">題數</th>
-                    <th class="py-2.5 px-3 text-center w-16">答對率</th>
-                    <th class="py-2.5 px-3">答對題號</th>
-                    <th class="py-2.5 px-3">答錯題號 (補救重點)</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-                  <tr v-for="dim in studentBreakdown" :key="dim.name" class="hover:bg-slate-50/70 transition">
-                    <td class="py-2.5 px-3 font-bold text-slate-800">{{ dim.name }}</td>
-                    <td class="py-2.5 px-2 text-center font-mono text-slate-400">{{ dim.totalQ }}</td>
-                    <td class="py-2.5 px-3 text-center font-mono font-bold" :class="dim.rate < 50 ? 'text-rose-500' : 'text-[#52796f]'">
-                      {{ dim.rate }}%
-                    </td>
-                    <td class="py-2.5 px-3 font-mono text-slate-600 text-[11px]">{{ dim.correctQs || '-' }}</td>
-                    <td class="py-2.5 px-3 font-mono text-[11px]">
-                      <span v-if="dim.wrongQs" class="font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
-                        {{ dim.wrongQs }}
+              <!-- 左欄 (5 Cols)：360° 跨領域三科能力全景網 (雷達圖) -->
+              <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col justify-between">
+                <div>
+                  <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                      <span class="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs shadow-2xs">
+                        🧭
                       </span>
-                      <span v-else class="text-slate-400">-</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                      <h4 class="text-xs sm:text-sm font-bold text-slate-800 m-0">
+                        360° 跨領域三科能力全景網
+                      </h4>
+                    </div>
+                    <span class="text-[10px] font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                      國語 · 數學 · 英語
+                    </span>
+                  </div>
+
+                  <!-- 雷達圖 SVG -->
+                  <div v-if="radarData" class="relative w-full aspect-square max-w-[360px] mx-auto my-2 flex items-center justify-center select-none">
+                    <svg viewBox="0 0 400 400" class="w-full h-full overflow-visible">
+                      <defs>
+                        <radialGradient id="drawerPolyGrad" cx="50%" cy="50%" r="50%">
+                          <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.32" />
+                          <stop offset="100%" stop-color="#4338ca" stop-opacity="0.12" />
+                        </radialGradient>
+                        <filter id="drawerPolyGlow" x="-20%" y="-20%" width="140%" height="140%">
+                          <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#4338ca" flood-opacity="0.25" />
+                        </filter>
+                      </defs>
+
+                      <!-- 背景同心刻度圈 (20%, 40%, 60%, 80%, 100%) -->
+                      <circle cx="200" cy="200" r="140" fill="none" stroke="#e2e8f0" stroke-width="1.2" stroke-dasharray="3 3" />
+                      <circle cx="200" cy="200" r="112" fill="none" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2 2" />
+                      <circle cx="200" cy="200" r="84" fill="none" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2 2" />
+                      <circle cx="200" cy="200" r="56" fill="none" stroke="#f1f5f9" stroke-width="1" stroke-dasharray="2 2" />
+                      <circle cx="200" cy="200" r="28" fill="none" stroke="#f1f5f9" stroke-width="0.8" />
+
+                      <!-- 11 軸線導引 -->
+                      <g stroke="#cbd5e1" stroke-width="0.9" opacity="0.75">
+                        <line
+                          v-for="ax in radarData.axes"
+                          :key="'line-' + ax.dimKey"
+                          x1="200" y1="200"
+                          :x2="ax.xOuter" :y2="ax.yOuter"
+                          :stroke="hoveredRadarDim === ax.dimKey ? '#4338ca' : '#cbd5e1'"
+                          :stroke-width="hoveredRadarDim === ax.dimKey ? 2 : 0.9"
+                          class="transition-all duration-200"
+                        />
+                      </g>
+
+                      <!-- 全校平均多邊形 (綠色虛線) -->
+                      <polygon
+                        :points="radarData.schoolPolygon"
+                        fill="none"
+                        stroke="#16a34a"
+                        stroke-width="1.8"
+                        stroke-dasharray="3 3"
+                      />
+
+                      <!-- 縣市常模多邊形 (紫色點線) -->
+                      <polygon
+                        :points="radarData.countyPolygon"
+                        fill="none"
+                        stroke="#9333ea"
+                        stroke-width="1.8"
+                        stroke-dasharray="2 3"
+                      />
+
+                      <!-- 學生個人多邊形 (實心漸層 + 亮藍紫邊框) -->
+                      <polygon
+                        :points="radarData.studentPolygon"
+                        fill="url(#drawerPolyGrad)"
+                        stroke="#4338ca"
+                        stroke-width="2.6"
+                        filter="url(#drawerPolyGlow)"
+                      />
+
+                      <!-- 個人節點微珠 -->
+                      <circle
+                        v-for="ax in radarData.axes"
+                        :key="'dot-' + ax.dimKey"
+                        :cx="ax.sx" :cy="ax.sy"
+                        :r="hoveredRadarDim === ax.dimKey ? 6 : 4"
+                        fill="#4338ca"
+                        stroke="#ffffff"
+                        stroke-width="1.5"
+                        class="transition-all duration-200 cursor-pointer"
+                        @mouseenter="hoveredRadarDim = ax.dimKey"
+                        @mouseleave="hoveredRadarDim = null"
+                      />
+
+                      <!-- 11 軸向文字標籤 -->
+                      <text
+                        v-for="ax in radarData.axes"
+                        :key="'txt-' + ax.dimKey"
+                        :x="ax.tx" :y="ax.ty"
+                        :text-anchor="ax.textAnchor"
+                        class="text-[9.5px] font-bold font-sans cursor-pointer transition-colors duration-200"
+                        :class="hoveredRadarDim === ax.dimKey ? 'fill-[#4338ca] font-black' : 'fill-slate-600'"
+                        @mouseenter="hoveredRadarDim = ax.dimKey"
+                        @mouseleave="hoveredRadarDim = null"
+                      >
+                        {{ ax.label }}
+                      </text>
+                    </svg>
+                  </div>
+
+                  <!-- 圖例標籤 -->
+                  <div class="flex items-center justify-center gap-3 flex-wrap pt-2 border-t border-slate-100 text-[11px] font-medium">
+                    <div class="flex items-center gap-1.5">
+                      <span class="w-3 h-2 rounded-xs bg-[#4338ca]"></span>
+                      <span class="text-slate-800 font-bold">個人多邊形</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                      <span class="w-3 h-0.5 border-t-2 border-dashed border-[#16a34a]"></span>
+                      <span class="text-slate-600">全校平均</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                      <span class="w-3 h-0.5 border-t-2 border-dotted border-[#9333ea]"></span>
+                      <span class="text-slate-600">縣市常模</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 診斷導讀備註 -->
+                <div class="mt-3 p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-[10px] text-slate-500 leading-relaxed">
+                  💡 <strong>雷達診斷導讀：</strong> 多邊形向外延伸代表優勢向度，向內凹陷代表需導師重點關聯輔導之學習盲點。
+                </div>
+              </div>
+
+              <!-- 右欄 (7 Cols)：分科向度深潛卡片 (國語文、數學科、英語文) -->
+              <div class="lg:col-span-7 space-y-3.5">
+
+                <!-- 1. 國語文 (冷海藍) -->
+                <div class="bg-white border border-blue-200/90 rounded-2xl p-4 shadow-xs space-y-3">
+                  <div class="flex items-center justify-between pb-2 border-b border-blue-100">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2.5 h-4.5 rounded-full bg-[#2563eb]"></span>
+                      <h4 class="text-sm sm:text-base font-bold text-slate-900 m-0">國語文</h4>
+                      <span class="text-xs font-mono font-medium text-slate-400">(PR: {{ studentSubjectReport.chinese.pr }})</span>
+                    </div>
+                    <span class="font-mono text-lg font-black text-slate-900">{{ studentSubjectReport.chinese.rate }}%</span>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div
+                      v-for="d in studentSubjectReport.chinese.dims"
+                      :key="d.key"
+                      class="space-y-1 p-1 rounded-lg transition"
+                      :class="hoveredRadarDim === d.key ? 'bg-blue-50/80 ring-1 ring-blue-300' : ''"
+                      @mouseenter="hoveredRadarDim = d.key"
+                      @mouseleave="hoveredRadarDim = null"
+                    >
+                      <div class="flex items-center justify-between text-slate-700">
+                        <span class="font-bold flex items-center gap-1" :class="d.val < 60 ? 'text-rose-600' : ''">
+                          {{ d.name }}
+                          <span v-if="d.val < 60" class="text-[9px] px-1 bg-rose-50 text-rose-500 rounded font-normal">補救重點</span>
+                        </span>
+                        <span class="font-mono font-bold" :class="d.val < 60 ? 'text-rose-600' : 'text-blue-900'">{{ d.val }}%</span>
+                      </div>
+                      <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          class="h-full rounded-full transition-all duration-500"
+                          :class="d.val < 60 ? 'bg-rose-500' : 'bg-[#2563eb]'"
+                          :style="{ width: `${d.val}%` }"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. 數學科 (翡翠綠) -->
+                <div class="bg-white border border-emerald-200/90 rounded-2xl p-4 shadow-xs space-y-3">
+                  <div class="flex items-center justify-between pb-2 border-b border-emerald-100">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2.5 h-4.5 rounded-full bg-[#16a34a]"></span>
+                      <h4 class="text-sm sm:text-base font-bold text-slate-900 m-0">數學科</h4>
+                      <span class="text-xs font-mono font-medium text-slate-400">(PR: {{ studentSubjectReport.math.pr }})</span>
+                    </div>
+                    <span class="font-mono text-lg font-black text-slate-900">{{ studentSubjectReport.math.rate }}%</span>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div
+                      v-for="d in studentSubjectReport.math.dims"
+                      :key="d.key"
+                      class="space-y-1 p-1 rounded-lg transition"
+                      :class="hoveredRadarDim === d.key ? 'bg-emerald-50/80 ring-1 ring-emerald-300' : ''"
+                      @mouseenter="hoveredRadarDim = d.key"
+                      @mouseleave="hoveredRadarDim = null"
+                    >
+                      <div class="flex items-center justify-between text-slate-700">
+                        <span class="font-bold flex items-center gap-1" :class="d.val < 60 ? 'text-rose-600' : ''">
+                          {{ d.name }}
+                          <span v-if="d.val < 60" class="text-[9px] px-1 bg-rose-50 text-rose-500 rounded font-normal">補救重點</span>
+                        </span>
+                        <span class="font-mono font-bold" :class="d.val < 60 ? 'text-rose-600' : 'text-emerald-900'">{{ d.val }}%</span>
+                      </div>
+                      <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          class="h-full rounded-full transition-all duration-500"
+                          :class="d.val < 60 ? 'bg-rose-500' : 'bg-[#16a34a]'"
+                          :style="{ width: `${d.val}%` }"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3. 英語文 (典雅紫) -->
+                <div class="bg-white border border-purple-200/90 rounded-2xl p-4 shadow-xs space-y-3">
+                  <div class="flex items-center justify-between pb-2 border-b border-purple-100">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2.5 h-4.5 rounded-full bg-[#9333ea]"></span>
+                      <h4 class="text-sm sm:text-base font-bold text-slate-900 m-0">英語文</h4>
+                      <span class="text-xs font-mono font-medium text-slate-400">(PR: {{ studentSubjectReport.english.pr }})</span>
+                    </div>
+                    <span class="font-mono text-lg font-black text-slate-900">{{ studentSubjectReport.english.rate }}%</span>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div
+                      v-for="d in studentSubjectReport.english.dims"
+                      :key="d.key"
+                      class="space-y-1 p-1 rounded-lg transition"
+                      :class="hoveredRadarDim === d.key ? 'bg-purple-50/80 ring-1 ring-purple-300' : ''"
+                      @mouseenter="hoveredRadarDim = d.key"
+                      @mouseleave="hoveredRadarDim = null"
+                    >
+                      <div class="flex items-center justify-between text-slate-700">
+                        <span class="font-bold flex items-center gap-1" :class="d.val < 60 ? 'text-rose-600' : ''">
+                          {{ d.name }}
+                          <span v-if="d.val < 60" class="text-[9px] px-1 bg-rose-50 text-rose-500 rounded font-normal">補救重點</span>
+                        </span>
+                        <span class="font-mono font-bold" :class="d.val < 60 ? 'text-rose-600' : 'text-purple-900'">{{ d.val }}%</span>
+                      </div>
+                      <div class="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          class="h-full rounded-full transition-all duration-500"
+                          :class="d.val < 60 ? 'bg-rose-500' : 'bg-[#9333ea]'"
+                          :style="{ width: `${d.val}%` }"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ============================================================== -->
+          <!-- 分頁 2：評量向度與錯題補救清冊 (單科深入對照與清單)             -->
+          <!-- ============================================================== -->
+          <div v-else-if="activeDrawerTab === 'breakdown'" class="space-y-5">
+            <!-- 學生基本資訊卡片 -->
+            <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-xs">
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <span class="text-slate-400 text-[11px] block">所屬學校</span>
+                  <strong class="font-bold text-slate-700">{{ state.school }}</strong>
+                </div>
+                <div>
+                  <span class="text-slate-400 text-[11px] block">班級 / 座號</span>
+                  <strong class="font-bold text-slate-700">{{ inquiryState.classObj }} 班 · {{ activeStudent.seat }} 號</strong>
+                </div>
+                <div>
+                  <span class="text-slate-400 text-[11px] block">學生姓名</span>
+                  <strong class="font-bold text-slate-800 text-sm">{{ activeStudent.name }}</strong>
+                </div>
+                <div>
+                  <span class="text-slate-400 text-[11px] block">評量科目</span>
+                  <strong class="font-bold text-[#52796f]">{{ inquiryState.subject }}</strong>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-slate-200/60 text-center">
+                <div class="bg-white p-2 rounded-xl border border-slate-200/70">
+                  <span class="text-slate-400 text-[10px] block font-medium">個人答對率</span>
+                  <span class="text-base font-black font-mono text-[#52796f]">
+                    {{ activeStudent.rate }}%
+                  </span>
+                </div>
+                <div class="bg-white p-2 rounded-xl border border-slate-200/70">
+                  <span class="text-slate-400 text-[10px] block font-medium">PR 值 (縣市)</span>
+                  <span class="text-base font-black font-mono text-slate-700">{{ activeStudent.prCounty }}</span>
+                </div>
+                <div class="bg-white p-2 rounded-xl border border-slate-200/70">
+                  <span class="text-slate-400 text-[10px] block font-medium">PR 值 (全國)</span>
+                  <span class="text-base font-black font-mono text-slate-700">{{ activeStudent.prNation }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 水平答對率對照長條圖 -->
+            <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs space-y-3">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+                <span>平均答對率(%) 橫向對比</span>
+                <span class="text-[10px] text-slate-400 font-mono">0% ~ 100%</span>
+              </div>
+
+              <div class="space-y-2 text-xs">
+                <!-- 1. 個人 -->
+                <div class="flex items-center gap-3">
+                  <span class="w-12 text-slate-500 font-bold shrink-0 text-right">個人</span>
+                  <div class="flex-1 bg-slate-100 rounded-full h-5 overflow-hidden relative">
+                    <div
+                      class="h-full rounded-full flex items-center justify-end pr-2 text-[10px] font-bold font-mono text-white transition-all duration-500 bg-[#52796f]"
+                      :style="{ width: `${Math.max(12, activeStudent.rate)}%` }"
+                    >
+                      {{ activeStudent.rate }}%
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. 班級 -->
+                <div class="flex items-center gap-3">
+                  <span class="w-12 text-slate-500 font-medium shrink-0 text-right">班級</span>
+                  <div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden relative">
+                    <div class="h-full bg-[#6096ba] rounded-full flex items-center justify-end pr-2 text-[10px] font-bold font-mono text-white" style="width: 76%">
+                      76%
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3. 學校 -->
+                <div class="flex items-center gap-3">
+                  <span class="w-12 text-slate-500 font-medium shrink-0 text-right">學校</span>
+                  <div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden relative">
+                    <div class="h-full bg-[#83c5be] rounded-full flex items-center justify-end pr-2 text-[10px] font-bold font-mono text-white" style="width: 77%">
+                      77%
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 4. 縣市 -->
+                <div class="flex items-center gap-3">
+                  <span class="w-12 text-slate-500 font-medium shrink-0 text-right">縣市</span>
+                  <div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden relative">
+                    <div class="h-full bg-[#94d2bd] rounded-full flex items-center justify-end pr-2 text-[10px] font-bold font-mono text-white" style="width: 72%">
+                      72%
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 5. 總平均 -->
+                <div class="flex items-center gap-3">
+                  <span class="w-12 text-slate-500 font-medium shrink-0 text-right">總平均</span>
+                  <div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden relative">
+                    <div class="h-full bg-[#e9d8a6] rounded-full flex items-center justify-end pr-2 text-[10px] font-bold font-mono text-slate-700" style="width: 70%">
+                      70%
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 評量向度表現與錯題診斷表 -->
+            <div class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-2xs">
+              <div class="p-3 bg-slate-50 border-b border-slate-200/70 flex items-center justify-between text-xs font-bold text-slate-700">
+                <span>各評量向度答對率與錯題清冊</span>
+                <span class="text-[10px] text-rose-500 font-normal">紅色題號為答錯題目，建議優先輔導</span>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr class="border-b border-slate-200 bg-slate-50/60 text-slate-500 text-[11px] font-semibold">
+                      <th class="py-2.5 px-3">評量向度</th>
+                      <th class="py-2.5 px-2 text-center w-14">題數</th>
+                      <th class="py-2.5 px-3 text-center w-16">答對率</th>
+                      <th class="py-2.5 px-3">答對題號</th>
+                      <th class="py-2.5 px-3">答錯題號 (補救重點)</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                    <tr v-for="dim in studentBreakdown" :key="dim.name" class="hover:bg-slate-50/70 transition">
+                      <td class="py-2.5 px-3 font-bold text-slate-800">{{ dim.name }}</td>
+                      <td class="py-2.5 px-2 text-center font-mono text-slate-400">{{ dim.totalQ }}</td>
+                      <td class="py-2.5 px-3 text-center font-mono font-bold" :class="dim.rate < 50 ? 'text-rose-500' : 'text-[#52796f]'">
+                        {{ dim.rate }}%
+                      </td>
+                      <td class="py-2.5 px-3 font-mono text-slate-600 text-[11px]">{{ dim.correctQs || '-' }}</td>
+                      <td class="py-2.5 px-3 font-mono text-[11px]">
+                        <span v-if="dim.wrongQs" class="font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+                          {{ dim.wrongQs }}
+                        </span>
+                        <span v-else class="text-slate-400">-</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -1254,7 +1573,136 @@ const isMobile = computed(() => window.innerWidth < 768)
 
 const drawerSize = computed(() => {
   if (isMobile.value) return '100%'
-  return isDrawerExpanded.value ? '880px' : '680px'
+  return isDrawerExpanded.value ? '96vw' : 'min(94vw, 1140px)'
+})
+
+// 抽屜內分頁切換 ('panorama': 360度跨領域全景網, 'breakdown': 評量向度與錯題清冊)
+const activeDrawerTab = ref('panorama')
+const hoveredRadarDim = ref(null)
+
+// 學生跨領域三科成績與向度分析 (動態隨選取學生計算)
+const studentSubjectReport = computed(() => {
+  const st = activeStudent.value
+  if (!st) return null
+
+  const baseRate = st.rate || 85
+  const seed = parseInt(st.seat || '1', 10)
+
+  // 1. 國語文 (冷海藍)
+  const chineseRate = Math.min(98, Math.max(50, baseRate + ((seed * 7) % 15) - 5))
+  const chinesePr = Math.min(99, Math.max(45, st.prCounty || 90))
+  const chineseDims = [
+    { name: '形音知識', key: 'chi-1', val: Math.min(100, Math.max(40, chineseRate - 15 + ((seed * 3) % 20))) },
+    { name: '字詞知識', key: 'chi-2', val: Math.min(100, Math.max(55, chineseRate + 10)) },
+    { name: '語法知識', key: 'chi-3', val: Math.min(100, Math.max(50, chineseRate + 5)) },
+    { name: '修辭知識', key: 'chi-4', val: Math.min(100, Math.max(30, chineseRate - 25 + ((seed * 5) % 20))) }
+  ]
+
+  // 2. 數學科 (翡翠綠)
+  const mathRate = Math.min(99, Math.max(55, baseRate + ((seed * 11) % 18) - 4))
+  const mathPr = Math.min(99, Math.max(50, (st.prCounty || 90) + 3))
+  const mathDims = [
+    { name: '數與計算', key: 'mat-1', val: Math.min(100, Math.max(50, mathRate + 5)) },
+    { name: '量與實測', key: 'mat-2', val: Math.min(100, Math.max(45, mathRate + 2)) },
+    { name: '空間與形狀', key: 'mat-3', val: Math.min(100, Math.max(50, mathRate + 6)) },
+    { name: '關係', key: 'mat-4', val: Math.min(100, Math.max(35, mathRate - 18 + ((seed * 4) % 15))) }
+  ]
+
+  // 3. 英語文 (典雅紫)
+  const engRate = Math.min(99, Math.max(50, baseRate + ((seed * 13) % 16) - 6))
+  const engPr = Math.min(99, Math.max(40, (st.prCounty || 90) - 4))
+  const engDims = [
+    { name: '聽力 - 語音聽辨', key: 'eng-1', val: Math.min(100, Math.max(50, engRate + 4)) },
+    { name: '聽力 - 辭彙聽辨', key: 'eng-2', val: Math.min(100, Math.max(45, engRate + 5)) },
+    { name: '聽力 - 教室生活群句理解與回應', key: 'eng-3', val: Math.min(100, Math.max(35, engRate - 12 + ((seed * 6) % 16))) },
+    { name: '聽力 - 文化節慶理解', key: 'eng-4', val: Math.min(100, Math.max(50, engRate + 6)) }
+  ]
+
+  return {
+    studentId: `STU_113_${String(seed).padStart(4, '0')}`,
+    chinese: { name: '國語文', pr: chinesePr, rate: chineseRate, color: '#2563eb', dims: chineseDims },
+    math: { name: '數學科', pr: mathPr, rate: mathRate, color: '#16a34a', dims: mathDims },
+    english: { name: '英語文', pr: engPr, rate: engRate, color: '#9333ea', dims: engDims }
+  }
+})
+
+// 360° 雷達網 11 軸向配置 (依附圖順時針方向排列)
+const radarAxes = [
+  { label: '[國] 形音知識', shortLabel: '形音知識', subject: 'chinese', dimKey: 'chi-1', textAnchor: 'middle', tx: 200, ty: 44 },
+  { label: '[英] 生活群句', shortLabel: '生活群句', subject: 'english', dimKey: 'eng-3', textAnchor: 'start', tx: 295, ty: 70 },
+  { label: '[英] 辭彙聽辨', shortLabel: '辭彙聽辨', subject: 'english', dimKey: 'eng-2', textAnchor: 'start', tx: 345, ty: 145 },
+  { label: '[英] 語音聽辨', shortLabel: '語音聽辨', subject: 'english', dimKey: 'eng-1', textAnchor: 'start', tx: 355, ty: 225 },
+  { label: '[數] 關係', shortLabel: '關係', subject: 'math', dimKey: 'mat-4', textAnchor: 'start', tx: 318, ty: 308 },
+  { label: '[數] 空間形狀', shortLabel: '空間形狀', subject: 'math', dimKey: 'mat-3', textAnchor: 'middle', tx: 245, ty: 355 },
+  { label: '[數] 量與實測', shortLabel: '量與實測', subject: 'math', dimKey: 'mat-2', textAnchor: 'middle', tx: 155, ty: 355 },
+  { label: '[數] 數與計算', shortLabel: '數與計算', subject: 'math', dimKey: 'mat-1', textAnchor: 'end', tx: 82, ty: 308 },
+  { label: '[國] 語法知識', shortLabel: '語法知識', subject: 'chinese', dimKey: 'chi-3', textAnchor: 'end', tx: 45, ty: 225 },
+  { label: '[國] 字詞知識', shortLabel: '字詞知識', subject: 'chinese', dimKey: 'chi-2', textAnchor: 'end', tx: 55, ty: 145 },
+  { label: '[國] 修辭知識', shortLabel: '修辭知識', subject: 'chinese', dimKey: 'chi-4', textAnchor: 'end', tx: 105, ty: 70 }
+]
+
+const radarData = computed(() => {
+  const rep = studentSubjectReport.value
+  if (!rep) return null
+
+  const cx = 200, cy = 200, rMax = 140
+  const n = radarAxes.length
+
+  const studentPoints = []
+  const schoolPoints = []
+  const countyPoints = []
+
+  const axesWithCoords = radarAxes.map((axis, i) => {
+    const angle = -Math.PI / 2 + (i * 2 * Math.PI) / n
+    const cosVal = Math.cos(angle)
+    const sinVal = Math.sin(angle)
+
+    const xOuter = Number((cx + rMax * cosVal).toFixed(1))
+    const yOuter = Number((cy + rMax * sinVal).toFixed(1))
+
+    let val = 80
+    const subjData = rep[axis.subject]
+    if (subjData && subjData.dims) {
+      const d = subjData.dims.find(item => item.key === axis.dimKey)
+      if (d) val = d.val
+    }
+
+    const schoolVal = 77 + ((i * 3) % 10) - 4
+    const countyVal = 72 + ((i * 2) % 8) - 3
+
+    const rStudent = (Math.max(10, Math.min(100, val)) / 100) * rMax
+    const sx = Number((cx + rStudent * cosVal).toFixed(1))
+    const sy = Number((cy + rStudent * sinVal).toFixed(1))
+    studentPoints.push(`${sx},${sy}`)
+
+    const rSchool = (schoolVal / 100) * rMax
+    const scx = Number((cx + rSchool * cosVal).toFixed(1))
+    const scy = Number((cy + rSchool * sinVal).toFixed(1))
+    schoolPoints.push(`${scx},${scy}`)
+
+    const rCounty = (countyVal / 100) * rMax
+    const cxCounty = Number((cx + rCounty * cosVal).toFixed(1))
+    const cyCounty = Number((cy + rCounty * sinVal).toFixed(1))
+    countyPoints.push(`${cxCounty},${cyCounty}`)
+
+    return {
+      ...axis,
+      val,
+      schoolVal,
+      countyVal,
+      xOuter,
+      yOuter,
+      sx,
+      sy
+    }
+  })
+
+  return {
+    axes: axesWithCoords,
+    studentPolygon: studentPoints.join(' '),
+    schoolPolygon: schoolPoints.join(' '),
+    countyPolygon: countyPoints.join(' ')
+  }
 })
 
 function scrollToTop() {
