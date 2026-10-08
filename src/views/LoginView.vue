@@ -201,64 +201,109 @@
       </div>
     </div>
 
-    <!-- Operation Manuals & Browser Recommendation Card -->
-    <div class="w-full max-w-[920px] mt-4 bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/80 p-4 shadow-sm flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
-      <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center md:justify-start">
-        <span class="font-bold text-slate-700 flex items-center gap-1.5 mr-0.5">
-          <svg class="w-4 h-4 text-[#52796f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-          </svg>
-          操作說明：
-        </span>
-        <button
-          type="button"
-          @click="handleDownloadManual('校長')"
-          class="px-2.5 py-1 bg-slate-50 hover:bg-[#52796f]/10 text-slate-700 hover:text-[#52796f] border border-slate-200 rounded-lg font-semibold transition cursor-pointer"
-        >
-          校長
-        </button>
-        <button
-          type="button"
-          @click="handleDownloadManual('校管理者')"
-          class="px-2.5 py-1 bg-slate-50 hover:bg-[#52796f]/10 text-slate-700 hover:text-[#52796f] border border-slate-200 rounded-lg font-semibold transition cursor-pointer"
-        >
-          校管理者
-        </button>
-        <button
-          type="button"
-          @click="handleDownloadManual('學年主任')"
-          class="px-2.5 py-1 bg-slate-50 hover:bg-[#52796f]/10 text-slate-700 hover:text-[#52796f] border border-slate-200 rounded-lg font-semibold transition cursor-pointer"
-        >
-          學年主任
-        </button>
-        <button
-          type="button"
-          @click="handleDownloadManual('導師')"
-          class="px-2.5 py-1 bg-slate-50 hover:bg-[#52796f]/10 text-slate-700 hover:text-[#52796f] border border-slate-200 rounded-lg font-semibold transition cursor-pointer"
-        >
-          導師
-        </button>
-        <button
-          type="button"
-          @click="handleDownloadManual('科任教師')"
-          class="px-2.5 py-1 bg-slate-50 hover:bg-[#52796f]/10 text-slate-700 hover:text-[#52796f] border border-slate-200 rounded-lg font-semibold transition cursor-pointer"
-        >
-          科任教師
-        </button>
-        <button
-          type="button"
-          @click="showQaModal = true"
-          class="px-2.5 py-1 bg-[#c47c5d]/10 hover:bg-[#c47c5d]/20 text-[#c47c5d] border border-[#c47c5d]/30 rounded-lg font-bold transition cursor-pointer flex items-center gap-1"
-        >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          登入 Q&A
-        </button>
+    <!-- 方案一：雙小人吉祥物分工卡片區 (Mascot Functional Distribution Pods) -->
+    <div class="w-full max-w-[920px] mt-4.5 grid grid-cols-1 md:grid-cols-2 gap-4">
+      
+      <!-- 【左側小男孩 👦】：操作說明手冊專區 -->
+      <div class="relative bg-white/95 backdrop-blur-md rounded-2xl border border-emerald-200/90 p-4 shadow-sm hover:shadow-md transition-all duration-300 flex items-center gap-3 sm:gap-4 overflow-hidden group">
+        <!-- 頂部莫蘭迪綠點綴條 -->
+        <div class="absolute top-0 left-0 right-0 h-1 bg-[#52796f]"></div>
+
+        <!-- 認真讀書小男孩 (read_boy) -->
+        <div class="shrink-0 flex flex-col items-center justify-center">
+          <img
+            src="/images/read_boy.png"
+            alt="操作說明手冊小幫手"
+            class="w-20 sm:w-24 h-auto drop-shadow-sm group-hover:scale-105 transition-transform duration-300 select-none pointer-events-none"
+          />
+          <span class="text-[10px] font-bold text-[#52796f] mt-1 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/70 whitespace-nowrap">
+            📖 手冊專員
+          </span>
+        </div>
+
+        <!-- 對話氣泡卡片內容 -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between pb-1.5 mb-2 border-b border-slate-100">
+            <span class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-[#52796f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              <span>操作說明手冊</span>
+            </span>
+            <span class="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-semibold">
+              PDF 下載
+            </span>
+          </div>
+
+          <div class="flex flex-wrap gap-1.5">
+            <button
+              v-for="role in ['校長', '校管理者', '學年主任', '導師', '科任教師']"
+              :key="role"
+              type="button"
+              @click="handleDownloadManual(role)"
+              class="px-2.5 py-1 bg-slate-50 hover:bg-[#52796f]/10 text-slate-700 hover:text-[#52796f] border border-slate-200/90 hover:border-[#52796f]/40 rounded-lg text-xs font-semibold transition cursor-pointer active:scale-95 shadow-2xs flex items-center gap-1"
+            >
+              <span>{{ role }}</span>
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="text-[11px] text-slate-400 text-center md:text-right shrink-0">
-        建議使用 <strong class="text-slate-600 font-medium">Chrome、Edge、Firefox</strong> 瀏覽器
+
+      <!-- 【右側小女孩 👧】：登入 Q&A 與瀏覽器建議專區 -->
+      <div class="relative bg-white/95 backdrop-blur-md rounded-2xl border border-amber-200/90 p-4 shadow-sm hover:shadow-md transition-all duration-300 flex items-center gap-3 sm:gap-4 overflow-hidden group">
+        <!-- 頂部暖杏色點綴條 -->
+        <div class="absolute top-0 left-0 right-0 h-1 bg-[#c47c5d]"></div>
+
+        <!-- 好好學習小女孩 (read_girl) -->
+        <div class="shrink-0 flex flex-col items-center justify-center">
+          <img
+            src="/images/read_girl.png"
+            alt="疑難諮詢小幫手"
+            class="w-20 sm:w-24 h-auto drop-shadow-sm group-hover:scale-105 transition-transform duration-300 select-none pointer-events-none"
+          />
+          <span class="text-[10px] font-bold text-[#c47c5d] mt-1 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/70 whitespace-nowrap">
+            💡 解答顧問
+          </span>
+        </div>
+
+        <!-- 登入 Q&A 按鈕與瀏覽器建議 -->
+        <div class="flex-1 min-w-0 space-y-2">
+          <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+            <span class="font-bold text-slate-800 text-xs sm:text-sm flex items-center gap-1.5">
+              <span>疑難排解與支援</span>
+            </span>
+            <span class="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md font-semibold">
+              常見問題
+            </span>
+          </div>
+
+          <!-- 登入 Q&A 按鈕 -->
+          <button
+            type="button"
+            @click="showQaModal = true"
+            class="w-full px-3 py-1.5 bg-gradient-to-r from-[#c47c5d]/10 to-amber-50 hover:from-[#c47c5d]/20 hover:to-amber-100 text-[#c47c5d] border border-[#c47c5d]/30 rounded-xl font-bold text-xs transition cursor-pointer flex items-center justify-between shadow-2xs active:scale-98"
+          >
+            <span class="flex items-center gap-1.5">
+              <span class="text-sm">❓</span>
+              <span>登入 Q&A 常見問題</span>
+            </span>
+            <span class="text-[11px] font-semibold bg-white/90 px-2 py-0.5 rounded-md border border-[#c47c5d]/20">
+              點擊查看 &rarr;
+            </span>
+          </button>
+
+          <!-- 瀏覽器建議 -->
+          <div class="text-[11px] text-slate-500 flex items-center gap-1.5 flex-wrap">
+            <span class="font-bold text-slate-600 flex items-center gap-1">
+              <span>🌐</span> 建議使用：
+            </span>
+            <span class="px-1.5 py-0.5 bg-slate-100 border border-slate-200/70 rounded text-slate-700 font-medium">Chrome</span>
+            <span class="px-1.5 py-0.5 bg-slate-100 border border-slate-200/70 rounded text-slate-700 font-medium">Edge</span>
+            <span class="px-1.5 py-0.5 bg-slate-100 border border-slate-200/70 rounded text-slate-700 font-medium">Firefox</span>
+          </div>
+        </div>
       </div>
+
     </div>
 
     <!-- 登入 Q&A 彈窗 -->

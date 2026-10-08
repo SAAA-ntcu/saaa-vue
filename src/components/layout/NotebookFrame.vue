@@ -49,12 +49,12 @@
           </div>
 
           <!-- Bottom Left Boy Illustration -->
-          <div class="hidden md:block absolute -bottom-14 z-30 pointer-events-none transform hover:scale-105 transition duration-300 w-36 lg:w-40 2xl:w-48 -left-7 lg:-left-10 2xl:-left-12">
+          <div v-if="!isLoginPage" class="hidden md:block absolute -bottom-14 z-30 pointer-events-none transform hover:scale-105 transition duration-300 w-36 lg:w-40 2xl:w-48 -left-7 lg:-left-10 2xl:-left-12">
             <img src="/images/read_boy.png" alt="認真讀書中" class="reader-boy w-full h-auto drop-shadow-md" loading="lazy" decoding="async" fetchpriority="low" />
           </div>
 
           <!-- Bottom Right Girl Illustration -->
-          <div class="hidden md:block absolute -bottom-14 z-30 pointer-events-none transform hover:scale-105 transition duration-300 w-36 lg:w-40 2xl:w-48 -right-16 lg:-right-20 2xl:-right-12">
+          <div v-if="!isLoginPage" class="hidden md:block absolute -bottom-14 z-30 pointer-events-none transform hover:scale-105 transition duration-300 w-36 lg:w-40 2xl:w-48 -right-16 lg:-right-20 2xl:-right-12">
             <img src="/images/read_girl.png" alt="好好學習" class="reader-girl w-full h-auto drop-shadow-md" loading="lazy" decoding="async" fetchpriority="low" />
           </div>
 
@@ -65,4 +65,9 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+const isLoginPage = computed(() => route.path === '/logins')
 </script>
