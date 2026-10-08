@@ -1048,17 +1048,17 @@ const isHomeroomTeacher = computed(() => state.role === '導師' || state.role =
 const inquiryState = reactive({
   level: 'school', // 'school' | 'class'
   year: '115',
-  grade: '3',
+  grade: '5', // 預設 5 年級，直接帶出高通真實學力大數據
   subject: '國語文',
   dimension: '整體',
-  classObj: '301'
+  classObj: '501'
 })
 
 // 班級導師權限鎖定：自動切換至任教班級，且禁止返回學校總覽
 watch(() => [state.role, state.grade, state.classroom], () => {
   if (isHomeroomTeacher.value) {
     inquiryState.level = 'class'
-    const g = state.grade || '3'
+    const g = state.grade || '5'
     const c = state.classroom || '1'
     inquiryState.grade = g
     inquiryState.classObj = `${g}0${c}`
