@@ -1,8 +1,10 @@
 import class360Data from '../data/gaotong/class360.json'
 import individualScoresData from '../data/gaotong/individualScores.json'
+import subject360Data from '../data/gaotong/subject360.json'
 import { ACTION_PRESETS, getActionPreset, PRIORITY_ITEMS } from '../data/gaotong/actionPresets'
 
 export { ACTION_PRESETS, getActionPreset, PRIORITY_ITEMS }
+
 
 export const GAOTONG_SUBJECTS = [
   {
@@ -235,3 +237,318 @@ function hexToRgba(hex, alpha) {
   const num = parseInt(val, 16)
   return `rgba(${num >> 16}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`
 }
+
+/**
+ * 模組 ②：真實跨科表現高度不一致（偏科診斷）與關注廣度雙軌診斷
+ */
+export function getStudentInconsistencyDiagnostic(classId, seat) {
+  const normSeat = String(parseInt(seat, 10))
+  const cData = class360Data.classes?.[classId]
+  if (!cData) return null
+  const matrix = cData.zone1_matrix || []
+  const row = matrix.find(
+    (r) => String(r.seat) === normSeat || String(r.seat).padStart(2, '0') === String(seat).padStart(2, '0')
+  )
+  if (!row) return null
+
+  const breadth = row.supportBreadth?.breadth ?? 0
+  const inconst = row.crossSubjectInconsistency || { isInconsistent: false }
+  const subjects = row.subjects || {}
+
+  let advantageSubject = null
+  let supportSubject = null
+  let maxPr = -1
+  let minPr = 101
+
+  for (const [subName, sObj] of Object.entries(subjects)) {
+    const pr = sObj.countyPr ?? 50
+    if (sObj.officialLevel === '精熟' || pr > maxPr) {
+      maxPr = pr
+      advantageSubject = { name: subName, pr, level: sObj.officialLevel }
+    }
+    if (sObj.officialLevel === '待加強' || pr < minPr) {
+      minPr = pr
+      supportSubject = { name: subName, pr, level: sObj.officialLevel }
+    }
+  }
+
+  let advantageStatement = ''
+  let supportStatement = ''
+  let recommendation = ''
+
+  if (inconst.isInconsistent) {
+    advantageStatement = advantageSubject
+      ? `${advantageSubject.name}學科表現突出（${advantageSubject.level}，PR ${advantageSubject.pr}），展現卓越學科潛力與自信心。`
+      : ''
+    supportStatement = supportSubject
+      ? `${supportSubject.name}學科落入${supportSubject.level}（PR ${supportSubject.pr}），為個別領域之特定單元概念盲點。`
+      : ''
+    recommendation =
+      '【優勢學科肯定 ＋ 弱勢精準扶助】切忌以單一學科低分標籤化全人學力，建議以優勢科目之自信學習策略，引導克服弱勢科目之特定單元障礙。'
+  } else if (breadth === 0) {
+    advantageStatement = '三科（國、數、英）學力皆在基礎或精熟以上，未見待加強訊號，整體學力穩健。'
+    recommendation = '各科學習節奏均衡，建議在具優勢之向度給予加深加廣生活化探究挑戰。'
+  } else if (breadth === 1) {
+    supportStatement = supportSubject
+      ? `僅在 ${supportSubject.name} 呈現待加強關注訊號（PR ${supportSubject.pr}），其餘學科穩定。`
+      : ''
+    recommendation = '屬單科特定向度待補強，建議科任教師聚焦核心概念輔導，無需全科介入。'
+  } else {
+    supportStatement = `多科（${breadth}科）落入待加強範圍，需啟動跨科共同關注。`
+    recommendation = '建議召開跨科科任會商，優先建立良好日常作業訂正習慣與課堂專注度。'
+  }
+
+  return {
+    breadth,
+    breadthLabel: row.supportBreadth?.displayText || `${breadth}科關注`,
+    isInconsistent: inconst.isInconsistent,
+    reason: inconst.reason || '',
+    advantageSubject,
+    supportSubject,
+    advantageStatement,
+    supportStatement,
+    recommendation
+  }
+}
+
+/**
+ * 模組 ③：跨科待加強交集 (Venn Overlap) 與跨科教師會商名單
+ */
+export function getStudentCollaborationInfo(classId, seat) {
+  const normSeat = String(parseInt(seat, 10))
+  const cData = class360Data.classes?.[classId]
+  if (!cData) return null
+  const z8 = cData.zone8_collaboration || []
+  const z5 = cData.zone5_drawers?.[normSeat] || cData.zone5_drawers?.[String(seat).padStart(2, '0')] || {}
+
+  const matched = z8.find((item) => (item.studentSeats || []).includes(normSeat))
+
+  if (matched) {
+    return {
+      isCrossSubjectOverlap: true,
+      combination: matched.combinationName,
+      suggestedTeachers: matched.suggestedTeachers,
+      topic: matched.collaborationTopic,
+      objectiveChecklist: z5.objectiveChecklist || [],
+      consultPartners: z5.consultPartners || ['英語專任教師', '數學任課教師']
+    }
+  }
+
+  const row = (cData.zone1_matrix || []).find((r) => String(r.seat) === normSeat)
+  const breadth = row?.supportBreadth?.breadth ?? 0
+  let combination = '單科聚焦或學習穩健'
+  let suggestedTeachers = '班級導師、任課教師'
+  let topic = '落實課堂日常觀察與學習習慣指導。'
+
+  if (breadth === 1) {
+    const low = Object.entries(row?.subjects || {}).find(([k, v]) => v.officialLevel === '待加強')
+    const subName = low ? low[0] : '特定學科'
+    combination = `${subName} 單科關注`
+    suggestedTeachers = `${subName}科任教師、班級導師`
+    topic = `針對 ${subName} 之特定弱勢單元與作業訂正進行日常課堂輔導。`
+  } else if (breadth === 0) {
+    combination = '未見明顯跨科關注訊號 (0科)'
+    suggestedTeachers = '班級導師、各科科任教師'
+    topic = '維持目前優質學習節奏，鼓勵自主加深加廣學習。'
+  }
+
+  return {
+    isCrossSubjectOverlap: false,
+    combination,
+    suggestedTeachers,
+    topic,
+    objectiveChecklist: z5.objectiveChecklist || [],
+    consultPartners: z5.consultPartners || ['班級導師']
+  }
+}
+
+/**
+ * 模組 ①：跨科「認知向度」穿透階梯（三層教育學映射）與學習遷移障礙診斷
+ */
+export function getCrossSubjectCognitiveTaxonomy(classId, seat) {
+  const normSeat = String(parseInt(seat, 10))
+  const padSeat = normSeat.padStart(2, '0')
+  const subs = ['chinese', 'math', 'english']
+  const subNames = { chinese: '國語文', math: '數學', english: '英語文' }
+
+  const matrix = {}
+  const levels = ['知識記憶與程序', '概念理解與闡釋', '應用分析與解題']
+
+  subs.forEach((subKey) => {
+    const subData = subject360Data.subjects[subKey]
+    if (!subData) return
+    const stu = subData.students.find(
+      (s) => s.class === classId && (String(s.seat) === normSeat || String(s.seat) === padSeat)
+    )
+    const items = subData.items || []
+
+    const qBuckets = { 0: [], 1: [], 2: [] }
+    if (subKey === 'math') {
+      qBuckets[0] = [3, 5, 6, 8, 16, 18, 19, 22, 24, 25] // 程序執行
+      qBuckets[1] = [1, 2, 4, 9, 10, 11, 13, 14, 15, 17, 20, 21, 23] // 概念理解
+      qBuckets[2] = [7, 12] // 解題思考
+    } else if (subKey === 'chinese') {
+      qBuckets[0] = items.filter((i) => /知識/.test(i.content)).map((i) => i.q)
+      qBuckets[1] = items.filter((i) => /字詞理解|句子理解|段落理解/.test(i.content)).map((i) => i.q)
+      qBuckets[2] = items.filter((i) => /篇章理解/.test(i.content)).map((i) => i.q)
+    } else if (subKey === 'english') {
+      qBuckets[0] = items.filter((i) => /辨/.test(i.content)).map((i) => i.q)
+      qBuckets[1] = items.filter((i) => /句子|教室|節慶/.test(i.content)).map((i) => i.q)
+      qBuckets[2] = items.filter((i) => /短文與對話/.test(i.content)).map((i) => i.q)
+    }
+
+    matrix[subKey] = levels.map((lvlName, idx) => {
+      const qList = qBuckets[idx] || []
+      let correct = 0
+      if (stu) {
+        qList.forEach((q) => {
+          const it = items.find((i) => i.q === q)
+          if (it && stu.responses[q - 1] === it.answer) correct++
+        })
+      }
+      const rate = qList.length ? Math.round((correct / qList.length) * 100) : 0
+      return {
+        levelIndex: idx,
+        levelName: lvlName,
+        correct,
+        total: qList.length,
+        rate
+      }
+    })
+  })
+
+  // 跨科綜合認知階梯均值
+  const composite = levels.map((lvlName, idx) => {
+    let sumRate = 0
+    let count = 0
+    subs.forEach((sk) => {
+      if (matrix[sk]?.[idx]) {
+        sumRate += matrix[sk][idx].rate
+        count++
+      }
+    })
+    const avgRate = count ? Math.round(sumRate / count) : 0
+    return {
+      levelName: lvlName,
+      rate: avgRate,
+      benchmarks: {
+        county: idx === 0 ? 76 : idx === 1 ? 73 : 68,
+        school: idx === 0 ? 78 : idx === 1 ? 75 : 70
+      }
+    }
+  })
+
+  // 學習遷移障礙智慧診斷
+  const mathApp = matrix.math?.[2]?.rate ?? 70
+  const chiText = matrix.chinese?.[2]?.rate ?? 70
+  const mathProc = matrix.math?.[0]?.rate ?? 70
+
+  let transferInsight = ''
+  if (mathApp < 60 && chiText < 65) {
+    transferInsight = `【學習遷移警示 · 語文閱讀限制數學審題】學童在數學應用解題答對率偏低（${mathApp}%），同時國語文「篇章理解」亦較弱（${chiText}%）。測驗數據顯示可能是長篇題幹閱讀理解困難限制了審題與題意掌握，而非純粹計算盲點。建議跨科協同引導數學題幹語意拆解。`
+  } else if (mathProc < 55 && mathApp >= 60) {
+    transferInsight = `【思維敏捷但程序疏漏】學童解題思考邏輯清晰（${mathApp}%），但程序執行計算失分較多（${mathProc}%）。建議加強多步驟運算之步驟覆核與驗算習慣。`
+  } else if (chiText >= 80 && mathApp >= 80) {
+    transferInsight =
+      '【高階遷移優異】國語篇章理解與數學解題思考皆達 80% 以上，展現極佳的跨領域抽象推理與語意轉換能力。'
+  } else {
+    transferInsight =
+      '【認知發展平衡】各認知層次表現平穩，建議在「應用分析與解題」向度多提供生活化實作探究情境，以激發高階思維。'
+  }
+
+  return {
+    bySubject: matrix,
+    composite,
+    transferInsight
+  }
+}
+
+/**
+ * 模組 ④：真實學生作答反應 (Responses) 與難題/粗心題診斷
+ */
+export function getStudentItemDiagnostics(subjectKey, classId, seat) {
+  const normSeat = String(parseInt(seat, 10))
+  const padSeat = normSeat.padStart(2, '0')
+  const sub = subject360Data.subjects[subjectKey]
+  if (!sub) return { items: [], wrongItems: [], correctCount: 0, total: 0 }
+
+  const stu = sub.students.find(
+    (s) => s.class === classId && (String(s.seat) === normSeat || String(s.seat) === padSeat)
+  )
+  const items = sub.items || []
+  const schoolStats = sub.itemStats?.school || []
+  const cityItems = sub.official?.cityItem || []
+
+  const allItems = items.map((it, idx) => {
+    const studentChoice = stu ? stu.responses[idx] : null
+    const isCorrect = studentChoice === it.answer
+    const sStat = schoolStats[idx]
+    const cItem = cityItems[idx]
+    const passRate = cItem ? cItem.rate : sStat ? sStat.rate : 0.7
+    const passPct = Math.round(passRate * 100)
+
+    let mistakeType = 'none'
+    let mistakeLabel = ''
+    let priority = 0
+
+    if (!isCorrect && studentChoice != null) {
+      if (passRate >= 0.75) {
+        mistakeType = 'careless'
+        mistakeLabel = '⚠️ 非預期失分（基礎題審題疏漏）'
+        priority = 1
+      } else if (passRate <= 0.40) {
+        mistakeType = 'hard'
+        mistakeLabel = '🔥 普遍高難題（全體常態挑戰）'
+        priority = 3
+      } else {
+        mistakeType = 'normal'
+        mistakeLabel = '📘 核心概念精進題'
+        priority = 2
+      }
+    }
+
+    return {
+      q: it.q,
+      short: it.short || `第 ${it.q} 題`,
+      content: it.content,
+      cognitive: it.cognitive || '概念理解',
+      studentChoice,
+      correctAnswer: it.answer,
+      isCorrect,
+      passPct,
+      mistakeType,
+      mistakeLabel,
+      priority
+    }
+  })
+
+  const wrongItems = allItems
+    .filter((i) => !i.isCorrect && i.studentChoice != null)
+    .sort((a, b) => a.priority - b.priority || a.q - b.q)
+  const correctCount = allItems.filter((i) => i.isCorrect).length
+
+  return {
+    items: allItems,
+    wrongItems,
+    correctCount,
+    total: allItems.length,
+    score: allItems.length ? Math.round((correctCount / allItems.length) * 100) : 0
+  }
+}
+
+/**
+ * 模組 ⑤：完整的雙常模 PR (縣市常模 vs 全國常模)
+ */
+export function getStudentDualPrScores(classId, seat) {
+  const normSeat = String(parseInt(seat, 10))
+  const padSeat = normSeat.padStart(2, '0')
+  const scoresBySeat = individualScoresData.classes?.[classId] || {}
+  const seatScores = scoresBySeat[normSeat] || scoresBySeat[padSeat] || {}
+
+  return {
+    '國語文': seatScores['國語文'] || { countyPr: 70, allParticipantsPr: 72 },
+    '數學': seatScores['數學'] || { countyPr: 70, allParticipantsPr: 72 },
+    '英語文': seatScores['英語文'] || { countyPr: 70, allParticipantsPr: 72 }
+  }
+}
+

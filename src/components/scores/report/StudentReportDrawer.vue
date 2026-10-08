@@ -13,7 +13,7 @@
       <header class="shrink-0 px-5 sm:px-6 py-3 border-b border-slate-100 bg-white/95 backdrop-blur-xs flex items-center justify-between z-10 shadow-2xs gap-3 flex-wrap">
         <div class="flex items-center gap-3 flex-wrap">
           <span class="text-[10px] font-black uppercase tracking-wider text-[#52796f] bg-[#52796f]/10 px-2.5 py-1 rounded-md">
-            綜合成績單
+            綜合成績單 · 診斷報告
           </span>
           <h3 class="text-lg font-black text-slate-800 m-0 flex items-center gap-2">
             <span>{{ student.name }}</span>
@@ -78,7 +78,62 @@
         @touchstart="handleTouchStart"
         @touchend="handleTouchEnd"
       >
-        <!-- 區塊 ①：跨科落點與相對強弱總覽 -->
+        <!-- 模組 ②：學生學力特徵與雙軌診斷橫幅 (偏科診斷與關注廣度標籤) -->
+        <section
+          v-if="report.inconsistencyProfile"
+          class="p-4 rounded-2xl border transition-all"
+          :class="report.inconsistencyProfile.isInconsistent
+            ? 'bg-gradient-to-r from-amber-50/90 via-orange-50/40 to-white border-amber-300 shadow-2xs'
+            : report.inconsistencyProfile.breadth === 0
+              ? 'bg-gradient-to-r from-emerald-50/90 via-teal-50/40 to-white border-emerald-300 shadow-2xs'
+              : 'bg-slate-50 border-slate-200'"
+        >
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-2 pb-2 border-b border-slate-200/60">
+            <div class="flex items-center gap-2 flex-wrap">
+              <!-- 關注廣度徽章 -->
+              <span
+                class="text-[11px] font-bold px-2.5 py-0.5 rounded-full border shadow-2xs flex items-center gap-1"
+                :class="report.inconsistencyProfile.breadth === 0
+                  ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                  : report.inconsistencyProfile.breadth === 1
+                    ? 'bg-amber-100 text-amber-800 border-amber-200'
+                    : 'bg-rose-100 text-rose-800 border-rose-200'"
+              >
+                <span class="w-1.5 h-1.5 rounded-full" :class="report.inconsistencyProfile.breadth === 0 ? 'bg-emerald-500' : report.inconsistencyProfile.breadth === 1 ? 'bg-amber-500' : 'bg-rose-500'"></span>
+                {{ report.inconsistencyProfile.breadthLabel }}
+              </span>
+
+              <!-- 偏科訊號徽章 -->
+              <span
+                v-if="report.inconsistencyProfile.isInconsistent"
+                class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-900 border border-orange-300 flex items-center gap-1 shadow-2xs"
+              >
+                ⚡ 跨科表現高度不一致（偏科診斷）
+              </span>
+            </div>
+
+            <span class="text-[11px] text-slate-400">
+              雙軌診斷指引 · 避免單一等第標籤化
+            </span>
+          </div>
+
+          <!-- 雙軌診斷說明文字 -->
+          <div class="space-y-1.5 text-xs">
+            <div v-if="report.inconsistencyProfile.advantageStatement" class="flex items-start gap-1.5 text-emerald-900">
+              <span class="font-bold shrink-0 text-emerald-700">🌟 優勢學科肯定：</span>
+              <span>{{ report.inconsistencyProfile.advantageStatement }}</span>
+            </div>
+            <div v-if="report.inconsistencyProfile.supportStatement" class="flex items-start gap-1.5 text-rose-900">
+              <span class="font-bold shrink-0 text-rose-700">🎯 精準扶助焦點：</span>
+              <span>{{ report.inconsistencyProfile.supportStatement }}</span>
+            </div>
+            <p class="text-[11px] text-slate-600 m-0 pt-1 leading-relaxed border-t border-slate-200/50">
+              {{ report.inconsistencyProfile.recommendation }}
+            </p>
+          </div>
+        </section>
+
+        <!-- 區塊 ①：跨科落點與相對強弱總覽 (含 Feature 5 雙常模 PR 階梯) -->
         <CrossSubjectOverview :subjects="report.subjects" />
 
         <!-- 區塊 ②：雙欄並排（左：下鑽雷達網 / 右：各科向度清單與錯題） -->
@@ -89,22 +144,23 @@
               各科向度細節與能力網
             </h4>
             <span class="text-xs text-slate-400">
-              點擊雷達切換鈕或下方「聚焦雷達」，可切換單科詳細向度
+              可切換單科詳細雷達，或點擊「🧠 認知向度」進行跨科思維穿透
             </span>
           </div>
 
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-            <!-- 左欄 (5 欄)：互動下鑽雷達 (Plan A 核心) -->
+            <!-- 左欄 (5 欄)：互動下鑽雷達 (含 Feature 1 跨科認知穿透) -->
             <div class="lg:col-span-5 lg:sticky lg:top-0 space-y-3">
               <DimensionRadar
                 :subjects="report.subjects"
+                :cognitive-profile="report.cognitiveProfile"
                 v-model:focusSubject="focusSubject"
                 :hovered-key="hoveredKey"
                 @hover="hoveredKey = $event"
               />
             </div>
 
-            <!-- 右欄 (7 欄)：各科詳細向度進度與錯題卡片 -->
+            <!-- 右欄 (7 欄)：各科詳細向度進度與錯題卡片 (含 Feature 4 難題/粗心題診斷) -->
             <div class="lg:col-span-7 space-y-4">
               <SubjectDetailCard
                 v-for="s in report.subjects"
@@ -114,31 +170,46 @@
                 :is-focused="focusSubject === s.key"
                 @hover="hoveredKey = $event"
                 @toggle-focus="toggleFocus"
+                @select-question="handleSelectQuestion"
               />
             </div>
           </div>
         </section>
 
-        <!-- 區塊 ③：教師課堂客觀觀察指引與跨科協作對象 (引用自 gaotong-dashboard) -->
-        <section v-if="studentChecklist.length" class="border border-slate-200/80 rounded-xl p-4 bg-slate-50/50 space-y-3">
-          <div class="flex items-center justify-between gap-2 flex-wrap">
+        <!-- 區塊 ③：模組 ③ 跨科教師會商名單與協作會議指南 -->
+        <section class="border border-slate-200/80 rounded-2xl p-4 sm:p-5 bg-slate-50/70 space-y-3">
+          <div class="flex items-center justify-between gap-2 flex-wrap pb-2 border-b border-slate-200/70">
             <h4 class="text-sm font-bold text-slate-800 m-0 flex items-center gap-2">
               <span class="w-1.5 h-4 rounded-full bg-[#52796f]"></span>
-              教師課堂客觀觀察指引
+              跨科教師協作會商指南
             </h4>
-            <div v-if="studentConsultPartners.length" class="text-xs text-slate-500 flex items-center gap-1.5">
-              <span class="text-slate-400">跨科會商協作：</span>
-              <span class="font-bold text-slate-700 bg-white border border-slate-200 px-2 py-0.5 rounded-md">
-                {{ studentConsultPartners.join('、') }}
+            <div v-if="report.collaborationProfile?.suggestedTeachers" class="text-xs text-slate-500 flex items-center gap-1.5">
+              <span class="text-slate-400">建議會商對象：</span>
+              <span class="font-bold text-slate-800 bg-white border border-slate-200 px-2.5 py-0.5 rounded-md shadow-2xs">
+                {{ report.collaborationProfile.suggestedTeachers }}
               </span>
             </div>
           </div>
-          
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+
+          <!-- 會議聚焦主題卡片 -->
+          <div v-if="report.collaborationProfile?.topic" class="p-3 bg-white border border-slate-200 rounded-xl text-xs flex items-start gap-2 shadow-2xs">
+            <span class="text-base text-[#52796f] leading-none mt-0.5">📌</span>
+            <div class="space-y-0.5">
+              <strong class="text-slate-800 font-bold block">
+                協作會商焦點：{{ report.collaborationProfile.combination }}
+              </strong>
+              <p class="text-[11px] text-slate-600 m-0 leading-relaxed">
+                {{ report.collaborationProfile.topic }}
+              </p>
+            </div>
+          </div>
+
+          <!-- 4 大課堂客觀觀察指引清單 -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
             <div
-              v-for="item in studentChecklist"
+              v-for="item in (report.collaborationProfile?.objectiveChecklist?.length ? report.collaborationProfile.objectiveChecklist : studentChecklist)"
               :key="item.id"
-              class="bg-white border border-slate-100 rounded-lg p-3 space-y-1 shadow-2xs"
+              class="bg-white border border-slate-100 rounded-xl p-3 space-y-1 shadow-2xs"
             >
               <strong class="text-xs text-slate-800 font-bold block">{{ item.title }}</strong>
               <p class="text-[11px] text-slate-500 m-0 leading-relaxed">{{ item.description }}</p>
@@ -146,7 +217,7 @@
           </div>
 
           <p class="text-[10px] text-slate-400 m-0 pt-1 text-right">
-            ※ 本觀察指引供校內教學支持與跨科對話使用，避免單一次評量標籤化。
+            ※ 本會商指南旨在建立導師與科任之橫向支持對話，將評量轉化為課堂觀察與具體輔導行動。
           </p>
         </section>
       </div>
@@ -183,6 +254,13 @@
         </button>
       </footer>
     </div>
+
+    <!-- 試題深度誘答診斷彈窗 -->
+    <SubjectItemDialog
+      :visible="isQuestionDialogVisible"
+      :item="selectedQuestionItem"
+      @close="isQuestionDialogVisible = false"
+    />
   </el-drawer>
 </template>
 
@@ -192,6 +270,7 @@ import { buildStudentReport } from '../../../composables/useStudentReport'
 import CrossSubjectOverview from './CrossSubjectOverview.vue'
 import DimensionRadar from './DimensionRadar.vue'
 import SubjectDetailCard from './SubjectDetailCard.vue'
+import SubjectItemDialog from './SubjectItemDialog.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -213,6 +292,24 @@ const drawerSize = computed(() => {
   if (isMobile.value) return '100%'
   return isDrawerExpanded.value ? '96vw' : 'min(94vw, 1140px)'
 })
+
+// 單題診斷彈窗狀態
+const isQuestionDialogVisible = ref(false)
+const selectedQuestionItem = ref(null)
+
+function handleSelectQuestion(item) {
+  selectedQuestionItem.value = {
+    q: item.q,
+    rate: item.passPct || 65,
+    countyRate: item.passPct || 65,
+    content: item.content || item.dim || `${item.subjectName || '學科'} 向度評量`,
+    answer: item.correctAnswer || 1,
+    optionRates: [54, 28, 11, 7],
+    topWrongOption: item.studentChoice || 2,
+    topWrongShare: '28%'
+  }
+  isQuestionDialogVisible.value = true
+}
 
 // 組裝成績單資料 (純函數響應式計算)
 const report = computed(() => {

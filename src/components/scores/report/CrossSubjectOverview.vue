@@ -49,11 +49,25 @@
           <div class="col-start-2 sm:col-start-auto flex sm:block items-center justify-end gap-2 text-right">
             <span class="font-mono font-black text-base text-slate-900">{{ s.rate }}%</span>
             <span class="sm:hidden text-[11px] text-slate-500">
-              縣 PR <strong class="font-mono text-slate-700">{{ s.pr.county }}</strong> · 全 PR <strong class="font-mono text-slate-700">{{ s.pr.national }}</strong>
+              縣 PR <strong class="font-mono text-blue-700">{{ s.pr.county }}</strong> · 全 PR <strong class="font-mono text-purple-700">{{ s.pr.national }}</strong>
             </span>
           </div>
-          <div class="hidden sm:block text-right font-mono font-bold text-slate-700">{{ s.pr.county }}</div>
-          <div class="hidden sm:block text-right font-mono font-medium text-slate-500">{{ s.pr.national }}</div>
+          <div class="hidden sm:block text-right font-mono font-bold text-blue-700">
+            <div class="flex items-center justify-end gap-1">
+              <span>{{ s.pr.county }}</span>
+              <div class="w-8 h-1.5 bg-blue-100 rounded-full overflow-hidden inline-block">
+                <div class="h-full bg-blue-600 rounded-full" :style="{ width: `${s.pr.county}%` }"></div>
+              </div>
+            </div>
+          </div>
+          <div class="hidden sm:block text-right font-mono font-bold text-purple-700">
+            <div class="flex items-center justify-end gap-1">
+              <span>{{ s.pr.national }}</span>
+              <div class="w-8 h-1.5 bg-purple-100 rounded-full overflow-hidden inline-block">
+                <div class="h-full bg-purple-600 rounded-full" :style="{ width: `${s.pr.national}%` }"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

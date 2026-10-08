@@ -23,6 +23,15 @@
           跨科總覽
         </button>
         <button
+          v-if="cognitiveProfile"
+          type="button"
+          @click="selectView('cognitive')"
+          class="px-2.5 py-1 rounded-md transition cursor-pointer flex items-center gap-1"
+          :class="selectedView === 'cognitive' ? 'bg-[#52796f] text-white shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'"
+        >
+          <span>🧠 認知向度</span>
+        </button>
+        <button
           v-for="s in subjects"
           :key="'btn-' + s.key"
           type="button"
@@ -124,8 +133,34 @@
         </span>
       </div>
       <p class="text-[10px] text-slate-400 text-center m-0">
-        💡 點擊切換視角，可下鑽檢視單科專屬向度雷達（絕不壅擠）
+        💡 點擊切換視角，可下鑽檢視單科專屬向度雷達或跨科認知階梯
       </p>
+    </div>
+
+    <!-- 認知穿透專屬：學習遷移診斷警示卡與各科學科認知分流表 -->
+    <div v-if="selectedView === 'cognitive' && cognitiveProfile" class="mt-2 p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl space-y-2 text-xs">
+      <div class="flex items-start gap-2">
+        <span class="text-base leading-none">💡</span>
+        <div class="space-y-1">
+          <strong class="font-bold text-amber-950 block">教育學深度診斷：跨科思維遷移與審題歷程</strong>
+          <p class="text-[11px] text-amber-900/90 m-0 leading-relaxed">
+            {{ cognitiveProfile.transferInsight }}
+          </p>
+        </div>
+      </div>
+
+      <!-- 3 科認知向度對照微型卡片 -->
+      <div class="pt-2 border-t border-amber-200/60 grid grid-cols-3 gap-2 text-center text-[10px]">
+        <div v-for="sub in subjects" :key="'cog-sub-' + sub.key" class="p-1.5 bg-white/90 rounded-lg border border-amber-100">
+          <span class="font-bold text-slate-700 block mb-1">{{ sub.name }}</span>
+          <div v-if="cognitiveProfile.bySubject[sub.key]" class="space-y-0.5">
+            <div v-for="lvl in cognitiveProfile.bySubject[sub.key]" :key="lvl.levelName" class="flex justify-between items-center text-[9px] text-slate-500">
+              <span class="truncate">{{ lvl.levelName.slice(0, 2) }}:</span>
+              <span class="font-mono font-bold" :class="lvl.rate < 60 ? 'text-rose-600' : 'text-slate-700'">{{ lvl.rate }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -136,7 +171,8 @@ import { ref, computed, watch } from 'vue'
 const props = defineProps({
   subjects: { type: Array, required: true },
   hoveredKey: { type: String, default: null },
-  focusSubject: { type: String, default: null }
+  focusSubject: { type: String, default: null },
+  cognitiveProfile: { type: Object, default: null }
 })
 
 const emit = defineEmits(['hover', 'update:focusSubject'])
@@ -149,7 +185,7 @@ watch(() => props.focusSubject, (newVal) => {
 
 function selectView(val) {
   selectedView.value = val
-  emit('update:focusSubject', val === 'all' ? null : val)
+  emit('update:focusSubject', val === 'all' || val === 'cognitive' ? null : val)
 }
 
 const SIZE = 400
@@ -167,11 +203,15 @@ const activeSubject = computed(() =>
 )
 
 const radarTitle = computed(() => {
+  if (selectedView.value === 'cognitive') return '跨科認知向度穿透 · 三層思維階梯'
   if (activeSubject.value) return `${activeSubject.value.name} 向度深入雷達`
   return '跨領域能力總覽網'
 })
 
 const radarSubtitle = computed(() => {
+  if (selectedView.value === 'cognitive') {
+    return '突破學科邊界 · 貫通知識程序、概念理解與應用分析'
+  }
   if (activeSubject.value) {
     return `${activeSubject.value.dims.length} 軸專屬向度 · 空間充裕清晰`
   }
@@ -179,12 +219,25 @@ const radarSubtitle = computed(() => {
 })
 
 const currentThemeColor = computed(() => {
+  if (selectedView.value === 'cognitive') return '#52796f'
   if (activeSubject.value) return activeSubject.value.chipColor
   return '#52796f'
 })
 
 // 計算當前顯示的軸向清單
 const rawAxes = computed(() => {
+  // 0. 跨科認知階梯視角
+  if (selectedView.value === 'cognitive' && props.cognitiveProfile?.composite) {
+    return props.cognitiveProfile.composite.map((c, idx) => ({
+      key: `cog-${idx}`,
+      label: `${c.levelName} (${c.rate}%)`,
+      fullName: c.levelName,
+      rate: c.rate,
+      bench: c.benchmarks,
+      color: idx === 0 ? '#3f7d6e' : idx === 1 ? '#2563eb' : '#b5575f'
+    }))
+  }
+
   // 1. 單科深潛視角 (國語 10 軸、數學 4 軸、英語 4 軸)
   if (activeSubject.value) {
     const s = activeSubject.value

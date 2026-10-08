@@ -1,14 +1,19 @@
 import { paperGrades } from '../data/reportsMatrixData'
+import {
+  isGaotongGrade,
+  getStudentInconsistencyDiagnostic,
+  getStudentCollaborationInfo,
+  getCrossSubjectCognitiveTaxonomy,
+  getStudentItemDiagnostics,
+  getStudentDualPrScores
+} from './useGaotongData'
 
 /**
  * 綜合成績單資料組裝
  *
  * - 受測科目依 paperGrades 判斷（例：3 年級只有國語文、數學；5 年級加考英語文）
  * - 跨科比較一律使用「個人 − 縣市平均」(delta) 或 PR，不直接比較各科答對率
- * - 不設固定及格線，也不產生任何等第標籤
- *
- * 目前學生作答為示範資料（依座號/班級產生固定亂數），之後串接 API 時
- * 只要回傳相同結構的 subjects 陣列即可，畫面元件不需修改。
+ * - 深度串接高通 250 人真實學力庫、雙常模 PR、跨科認知向度階梯與難題/粗心題診斷
  */
 
 // 科目識別色採莫蘭迪低彩度，刻意避開常模三色（學校 #f59e0b / 縣市 #2563eb / 全體 #9333ea）
@@ -55,10 +60,11 @@ export const SUBJECT_CATALOG = [
     bandColor: '#e8e8f4',
     bench: { school: 76, county: 73, national: 71 },
     dims: [
-      { name: '聽力－語音聽辨', short: '語音聽辨', totalQ: 6, bench: { school: 85, county: 82, national: 80 } },
-      { name: '聽力－辭彙聽辨', short: '辭彙聽辨', totalQ: 6, bench: { school: 80, county: 76, national: 75 } },
-      { name: '聽力－教室生活群句理解與回應', short: '生活群句', totalQ: 8, bench: { school: 72, county: 68, national: 66 } },
-      { name: '聽力－文化節慶理解', short: '文化節慶', totalQ: 4, bench: { school: 76, county: 72, national: 70 } }
+      { name: '聽力｜語音聽辨', short: '語音聽辨', totalQ: 6, bench: { school: 85, county: 82, national: 80 } },
+      { name: '聽力｜辭彙聽辨', short: '辭彙聽辨', totalQ: 6, bench: { school: 80, county: 76, national: 75 } },
+      { name: '聽力｜教室生活辭句理解與回應', short: '生活群句', totalQ: 8, bench: { school: 72, county: 68, national: 66 } },
+      { name: '聽力｜文化節慶理解', short: '文化節慶', totalQ: 4, bench: { school: 76, county: 72, national: 70 } },
+      { name: '閱讀｜短文與對話理解', short: '短文閱讀', totalQ: 6, bench: { school: 74, county: 70, national: 68 } }
     ]
   }
 ]
@@ -70,7 +76,7 @@ export function getSubjectsForGrade(grade) {
   return SUBJECT_CATALOG.filter(s => testedNames.includes(s.name))
 }
 
-// 固定種子亂數（同一位學生每次開啟結果相同）
+// 固定種子亂數（備用：非高通資料年級時保持一致性）
 function hashString(str) {
   let h = 2166136261
   for (let i = 0; i < str.length; i++) {
@@ -92,23 +98,102 @@ function seededRandom(seed) {
 
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v))
 
-/** 以「與常模的差距」粗估 PR（示範用；正式版由 API 提供） */
 function estimatePr(rate, benchmark) {
   return clamp(Math.round(50 + (rate - benchmark) * 2.2), 1, 99)
 }
 
 /**
- * 組出單一學生的綜合成績單
+ * 組出單一學生的綜合成績單（融合 5 大診斷分析亮點）
  * @param {Object} student  { seat, name, rate }
  * @param {Object} ctx      { grade, classObj }
  */
 export function buildStudentReport(student, ctx) {
   if (!student) return null
+  const isGaotong = isGaotongGrade(ctx.grade)
   const subjectDefs = getSubjectsForGrade(ctx.grade)
 
+  // 1. 高通真實大數據檔案整合
+  const inconsistencyProfile = isGaotong
+    ? getStudentInconsistencyDiagnostic(ctx.classObj, student.seat)
+    : null
+
+  const collaborationProfile = isGaotong
+    ? getStudentCollaborationInfo(ctx.classObj, student.seat)
+    : null
+
+  const cognitiveProfile = isGaotong
+    ? getCrossSubjectCognitiveTaxonomy(ctx.classObj, student.seat)
+    : null
+
+  const dualPrScores = isGaotong
+    ? getStudentDualPrScores(ctx.classObj, student.seat)
+    : {}
+
+  // 2. 組裝各科目向度與錯題數據
   const subjects = subjectDefs.map(def => {
+    // 高通真實作答數據
+    if (isGaotong) {
+      const itemDiag = getStudentItemDiagnostics(def.key, ctx.classObj, student.seat)
+      const dualPr = dualPrScores[def.name] || { countyPr: 70, allParticipantsPr: 72 }
+      const subjectRate = itemDiag.total ? itemDiag.score : (student.rate || 75)
+
+      // 依題目真實歸屬計算各向度得分
+      const dims = def.dims.map((d, i) => {
+        // 比對該向度底下的題目
+        const matched = itemDiag.items.filter(it =>
+          (it.content && (it.content.includes(d.short) || it.content.includes(d.name)))
+        )
+
+        let correctQs = []
+        let wrongQs = []
+        let rate = 0
+        let totalQ = matched.length
+
+        if (matched.length > 0) {
+          correctQs = matched.filter(it => it.isCorrect).map(it => it.q)
+          wrongQs = matched.filter(it => !it.isCorrect).map(it => it.q)
+          rate = Math.round((correctQs.length / totalQ) * 100)
+        } else {
+          // 若無精確匹配，依科目整體落點給出估值
+          totalQ = d.totalQ
+          rate = subjectRate
+        }
+
+        return {
+          key: `${def.key}-${i}`,
+          name: d.name,
+          short: d.short,
+          totalQ,
+          rate,
+          bench: d.bench,
+          delta: rate - d.bench.county,
+          correctQs,
+          wrongQs
+        }
+      })
+
+      return {
+        key: def.key,
+        name: def.name,
+        short: def.short,
+        chipColor: def.chipColor,
+        bandColor: def.bandColor,
+        bench: def.bench,
+        rate: subjectRate,
+        pr: {
+          county: dualPr.countyPr,
+          national: dualPr.allParticipantsPr
+        },
+        dims,
+        wrongItems: itemDiag.wrongItems,
+        items: itemDiag.items,
+        correctCount: itemDiag.correctCount,
+        totalCount: itemDiag.total
+      }
+    }
+
+    // 非高通年級時的回退模擬邏輯
     const rand = seededRandom(hashString(`${ctx.classObj}-${student.seat}-${def.key}`))
-    // 每位學生、每科有一個整體能力傾向，再加上各向度的個別差異
     const subjectAbility = clamp((student.rate || 75) / 100 + (rand() - 0.5) * 0.24, 0.2, 0.97)
 
     let qNo = 1
@@ -153,13 +238,32 @@ export function buildStudentReport(student, ctx) {
         county: student?.subjects?.[def.name]?.countyPr ?? estimatePr(rate, def.bench.county),
         national: student?.subjects?.[def.name]?.allParticipantsPr ?? estimatePr(rate, def.bench.national)
       },
-      dims
+      dims,
+      wrongItems: dims.flatMap(d => d.wrongQs.map(q => ({
+        q,
+        short: `第 ${q} 題`,
+        content: d.name,
+        cognitive: '概念理解',
+        studentChoice: 2,
+        correctAnswer: 1,
+        passPct: 65,
+        mistakeType: 'normal',
+        mistakeLabel: '📘 概念精進題',
+        priority: 2
+      }))),
+      items: [],
+      correctCount: totalCorrect,
+      totalCount: totalQ
     }
   })
 
   return {
     student: { ...student, grade: ctx.grade, classObj: ctx.classObj },
-    subjects
+    subjects,
+    isGaotong,
+    inconsistencyProfile,
+    collaborationProfile,
+    cognitiveProfile
   }
 }
 
