@@ -598,20 +598,7 @@
               </div>
             </div>
 
-            <!-- 底部備課診斷提示 -->
-            <div class="p-3 bg-slate-50/80 rounded-xl border border-slate-200/70 text-xs text-slate-500 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-2">
-              <div class="flex items-center gap-2">
-                <span class="text-base">💡</span>
-                <span>
-                  <strong>教學備課指引：</strong>長條顏色即時反映是否達到校平均；切換「弱勢向度置頂」可立即鎖定本班待補救教學重點，並可參照下方學生名冊進行分組輔導。
-                </span>
-              </div>
-              <div class="flex items-center gap-3 text-[11px] font-medium shrink-0">
-                <span class="flex items-center gap-1"><span class="w-2.5 h-0.5 bg-[#f59e0b]"></span>校平均</span>
-                <span class="flex items-center gap-1"><span class="w-2.5 h-0.5 bg-[#2563eb]"></span>縣市平均</span>
-                <span class="flex items-center gap-1"><span class="w-2.5 h-0.5 border-t border-dashed border-[#9333ea]"></span>總參與</span>
-              </div>
-            </div>
+
           </div>
 
         </div>
