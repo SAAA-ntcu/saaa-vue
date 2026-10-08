@@ -406,11 +406,9 @@
                     <!-- Grade A: 45° -> 0° (Mint Green) -->
                     <path d="M 281.93,88.07 A 130,130 0 0,1 320,180" fill="none" stroke="#4ade80" stroke-width="7" stroke-linecap="round" />
 
-                    <!-- 外側等級文字標籤 (微調位置避免與外環標針遮擋) -->
-                    <text x="65" y="78" text-anchor="middle" class="text-xs font-bold fill-slate-400 font-sans">Grade D</text>
-                    <text x="135" y="38" text-anchor="middle" class="text-xs font-bold fill-slate-400 font-sans">Grade C</text>
-                    <text x="245" y="38" text-anchor="middle" class="text-xs font-bold fill-slate-400 font-sans">Grade B</text>
-                    <text x="325" y="92" text-anchor="middle" class="text-xs font-bold fill-slate-400 font-sans">Grade A</text>
+                    <!-- 刻度起訖端點標籤 (0% 與 100%) -->
+                    <text x="46" y="184" text-anchor="middle" class="text-[11px] font-mono font-bold fill-slate-400">0%</text>
+                    <text x="334" y="184" text-anchor="middle" class="text-[11px] font-mono font-bold fill-slate-400">100%</text>
 
                     <!-- 基礎放射狀刻度線 (Ticks) -->
                     <line
@@ -494,23 +492,23 @@
                     <text x="190" y="142" text-anchor="middle" class="font-mono text-4xl sm:text-5xl font-black fill-[#0284c7]">
                       {{ overallStat.classVal }}
                     </text>
-                    <!-- 中央副標題 (Grade Rating) -->
+                    <!-- 中央副標題 (全科總答對率) -->
                     <text x="190" y="168" text-anchor="middle" class="text-xs font-bold fill-slate-400">
-                      Grade Rating
+                      全科總答對率
                     </text>
                   </svg>
                 </div>
 
                 <!-- 儀表盤下方等級說明膠囊 -->
                 <div class="mt-2 flex items-center gap-2">
-                  <span class="text-xs font-bold text-slate-500">本班評量評等：</span>
+                  <span class="text-xs font-bold text-slate-500">本班表現水準：</span>
                   <span
-                    class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold"
-                    :class="gaugeGrade.grade === 'Grade A' ? 'bg-emerald-100 text-emerald-800' :
-                            gaugeGrade.grade === 'Grade B' ? 'bg-sky-100 text-sky-800' :
-                            gaugeGrade.grade === 'Grade C' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'"
+                    class="px-2.5 py-0.5 rounded-full text-xs font-bold"
+                    :class="gaugeGrade.label === '精熟' ? 'bg-emerald-100 text-emerald-800' :
+                            gaugeGrade.label === '熟練' ? 'bg-sky-100 text-sky-800' :
+                            gaugeGrade.label === '基礎' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'"
                   >
-                    {{ gaugeGrade.grade }} · {{ gaugeGrade.label }}
+                    {{ gaugeGrade.label }}
                   </span>
                 </div>
               </div>
@@ -1301,15 +1299,15 @@ const gaugeBenchmarks = computed(() => {
   })
 })
 
-// 總體儀表盤計算 (對應 Grade D, C, B, A 四分位與附圖儀表盤)
+// 總體儀表盤計算 (對應 4 表現水準)
 const gaugeScore = computed(() => Number(overallStat.value?.classVal) || 70)
 
 const gaugeGrade = computed(() => {
   const score = gaugeScore.value
-  if (score >= 75) return { grade: 'Grade A', label: '精熟', color: '#4ade80' }
-  if (score >= 50) return { grade: 'Grade B', label: '熟練', color: '#38bdf8' }
-  if (score >= 25) return { grade: 'Grade C', label: '基礎', color: '#fbbf24' }
-  return { grade: 'Grade D', label: '待加強', color: '#f43f5e' }
+  if (score >= 75) return { label: '精熟', color: '#4ade80' }
+  if (score >= 50) return { label: '熟練', color: '#38bdf8' }
+  if (score >= 25) return { label: '基礎', color: '#fbbf24' }
+  return { label: '待加強', color: '#f43f5e' }
 })
 
 // 儀表盤箭頭指針角度與頂點計算 (cx=190, cy=180)
