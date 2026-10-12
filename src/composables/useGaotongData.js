@@ -68,14 +68,19 @@ export function isGaotongGrade(grade) {
   return String(grade) === '5'
 }
 
-/** 取得單班完整學生名冊（融合 class360 與 individualScores 雙重 PR） */
-export function getGaotongClassStudents(classId) {
+/** 取得單班完整學生名冊（支援指定學科動態呈現該科答對率與雙重 PR） */
+export function getGaotongClassStudents(classId, subjectName = null) {
   const cData = class360Data.classes?.[classId]
   if (!cData) return []
 
   const matrix = cData.zone1_matrix || []
   const scoresBySeat = individualScoresData.classes?.[classId] || {}
   const drawers = cData.zone5_drawers || {}
+
+  let targetSubName = subjectName
+  if (targetSubName === 'chinese') targetSubName = '國語文'
+  else if (targetSubName === 'math') targetSubName = '數學'
+  else if (targetSubName === 'english') targetSubName = '英語文'
 
   return matrix.map((row) => {
     const seat = String(row.seat).padStart(2, '0')
@@ -110,17 +115,31 @@ export function getGaotongClassStudents(classId) {
     const chiPr = subjectsMap['國語文']?.countyPr || 70
     const matPr = subjectsMap['數學']?.countyPr || 70
     const engPr = subjectsMap['英語文']?.countyPr || 70
-    const prCounty = Math.round((chiPr + matPr + engPr) / 3)
-    const prNation = Math.min(99, Math.round(prCounty + 2))
+    const overallPrCounty = Math.round((chiPr + matPr + engPr) / 3)
+    const overallPrNation = Math.min(99, Math.round(overallPrCounty + 2))
+
+    // 若有指定科目（例如 '數學'），動態呈現該科目之真實成績與 PR
+    let displayRate = avgRate
+    let displayPrCounty = overallPrCounty
+    let displayPrNation = overallPrNation
+
+    if (targetSubName && subjectsMap[targetSubName]) {
+      const sInfo = subjectsMap[targetSubName]
+      if (sInfo.status === 'VALID' && Number.isFinite(sInfo.studentAccuracy)) {
+        displayRate = sInfo.studentAccuracy
+      }
+      displayPrCounty = sInfo.countyPr ?? overallPrCounty
+      displayPrNation = sInfo.allParticipantsPr ?? overallPrNation
+    }
 
     return {
       studentUid: row.studentUid,
       seat,
       classId,
       name: getStudentName(classId, seat),
-      rate: avgRate,
-      prCounty,
-      prNation,
+      rate: displayRate,
+      prCounty: displayPrCounty,
+      prNation: displayPrNation,
       subjects: subjectsMap,
       supportBreadth: row.supportBreadth || { breadth: 0 },
       crossSubjectInconsistency: row.crossSubjectInconsistency || { isInconsistent: false },
@@ -237,6 +256,159 @@ function hexToRgba(hex, alpha) {
   const val = hex.replace('#', '')
   const num = parseInt(val, 16)
   return `rgba(${num >> 16}, ${(num >> 8) & 255}, ${num & 255}, ${alpha})`
+}
+
+/** 取得指定學科在全校各班與常模之統計（支援整體或特定向度，用於校級比較圖） */
+export function getGaotongSubjectClassStats(subjectKey, dimension = '整體') {
+  let sKey = subjectKey
+  if (sKey === '國語文') sKey = 'chinese'
+  else if (sKey === '數學') sKey = 'math'
+  else if (sKey === '英語文') sKey = 'english'
+  if (!sKey || !subject360Data.subjects[sKey]) sKey = 'math'
+
+  const sub = subject360Data.subjects[sKey]
+  const classIds = sub.classIds || GAOTONG_CLASS_IDS
+  const items = sub.items || []
+  const schoolStats = sub.itemStats?.school || []
+  const cityItems = sub.official?.cityItem || []
+
+  const targetIndices = []
+  items.forEach((item, idx) => {
+    if (dimension === '整體' || item.content === dimension) {
+      targetIndices.push(idx)
+    }
+  })
+
+  // 各班平均答對率
+  const classes = classIds.map((cId) => {
+    let correct = 0
+    let valid = 0
+    const cStats = sub.itemStats?.classes?.[cId]
+    targetIndices.forEach((idx) => {
+      if (cStats && cStats[idx]) {
+        correct += cStats[idx].correct
+        valid += cStats[idx].valid
+      }
+    })
+    const rate = valid ? Math.round((correct / valid) * 1000) / 10 : 70
+    return { name: cId, rate }
+  })
+
+  // 全校與縣市基準
+  let sCorrect = 0
+  let sValid = 0
+  const cRates = []
+  targetIndices.forEach((idx) => {
+    if (schoolStats[idx]) {
+      sCorrect += schoolStats[idx].correct
+      sValid += schoolStats[idx].valid
+    }
+    if (cityItems[idx] && cityItems[idx].rate != null) {
+      cRates.push(cityItems[idx].rate)
+    }
+  })
+
+  const subMeta = GAOTONG_SUBJECTS.find((s) => s.id === sKey) || GAOTONG_SUBJECTS[0]
+  const schoolAvg = sValid ? Math.round((sCorrect / sValid) * 1000) / 10 : subMeta.schoolAvg
+  const countyAvg = cRates.length
+    ? Math.round((cRates.reduce((a, b) => a + b, 0) / cRates.length) * 1000) / 10
+    : subMeta.countyAvg
+  const nationalAvg = Math.max(10, Math.min(99, Math.round((countyAvg - 2) * 10) / 10))
+
+  return { classes, schoolAvg, countyAvg, nationalAvg }
+}
+
+/** 取得指定學科的向度名稱清單（含 '整體'） */
+export function getGaotongSubjectDimensionList(subjectKey) {
+  let sKey = subjectKey
+  if (sKey === '國語文') sKey = 'chinese'
+  else if (sKey === '數學') sKey = 'math'
+  else if (sKey === '英語文') sKey = 'english'
+  if (!sKey || !subject360Data.subjects[sKey]) sKey = 'math'
+
+  const sub = subject360Data.subjects[sKey]
+  const items = sub?.items || []
+  const uniqueDims = Array.from(new Set(items.map((i) => i.content).filter(Boolean)))
+  return ['整體', ...uniqueDims]
+}
+
+/** 取得指定學科在指定班級的各向度得分及全校/縣市/全體基準 */
+export function getGaotongSubjectDimensions(subjectKey, classId = '501') {
+  let sKey = subjectKey
+  if (sKey === '國語文') sKey = 'chinese'
+  else if (sKey === '數學') sKey = 'math'
+  else if (sKey === '英語文') sKey = 'english'
+  if (!sKey || !subject360Data.subjects[sKey]) sKey = 'math'
+
+  const sub = subject360Data.subjects[sKey]
+  const items = sub?.items || []
+  const cStats = sub?.itemStats?.classes?.[classId]
+  const schoolStats = sub?.itemStats?.school || []
+  const cityItems = sub?.official?.cityItem || []
+
+  const dimMap = {}
+  let totalC_correct = 0
+  let totalC_valid = 0
+  let totalS_correct = 0
+  let totalS_valid = 0
+  const totalCityRates = []
+
+  items.forEach((item, idx) => {
+    const dim = item.content
+    if (!dimMap[dim]) {
+      dimMap[dim] = {
+        name: dim,
+        cCorrect: 0,
+        cValid: 0,
+        sCorrect: 0,
+        sValid: 0,
+        cityRates: []
+      }
+    }
+    if (cStats && cStats[idx]) {
+      dimMap[dim].cCorrect += cStats[idx].correct
+      dimMap[dim].cValid += cStats[idx].valid
+      totalC_correct += cStats[idx].correct
+      totalC_valid += cStats[idx].valid
+    }
+    if (schoolStats[idx]) {
+      dimMap[dim].sCorrect += schoolStats[idx].correct
+      dimMap[dim].sValid += schoolStats[idx].valid
+      totalS_correct += schoolStats[idx].correct
+      totalS_valid += schoolStats[idx].valid
+    }
+    if (cityItems[idx] && cityItems[idx].rate != null) {
+      dimMap[dim].cityRates.push(cityItems[idx].rate)
+      totalCityRates.push(cityItems[idx].rate)
+    }
+  })
+
+  const overallClass = totalC_valid ? Math.round((totalC_correct / totalC_valid) * 100) : 70
+  const overallSchool = totalS_valid ? Math.round((totalS_correct / totalS_valid) * 100) : 70
+  const overallCounty = totalCityRates.length
+    ? Math.round((totalCityRates.reduce((a, b) => a + b, 0) / totalCityRates.length) * 100)
+    : Math.round(overallSchool * 0.96)
+  const overallNational = Math.max(10, Math.min(99, Math.round(overallCounty - 2)))
+
+  const overall = {
+    name: '總答對率',
+    classVal: overallClass,
+    school: overallSchool,
+    county: overallCounty,
+    national: overallNational
+  }
+
+  const list = Object.values(dimMap).map((d) => {
+    const classVal = d.cValid ? Math.round((d.cCorrect / d.cValid) * 100) : 70
+    const school = d.sValid ? Math.round((d.sCorrect / d.sValid) * 100) : 70
+    const county = d.cityRates.length
+      ? Math.round((d.cityRates.reduce((a, b) => a + b, 0) / d.cityRates.length) * 100)
+      : Math.round(school * 0.96)
+    const national = Math.max(10, Math.min(99, Math.round(county - 2)))
+    return { name: d.name, classVal, school, county, national }
+  })
+
+  return [overall, ...list]
 }
 
 /**

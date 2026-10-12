@@ -99,11 +99,9 @@
             v-model="inquiryState.dimension"
             class="h-9 px-2.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 outline-none focus:border-[#52796f] cursor-pointer"
           >
-            <option value="整體">整體答對率</option>
-            <option value="形音知識">形音知識</option>
-            <option value="字詞知識">字詞知識</option>
-            <option value="語法知識">語法知識</option>
-            <option value="篇章理解">篇章理解</option>
+            <option v-for="dim in availableDimensions" :key="dim.value" :value="dim.value">
+              {{ dim.label }}
+            </option>
           </select>
         </div>
       </div>
@@ -312,105 +310,111 @@
           <!-- 圖例 (棒棒糖圓點與參考基準帶) -->
           <div class="flex items-center gap-3 text-xs flex-wrap font-medium">
             <div class="flex items-center gap-1.5">
-              <span class="w-3 h-3 rounded-full bg-[#52796f]"></span>
+              <span class="w-3 h-3 rounded-full" :style="{ backgroundColor: activeSubjectMeta.color }"></span>
               <span class="text-slate-600">各班平均(%)</span>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="w-3.5 h-2 rounded bg-emerald-100 border border-emerald-300"></span>
-              <span class="text-emerald-700 font-bold">校平均 ({{ schoolAvg }}%)</span>
+              <span class="text-emerald-700 font-bold">校平均 ({{ currentSchoolAvg }}%)</span>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="w-3.5 h-2 rounded bg-teal-50 border border-teal-300"></span>
-              <span class="text-teal-700 font-bold">縣市平均 ({{ countyAvg }}%)</span>
+              <span class="text-teal-700 font-bold">縣市平均 ({{ currentCountyAvg }}%)</span>
             </div>
             <div class="flex items-center gap-1.5">
               <span class="w-3.5 h-0.5 border-t-2 border-dashed border-slate-400"></span>
-              <span class="text-slate-500 font-medium">總參與 ({{ nationalAvg }}%)</span>
+              <span class="text-slate-500 font-medium">總參與 ({{ currentNationalAvg }}%)</span>
             </div>
           </div>
         </div>
 
-        <!-- 互動棒棒糖點圖 (Lollipop Chart + 基準帶，聚焦 70% ~ 100%) -->
+        <!-- 互動棒棒糖點圖 (Lollipop Chart + 基準帶，動態適配學科尺度) -->
         <div class="w-full overflow-x-auto scrollbar-none py-2">
           <div class="min-w-[700px] h-64 relative">
             <svg class="w-full h-full overflow-visible" viewBox="0 0 760 250">
               <!-- 背景基準區間帶 (Reference Bands) -->
-              <!-- 1. 校均以上優質表現區間 (≥ 93%) -->
+              <!-- 1. 校均以上優質表現區間 (≥ schoolAvg) -->
               <rect
                 x="50"
                 :y="getRateY(100)"
-                width="675"
-                :height="getRateY(schoolAvg) - getRateY(100)"
+                width="620"
+                :height="Math.max(0, getRateY(currentSchoolAvg) - getRateY(100))"
                 fill="#f0fdf4"
                 rx="6"
               />
-              <!-- 2. 縣市平均 ~ 校平均常模區間 (86% ~ 93%) -->
+              <!-- 2. 縣市平均 ~ 校平均常模區間 -->
               <rect
                 x="50"
-                :y="getRateY(schoolAvg)"
-                width="675"
-                :height="getRateY(countyAvg) - getRateY(schoolAvg)"
+                :y="getRateY(Math.max(currentSchoolAvg, currentCountyAvg))"
+                width="620"
+                :height="Math.max(0, Math.abs(getRateY(currentCountyAvg) - getRateY(currentSchoolAvg)))"
                 fill="#f8fafc"
                 rx="4"
               />
 
-              <!-- Y 軸刻度線 (70% ~ 100%) -->
+              <!-- Y 軸刻度線 (動態尺度) -->
               <g class="text-[10px] fill-slate-400 font-mono" text-anchor="end">
-                <text x="42" :y="getRateY(100) + 4">100%</text>
-                <text x="42" :y="getRateY(90) + 4">90%</text>
-                <text x="42" :y="getRateY(80) + 4">80%</text>
-                <text x="42" :y="getRateY(70) + 4">70%</text>
+                <text v-for="tick in yTicks" :key="'tick-text-' + tick" x="42" :y="getRateY(tick) + 4">
+                  {{ tick }}%
+                </text>
               </g>
 
               <!-- 網格背景線 -->
               <g stroke="#f1f5f9" stroke-width="1">
-                <line x1="50" :y1="getRateY(100)" x2="725" :y2="getRateY(100)" stroke-dasharray="2 4" />
-                <line x1="50" :y1="getRateY(90)" x2="725" :y2="getRateY(90)" stroke-dasharray="2 4" />
-                <line x1="50" :y1="getRateY(80)" x2="725" :y2="getRateY(80)" stroke-dasharray="2 4" />
-                <line x1="50" :y1="getRateY(70)" x2="725" :y2="getRateY(70)" stroke="#cbd5e1" stroke-width="1.5" />
+                <line
+                  v-for="tick in yTicks"
+                  :key="'tick-line-' + tick"
+                  x1="50"
+                  :y1="getRateY(tick)"
+                  x2="670"
+                  :y2="getRateY(tick)"
+                  :stroke="tick === yMinRate ? '#cbd5e1' : '#f1f5f9'"
+                  :stroke-width="tick === yMinRate ? 1.5 : 1"
+                  :stroke-dasharray="tick === yMinRate ? 'none' : '2 4'"
+                />
               </g>
 
               <!-- 水平參考基準線與標籤 -->
               <!-- 校平均線 (Emerald) -->
               <line
                 x1="50"
-                :y1="getRateY(schoolAvg)"
-                x2="670"
-                :y2="getRateY(schoolAvg)"
+                :y1="getRateY(currentSchoolAvg)"
+                x2="665"
+                :y2="getRateY(currentSchoolAvg)"
                 stroke="#10b981"
                 stroke-width="1.5"
                 stroke-dasharray="5 3"
               />
-              <text x="674" :y="getRateY(schoolAvg) + 4" class="text-[10px] font-bold fill-emerald-700">
-                校均 {{ schoolAvg }}%
+              <text x="670" :y="getRateY(currentSchoolAvg) + 4" class="text-[10px] font-bold fill-emerald-700">
+                校均 {{ currentSchoolAvg }}%
               </text>
 
               <!-- 縣市平均線 (Teal) -->
               <line
                 x1="50"
-                :y1="getRateY(countyAvg)"
-                x2="670"
-                :y2="getRateY(countyAvg)"
+                :y1="getRateY(currentCountyAvg)"
+                x2="665"
+                :y2="getRateY(currentCountyAvg)"
                 stroke="#0d9488"
                 stroke-width="1.5"
                 stroke-dasharray="5 3"
               />
-              <text x="674" :y="getRateY(countyAvg) + 4" class="text-[10px] font-bold fill-teal-700">
-                縣均 {{ countyAvg }}%
+              <text x="670" :y="getRateY(currentCountyAvg) + 4" class="text-[10px] font-bold fill-teal-700">
+                縣均 {{ currentCountyAvg }}%
               </text>
 
               <!-- 總參與平均線 (Slate) -->
               <line
                 x1="50"
-                :y1="getRateY(nationalAvg)"
-                x2="670"
-                :y2="getRateY(nationalAvg)"
+                :y1="getRateY(currentNationalAvg)"
+                x2="665"
+                :y2="getRateY(currentNationalAvg)"
                 stroke="#94a3b8"
                 stroke-width="1.2"
                 stroke-dasharray="3 3"
               />
-              <text x="674" :y="getRateY(nationalAvg) + 4" class="text-[10px] font-medium fill-slate-500">
-                總均 {{ nationalAvg }}%
+              <text x="670" :y="getRateY(currentNationalAvg) + 4" class="text-[10px] font-medium fill-slate-500">
+                總均 {{ currentNationalAvg }}%
               </text>
 
               <!-- 各班棒棒糖 (軸線 Stem + 頂端圓點 Head) -->
@@ -422,9 +426,9 @@
               >
                 <!-- 桿身 (Stem) -->
                 <line
-                  :x1="85 + idx * 72"
-                  :y1="getRateY(70)"
-                  :x2="85 + idx * 72"
+                  :x1="stemX(idx)"
+                  :y1="getRateY(yMinRate)"
+                  :x2="stemX(idx)"
                   :y2="getRateY(cls.rate)"
                   class="stroke-slate-300"
                   stroke-width="2.5"
@@ -433,18 +437,18 @@
 
                 <!-- 圓點本體 (Circle Head) -->
                 <circle
-                  :cx="85 + idx * 72"
+                  :cx="stemX(idx)"
                   :cy="getRateY(cls.rate)"
                   r="14"
                   class="shadow-sm"
-                  :class="inquiryState.classObj === cls.name
-                    ? 'fill-[#274c77] stroke-white stroke-2'
-                    : 'fill-[#52796f] stroke-white stroke-2'"
+                  :fill="inquiryState.classObj === cls.name ? '#1e293b' : activeSubjectMeta.color"
+                  stroke="#ffffff"
+                  stroke-width="2"
                 />
 
                 <!-- 圓心百分比數字 -->
                 <text
-                  :x="85 + idx * 72"
+                  :x="stemX(idx)"
                   :y="getRateY(cls.rate) + 4"
                   text-anchor="middle"
                   class="text-[11px] font-bold font-mono fill-white pointer-events-none select-none"
@@ -454,12 +458,12 @@
 
                 <!-- X 軸班級標籤 -->
                 <text
-                  :x="85 + idx * 72"
+                  :x="stemX(idx)"
                   y="235"
                   text-anchor="middle"
                   class="text-xs font-bold select-none"
                   :class="inquiryState.classObj === cls.name
-                    ? 'fill-[#274c77] font-black'
+                    ? 'fill-[#1e293b] font-black'
                     : 'fill-slate-600'"
                 >
                   {{ cls.name }}班
@@ -472,10 +476,10 @@
         <!-- 友善專業診斷引導提示 (不標籤化落後班級，避免爭議) -->
         <div class="mt-3 p-3 bg-slate-50 border border-slate-200/90 rounded-xl flex items-center justify-between text-xs text-slate-700 flex-wrap gap-2">
           <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-[#52796f] shrink-0"></span>
+            <span class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: activeSubjectMeta.color }"></span>
             <span>
               <strong>向度診斷指引：</strong>
-              背景綠色區間為校均標（{{ schoolAvg }}%）以上，淺色區間為縣市平均（{{ countyAvg }}%）。點選任一班級圓點即可進入該班查看學生名冊與「形音、字詞、語法、篇章」各向度分析。
+              背景綠色區間為校均標（{{ currentSchoolAvg }}%）以上，淺色區間為縣市平均（{{ currentCountyAvg }}%）。點選任一班級圓點即可進入該班查看學生名冊與「{{ inquiryState.subject }}」各向度分析。
             </span>
           </div>
           <span class="text-[11px] font-semibold text-[#52796f] flex items-center gap-1">
@@ -511,7 +515,7 @@
             <h3 class="text-base font-bold text-slate-800 m-0">
               班級成績統計 · {{ state.school }}
               <span class="text-[#52796f] font-black">{{ inquiryState.classObj }} 班</span>
-              答對率向度分析
+              {{ inquiryState.subject }}答對率向度分析
             </h3>
           </div>
 
@@ -547,7 +551,7 @@
         <!-- 主體內容：頂部總體儀表盤 + 下方向度全覽水平基準長條對齊圖 -->
         <div class="space-y-6 pt-1">
 
-          <!-- 1. 頂部核心橫幅：【全科總答對率 · 儀表盤診斷艙 (依附圖實作)】 -->
+          <!-- 1. 頂部核心橫幅：【學科答對率 · 儀表盤診斷艙 (依附圖實作)】 -->
           <div class="bg-gradient-to-r from-slate-50 via-white to-slate-50/80 border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
               
@@ -556,11 +560,11 @@
                 <div class="w-full max-w-[270px] aspect-square relative flex items-center justify-center">
                   <svg viewBox="0 0 320 320" class="w-full h-full overflow-visible select-none">
                     <defs>
-                      <!-- 藍紫漸層 (100% 依附圖深藍至藍紫漸變) -->
+                      <!-- 漸層動態配色 (隨選定學科色彩動態渲染) -->
                       <linearGradient id="ringGradient" x1="100%" y1="20%" x2="10%" y2="90%">
-                        <stop offset="0%" stop-color="#c7d2fe" stop-opacity="0.85" />
-                        <stop offset="50%" stop-color="#6366f1" />
-                        <stop offset="100%" stop-color="#1d4ed8" />
+                        <stop offset="0%" :stop-color="activeSubjectMeta.color" stop-opacity="0.3" />
+                        <stop offset="50%" :stop-color="activeSubjectMeta.color" stop-opacity="0.8" />
+                        <stop offset="100%" :stop-color="activeSubjectMeta.color" />
                       </linearGradient>
 
                       <!-- 浮島中央白圓陰影 -->
@@ -640,7 +644,8 @@
                       x="160"
                       y="162"
                       text-anchor="middle"
-                      class="font-mono text-4xl sm:text-5xl font-black fill-[#1d4ed8] select-none"
+                      class="font-mono text-4xl sm:text-5xl font-black select-none"
+                      :fill="activeSubjectMeta.color"
                     >
                       {{ overallStat.classVal }}%
                     </text>
@@ -650,29 +655,29 @@
                       text-anchor="middle"
                       class="text-xs font-bold fill-slate-400 tracking-wider select-none"
                     >
-                      全科總答對率
+                      {{ inquiryState.subject }}總答對率
                     </text>
                   </svg>
                 </div>
               </div>
 
-              <!-- 右側：全科綜合說明與 3 大對照基準卡 (7 Cols，無任何冗餘重複) -->
+              <!-- 右側：綜合說明與 3 大對照基準卡 (7 Cols) -->
               <div class="lg:col-span-7 space-y-4 flex flex-col justify-center">
                 <div>
                   <div class="flex items-center gap-2 flex-wrap">
-                    <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-[#52796f] text-white">
-                      🌟 全科總答對率 · 儀表診斷
+                    <span class="px-2.5 py-1 rounded-full text-xs font-bold text-white" :style="{ backgroundColor: activeSubjectMeta.color }">
+                      🌟 {{ inquiryState.subject }}總答對率 · 儀表診斷
                     </span>
                     <h4 class="text-sm font-bold text-slate-800 m-0">
-                      {{ state.school }} {{ inquiryState.classObj }} 班 綜合指標
+                      {{ state.school }} {{ inquiryState.classObj }} 班 {{ inquiryState.subject }}指標
                     </h4>
                   </div>
                   <p class="text-xs text-slate-400 m-0 mt-1.5">
-                    依據標準常模儀表盤直觀呈現本班全科總答對率落點，並提供學校、縣市與全國平均對照。
+                    依據標準常模儀表盤直觀呈現本班{{ inquiryState.subject }}答對率落點，並提供學校、縣市與全國平均對照。
                   </p>
                 </div>
 
-                <!-- 3 欄獨立基準常模艙 (學校、縣市、全體對照，移除非必要的本班重複卡片) -->
+                <!-- 3 欄獨立基準常模艙 (學校、縣市、全體對照) -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1">
                   <!-- 1. 學校平均 (琥珀橘) -->
                   <div
@@ -686,7 +691,7 @@
                       學校平均
                     </span>
                     <span class="mt-1.5 font-mono text-2xl font-black text-amber-950">
-                      {{ overallStat.school }}.0%
+                      {{ overallStat.school }}%
                     </span>
                     <span class="text-[10px] font-medium text-amber-700 mt-1">校內平均</span>
                   </div>
@@ -703,7 +708,7 @@
                       縣市平均
                     </span>
                     <span class="mt-1.5 font-mono text-2xl font-black text-blue-950">
-                      {{ overallStat.county }}.0%
+                      {{ overallStat.county }}%
                     </span>
                     <span class="text-[10px] font-medium text-blue-700 mt-1">縣市常模</span>
                   </div>
@@ -720,7 +725,7 @@
                       全體平均
                     </span>
                     <span class="mt-1.5 font-mono text-2xl font-black text-purple-950">
-                      {{ overallStat.national }}.0%
+                      {{ overallStat.national }}%
                     </span>
                     <span class="text-[10px] font-medium text-purple-700 mt-1">全國總常模</span>
                   </div>
@@ -978,7 +983,7 @@
               <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
                 <th class="py-3 px-4 w-16 text-center">座號</th>
                 <th class="py-3 px-4">學生姓名</th>
-                <th class="py-3 px-4 text-center">科目答對率</th>
+                <th class="py-3 px-4 text-center">{{ inquiryState.subject }}答對率</th>
                 <th class="py-3 px-4 text-center">PR 值 (縣市)</th>
                 <th class="py-3 px-4 text-center">PR 值 (全國)</th>
                 <th class="py-3 px-4">弱勢向度警示</th>
@@ -1092,6 +1097,9 @@ import {
   GAOTONG_CLASS_IDS,
   getGaotongClassStudents,
   getGaotongClassStats,
+  getGaotongSubjectClassStats,
+  getGaotongSubjectDimensionList,
+  getGaotongSubjectDimensions,
   getActionPreset,
   PRIORITY_ITEMS
 } from '../../composables/useGaotongData'
@@ -1121,28 +1129,91 @@ watch(() => [state.role, state.grade, state.classroom], () => {
   }
 }, { immediate: true })
 
-// Mock Baseline Averages for Chart 2 (校級成績統計)
-const schoolAvg = 93
-const countyAvg = 86
-const nationalAvg = 84
+// 動態取得當前選定學科之色彩與元資料
+const activeSubjectMeta = computed(() => {
+  const subName = inquiryState.subject
+  const key = subName === '數學' ? 'math' : subName === '英語文' ? 'english' : 'chinese'
+  return GAOTONG_SUBJECTS.find((s) => s.id === key) || GAOTONG_SUBJECTS[0]
+})
 
-// 棒棒糖圖 (Lollipop Chart) Y 軸坐標映射 (聚焦 70% ~ 100%)
-function getRateY(rate) {
-  const val = Number(rate) || 70
-  const clamped = Math.max(70, Math.min(100, val))
-  // 100% -> Y=32, 70% -> Y=212 (高度 180px)
-  return Math.round(212 - ((clamped - 70) / 30) * 180)
-}
+// 可選向度清單（隨選定學科動態變換）
+const availableDimensions = computed(() => {
+  if (isGaotongGrade(inquiryState.grade)) {
+    const list = getGaotongSubjectDimensionList(inquiryState.subject)
+    return list.map((d) => ({
+      value: d,
+      label: d === '整體' ? `${inquiryState.subject} 整體答對率` : d
+    }))
+  }
+  return [
+    { value: '整體', label: '整體答對率' },
+    { value: '形音知識', label: '形音知識' },
+    { value: '字詞知識', label: '字詞知識' },
+    { value: '語法知識', label: '語法知識' },
+    { value: '篇章理解', label: '篇章理解' }
+  ]
+})
 
-// 各年級動態班級列表 (Chart 2 及班級切換共用)
-const classStats = computed(() => {
+// 學科與向度之全校班級統計 (Chart 2 棒棒糖圖核心數據)
+const subjectClassStatsData = computed(() => {
+  if (isGaotongGrade(inquiryState.grade)) {
+    return getGaotongSubjectClassStats(inquiryState.subject, inquiryState.dimension)
+  }
   const g = inquiryState.grade || '3'
   const rates = [95, 91, 84, 95, 95, 84, 96, 96]
-  return Array.from({ length: 8 }, (_, i) => ({
+  const classes = Array.from({ length: 8 }, (_, i) => ({
     name: `${g}0${i + 1}`,
     rate: rates[i % rates.length]
   }))
+  return {
+    classes,
+    schoolAvg: 93,
+    countyAvg: 86,
+    nationalAvg: 84
+  }
 })
+
+const classStats = computed(() => subjectClassStatsData.value.classes)
+const currentSchoolAvg = computed(() => subjectClassStatsData.value.schoolAvg)
+const currentCountyAvg = computed(() => subjectClassStatsData.value.countyAvg)
+const currentNationalAvg = computed(() => subjectClassStatsData.value.nationalAvg)
+
+// 動態 Y 軸尺度 (根據當前學科/向度之最低值自動調整，避免數學等科目被截斷在底線)
+const yMinRate = computed(() => {
+  const rates = classStats.value.map((c) => c.rate)
+  const lowest = Math.min(
+    currentSchoolAvg.value,
+    currentCountyAvg.value,
+    rates.length ? Math.min(...rates) : 70
+  )
+  if (lowest < 40) return 20
+  if (lowest < 60) return 30
+  return 60
+})
+
+const yTicks = computed(() => {
+  if (yMinRate.value === 20) return [100, 80, 60, 40, 20]
+  if (yMinRate.value === 30) return [100, 80, 60, 40]
+  return [100, 90, 80, 70, 60]
+})
+
+// 棒棒糖圖 (Lollipop Chart) Y 軸坐標映射 (動態 20%~100%、30%~100% 或 60%~100%)
+function getRateY(rate) {
+  const val = Number(rate) || yMinRate.value
+  const min = yMinRate.value
+  const max = 100
+  const clamped = Math.max(min, Math.min(max, val))
+  // max (100) -> Y=32, min -> Y=212 (高度 180px)
+  return Math.round(212 - ((clamped - min) / (max - min)) * 180)
+}
+
+function stemX(idx) {
+  const total = classStats.value.length || 1
+  if (total <= 1) return 360
+  const startX = 85
+  const endX = 640
+  return Math.round(startX + (idx / (total - 1)) * (endX - startX))
+}
 
 // 可選定之班級選單 (校長、校管、學年主任可選全校各班；導師僅能選擇其任教班級)
 const availableClasses = computed(() => {
@@ -1198,8 +1269,11 @@ watch(() => inquiryState.classObj, () => {
   }
 })
 
-// 各班向度統計數據 (動態隨選定之班級計算)
+// 各班向度統計數據 (動態隨選定之班級與科目計算)
 const classDimensions = computed(() => {
+  if (isGaotongGrade(inquiryState.grade)) {
+    return getGaotongSubjectDimensions(inquiryState.subject, inquiryState.classObj)
+  }
   const cNum = parseInt(inquiryState.classObj?.slice(-2) || '1', 10)
   return [
     { name: '總答對率', national: 70, county: 72, school: 77, classVal: Math.min(100, Math.max(50, 76 + ((cNum * 7) % 15) - 7)) },
@@ -1294,7 +1368,7 @@ const precisionTicks = computed(() => {
 // 各班學生名冊 (支援五年級真實數據庫 250 人與三年級示範)
 const allStudentsInClass = computed(() => {
   if (isGaotongGrade(inquiryState.grade)) {
-    return getGaotongClassStudents(inquiryState.classObj)
+    return getGaotongClassStudents(inquiryState.classObj, inquiryState.subject)
   }
   const cNum = parseInt(inquiryState.classObj?.slice(-2) || '1', 10)
   const lastNames = ['陳', '林', '黃', '張', '李', '王', '吳', '劉', '蔡', '楊']
@@ -1340,7 +1414,9 @@ const studentDrawerVisible = ref(false)
 const activeStudent = ref(null)
 
 // 高通真實數據庫狀態
-const treemapSubjectKey = ref('math')
+const treemapSubjectKey = ref(
+  inquiryState.subject === '數學' ? 'math' : inquiryState.subject === '英語文' ? 'english' : 'chinese'
+)
 const selectedAction = ref(null)
 const currentFilter = ref('all')
 
@@ -1372,7 +1448,23 @@ const filterOptions = [
 
 function chooseTreemapSubject(sId) {
   treemapSubjectKey.value = sId
+  if (sId === 'math') inquiryState.subject = '數學'
+  else if (sId === 'english') inquiryState.subject = '英語文'
+  else inquiryState.subject = '國語文'
 }
+
+// 雙向同步：切換學科下拉選單時，自動同步 Treemap 焦點科目並校驗向度
+watch(() => inquiryState.subject, (newSub) => {
+  if (newSub === '數學') treemapSubjectKey.value = 'math'
+  else if (newSub === '英語文') treemapSubjectKey.value = 'english'
+  else treemapSubjectKey.value = 'chinese'
+
+  // 若當前選擇的向度不在新科目的向度清單中，自動重設為「整體」
+  const validDims = availableDimensions.value.map(d => d.value)
+  if (!validDims.includes(inquiryState.dimension)) {
+    inquiryState.dimension = '整體'
+  }
+})
 
 function openAction(key) {
   selectedAction.value = getActionPreset(key)
