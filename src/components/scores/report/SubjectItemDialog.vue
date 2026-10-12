@@ -63,9 +63,13 @@
             <span class="text-[11px] text-rose-500 block mb-0.5">主要誘答選項</span>
             <strong class="text-lg font-black text-rose-700 font-mono">
               {{ item.topWrongOption ? letterAns(item.topWrongOption) : '—' }}
-              <span v-if="item.topWrongOption && item.topWrongOption !== '—'" class="text-xs font-normal">({{ item.topWrongShare || '' }})</span>
+              <span v-if="item.topWrongOption && item.topWrongOption !== '—'" class="text-xs font-normal">
+                ({{ item.topWrongRate != null ? `${item.topWrongRate}%` : item.topWrongShare || '' }})
+              </span>
             </strong>
-            <small class="text-[10px] text-rose-400 block">錯答集中度</small>
+            <small class="text-[10px] text-rose-400 block">
+              {{ item.topWrongShare ? `錯答集中度 ${item.topWrongShare}` : '錯答集中度' }}
+            </small>
           </div>
         </div>
 
@@ -263,6 +267,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { getQuestionDeepDiagnostic } from '../../../composables/useGaotongData'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -277,31 +282,56 @@ function letterAns(val) {
   return String(val)
 }
 
-const computedOptionRows = computed(() => {
-  if (!props.item) return []
-  if (props.item.optionRows && props.item.optionRows.length > 0) {
-    return props.item.optionRows
+const diagnosticData = computed(() => {
+  if (!props.item) return null
+  const raw = props.item
+
+  // If item already contains authentic optionRows and classRows, use directly
+  if (
+    raw.optionRows &&
+    raw.optionRows.length > 0 &&
+    raw.classRows &&
+    raw.classRows.length > 0 &&
+    raw.historicalInsight
+  ) {
+    return raw
   }
-  const correct = letterAns(props.item.answer)
-  const rates = props.item.optionRates || [58, 26, 11, 5]
-  return ['A', 'B', 'C', 'D'].map((label, idx) => ({
-    label,
-    rate: rates[idx] ?? 10,
-    isCorrect: label === correct
-  }))
+
+  // Otherwise, enhance with 100% genuine Gaotong dataset diagnostics
+  const qNum = raw.q || raw.qNum || 1
+  const subName = raw.subjectKey || raw.subjectName || raw.content || '國語文'
+  const cId = raw.classId || '501'
+  const seat = raw.studentContext?.seat || null
+  const real = getQuestionDeepDiagnostic(subName, qNum, cId, seat)
+
+  return {
+    ...real,
+    ...raw,
+    q: qNum,
+    short: real.short || raw.short,
+    content: real.content || raw.content,
+    cognitive: real.cognitive || raw.cognitive,
+    answerLetter: real.answerLetter || raw.answerLetter,
+    schoolRate: real.schoolRate ?? raw.schoolRate,
+    countyRate: real.countyRate ?? raw.countyRate,
+    totalValid: real.totalValid ?? raw.totalValid,
+    topWrongOption: real.topWrongOption || raw.topWrongOption,
+    topWrongShare: real.topWrongShare || raw.topWrongShare,
+    topWrongRate: real.topWrongRate ?? raw.topWrongRate,
+    optionRows: real.optionRows && real.optionRows.length ? real.optionRows : raw.optionRows,
+    classRows: real.classRows && real.classRows.length ? real.classRows : raw.classRows,
+    historicalInsight: real.historicalInsight || raw.historicalInsight,
+    affectedStudentsInClass: real.affectedStudentsInClass && real.affectedStudentsInClass.length ? real.affectedStudentsInClass : raw.affectedStudentsInClass
+  }
+})
+
+const item = computed(() => diagnosticData.value)
+
+const computedOptionRows = computed(() => {
+  return item.value?.optionRows || []
 })
 
 const computedClassRows = computed(() => {
-  if (!props.item) return []
-  if (props.item.classRows && props.item.classRows.length > 0) {
-    return props.item.classRows
-  }
-  const baseRate = props.item?.schoolRate || props.item?.rate || 68
-  const classes = ['507', '503', '508', '502', '505', '501', '506', '509', '504']
-  return classes.map((classId, i) => ({
-    classId,
-    rate: Math.max(30, Math.min(95, baseRate - 18 + i * 4)),
-    isCurrentClass: false
-  }))
+  return item.value?.classRows || []
 })
 </script>

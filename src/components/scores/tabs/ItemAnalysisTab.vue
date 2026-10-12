@@ -245,9 +245,14 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { scoreService } from '../../../services/scoreService'
+import {
+  isGaotongGrade,
+  getQuestionDeepDiagnostic,
+  getGaotongSubjectItems
+} from '../../../composables/useGaotongData'
 import SubjectItemDialog from '../report/SubjectItemDialog.vue'
 
 const isQuestionDialogVisible = ref(false)
@@ -264,52 +269,44 @@ function downloadSpecialReport(name) {
 }
 
 function openQuestionDialog(d) {
-  selectedQuestionItem.value = {
-    q: d.qNum,
-    rate: Number(d.schoolAcc),
-    countyRate: Number(d.countyAcc),
-    content: analysisFilters.subject !== 'all' ? analysisFilters.subject : '試題內容向度',
-    answer: ((d.qNum * 3) % 4) + 1,
-    optionRates: [54, 28, 11, 7],
-    topWrongOption: 2,
-    topWrongShare: '28%'
+  if (isGaotongGrade(analysisFilters.grade)) {
+    selectedQuestionItem.value = getQuestionDeepDiagnostic(
+      analysisFilters.subject,
+      d.qNum,
+      '501'
+    )
+  } else {
+    selectedQuestionItem.value = {
+      q: d.qNum,
+      rate: Number(d.schoolAcc),
+      countyRate: Number(d.countyAcc),
+      content: analysisFilters.subject !== 'all' ? analysisFilters.subject : '試題內容向度',
+      answer: ((d.qNum * 3) % 4) + 1
+    }
   }
   isQuestionDialogVisible.value = true
 }
 
-const analysisData = ref(Array.from({ length: 30 }, (_, i) => {
-  const qNum = i + 1
-  const countyAcc = 50 + Math.random() * 40
-  const overallAcc = countyAcc + (Math.random() * 10 - 5)
-  const schoolAcc = countyAcc + (Math.random() * 20 - 10)
-
-  if (i === 4 || i === 12 || i === 25) {
-    return {
-      qNum,
-      overallAcc: overallAcc.toFixed(1),
-      countyAcc: countyAcc.toFixed(1),
-      schoolAcc: Math.max(0, countyAcc - 15 - Math.random() * 10).toFixed(1)
-    }
-  }
-
-  return {
-    qNum,
-    overallAcc: Math.min(100, Math.max(0, overallAcc)).toFixed(1),
-    countyAcc: Math.min(100, Math.max(0, countyAcc)).toFixed(1),
-    schoolAcc: Math.min(100, Math.max(0, schoolAcc)).toFixed(1)
-  }
-}))
+const analysisData = ref([])
 
 async function loadData() {
-  const res = await scoreService.getQuestionAnalysisData(30)
-  if (res.success && res.data) {
-    analysisData.value = res.data
+  if (isGaotongGrade(analysisFilters.grade)) {
+    analysisData.value = getGaotongSubjectItems(analysisFilters.subject)
+  } else {
+    const res = await scoreService.getQuestionAnalysisData(30)
+    if (res.success && res.data) {
+      analysisData.value = res.data
+    }
   }
 }
 
-onMounted(() => {
-  loadData()
-})
+watch(
+  () => [analysisFilters.grade, analysisFilters.subject],
+  () => {
+    loadData()
+  },
+  { immediate: true }
+)
 
 const sortKey = ref('qNum')
 const sortOrder = ref('asc')

@@ -332,6 +332,46 @@ export function getGaotongSubjectDimensionList(subjectKey) {
   return ['整體', ...uniqueDims]
 }
 
+/** 取得指定學科的完整試題清單（含全校/縣市/整體答對率與落差，供試題分析頁使用） */
+export function getGaotongSubjectItems(subjectKey) {
+  let sKey = subjectKey
+  if (sKey === '國語' || sKey === '國語文' || sKey === '國文') sKey = 'chinese'
+  else if (sKey === '數學' || sKey === '數') sKey = 'math'
+  else if (sKey === '英語' || sKey === '英語文' || sKey === '英文') sKey = 'english'
+  if (!sKey || !subject360Data.subjects[sKey]) sKey = 'chinese'
+
+  const sub = subject360Data.subjects[sKey]
+  const items = sub?.items || []
+  const schoolStats = sub?.itemStats?.school || []
+  const cityItems = sub?.official?.cityItem || []
+  const subMeta = GAOTONG_SUBJECTS.find((s) => s.id === sKey) || GAOTONG_SUBJECTS[0]
+  const normFactor = subMeta.schoolAvg ? subMeta.countyAvg / subMeta.schoolAvg : 0.95
+
+  return items.map((it, idx) => {
+    const sStat = schoolStats[idx]
+    const cItem = cityItems[idx]
+    const schoolAcc = sStat?.rate != null ? Math.round(sStat.rate * 1000) / 10 : 70.0
+    let countyAcc = cItem?.rate != null ? Math.round(cItem.rate * 1000) / 10 : null
+    if (countyAcc == null) {
+      countyAcc = Math.round(Math.min(99, Math.max(15, schoolAcc * normFactor)) * 10) / 10
+    }
+    const overallAcc = Math.max(10, Math.min(99, Math.round((countyAcc - 1.5) * 10) / 10))
+    const delta = Math.round((schoolAcc - countyAcc) * 10) / 10
+
+    return {
+      qNum: it.q,
+      short: it.short || `第 ${it.q} 題`,
+      content: it.content || '向度評量',
+      cognitive: it.cognitive,
+      answer: it.answer,
+      schoolAcc: schoolAcc.toFixed(1),
+      countyAcc: countyAcc.toFixed(1),
+      overallAcc: overallAcc.toFixed(1),
+      delta: delta.toFixed(1)
+    }
+  })
+}
+
 /** 取得指定學科在指定班級的各向度得分及全校/縣市/全體基準 */
 export function getGaotongSubjectDimensions(subjectKey, classId = '501') {
   let sKey = subjectKey
@@ -734,10 +774,10 @@ export function getStudentDualPrScores(classId, seat) {
  */
 export function getQuestionDeepDiagnostic(subjectKey, questionNumber, classId = '501', seat = null) {
   let sKey = subjectKey
-  if (sKey === '國語文') sKey = 'chinese'
-  else if (sKey === '數學') sKey = 'math'
-  else if (sKey === '英語文') sKey = 'english'
-  if (!sKey || !subject360Data.subjects[sKey]) sKey = 'math'
+  if (sKey === '國語' || sKey === '國語文' || sKey === '國文') sKey = 'chinese'
+  else if (sKey === '數學' || sKey === '數') sKey = 'math'
+  else if (sKey === '英語' || sKey === '英語文' || sKey === '英文') sKey = 'english'
+  if (!sKey || !subject360Data.subjects[sKey]) sKey = 'chinese'
 
   const sub = subject360Data.subjects[sKey]
   const hSub = subject360HistoryData.subjects?.[sKey]
