@@ -65,7 +65,7 @@
         <div
           v-for="w in displayWrongItems"
           :key="'wrong-' + w.q"
-          @click="$emit('select-question', { ...w, subjectName: subject.name })"
+          @click="$emit('select-question', { ...w, subjectKey: subject.key, subjectName: subject.name })"
           class="flex items-center justify-between p-2 rounded-lg border text-xs cursor-pointer transition-all hover:scale-[1.01] hover:shadow-2xs"
           :class="w.mistakeType === 'careless'
             ? 'bg-amber-50/70 border-amber-200 text-amber-950 hover:bg-amber-100/80'
