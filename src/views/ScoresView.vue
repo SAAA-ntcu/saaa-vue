@@ -603,7 +603,7 @@
       <!-- Data Table Section -->
       <div class="p-5">
         <h4 class="text-sm font-bold text-slate-800 mb-3">試題詳細數據</h4>
-        <div class="border border-slate-200/80 rounded-xl overflow-hidden">
+        <div class="border border-slate-200/80 rounded-xl overflow-x-auto">
           <table class="w-full text-left border-collapse text-xs">
             <thead>
               <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold">
@@ -622,6 +622,9 @@
                 <th class="py-2.5 px-4 text-center cursor-pointer hover:bg-slate-100 select-none" @click="sortBy('delta')">
                   <div class="flex items-center justify-center gap-1">校與縣市落差 (Δ) <span v-if="sortKey==='delta'" class="text-[10px]">{{ sortOrder==='asc'?'▲':'▼' }}</span></div>
                 </th>
+                <th class="py-2.5 px-4 text-center cursor-pointer hover:bg-slate-100 select-none" @click="sortBy('deltaOverall')">
+                  <div class="flex items-center justify-center gap-1">校與整體落差 (Δ) <span v-if="sortKey==='deltaOverall'" class="text-[10px]">{{ sortOrder==='asc'?'▲':'▼' }}</span></div>
+                </th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
@@ -633,6 +636,11 @@
                 <td class="py-2 px-4 text-center font-mono font-bold">
                   <span :class="(Number(d.schoolAcc) - Number(d.countyAcc)) < 0 ? 'text-[#e07a5f]' : 'text-emerald-600'">
                     {{ (Number(d.schoolAcc) - Number(d.countyAcc)) > 0 ? '+' : '' }}{{ (Number(d.schoolAcc) - Number(d.countyAcc)).toFixed(1) }}%
+                  </span>
+                </td>
+                <td class="py-2 px-4 text-center font-mono font-bold">
+                  <span :class="(Number(d.schoolAcc) - Number(d.overallAcc)) < 0 ? 'text-[#e07a5f]' : 'text-emerald-600'">
+                    {{ (Number(d.schoolAcc) - Number(d.overallAcc)) > 0 ? '+' : '' }}{{ (Number(d.schoolAcc) - Number(d.overallAcc)).toFixed(1) }}%
                   </span>
                 </td>
               </tr>
@@ -1124,6 +1132,9 @@ const sortedAnalysisData = computed(() => {
     if (sortKey.value === 'delta') {
       valA = Number(a.schoolAcc) - Number(a.countyAcc);
       valB = Number(b.schoolAcc) - Number(b.countyAcc);
+    } else if (sortKey.value === 'deltaOverall') {
+      valA = Number(a.schoolAcc) - Number(a.overallAcc);
+      valB = Number(b.schoolAcc) - Number(b.overallAcc);
     } else {
       valA = Number(valA);
       valB = Number(valB);
