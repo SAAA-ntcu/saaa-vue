@@ -324,6 +324,7 @@
                     <el-switch
                       v-model="t.isActive"
                       size="small"
+                      style="--el-switch-on-color: #52796f; --el-switch-off-color: #cbd5e1;"
                       active-color="#52796f"
                       inactive-color="#cbd5e1"
                       @change="(val) => handleToggleTeacherStatus(t, val)"

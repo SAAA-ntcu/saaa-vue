@@ -69,3 +69,23 @@ body {
 .el-pagination.is-background .el-pager li:hover {
   color: #52796f !important;
 }
+
+/* Element Plus Theme Colors - Align with Morandi Primary Palette */
+:root {
+  --el-color-primary: #52796f;
+  --el-color-primary-light-3: #759a91;
+  --el-color-primary-light-5: #9cbab2;
+  --el-color-primary-light-7: #c3d9d3;
+  --el-color-primary-light-8: #d7e8e3;
+  --el-color-primary-light-9: #edf2ee;
+  --el-color-primary-dark-2: #354f52;
+}
+
+/* Ensure Element Plus switch uses morandi primary color */
+.el-switch.is-checked .el-switch__core {
+  background-color: #52796f !important;
+  border-color: #52796f !important;
+}
+.el-switch {
+  --el-switch-on-color: #52796f !important;
+}

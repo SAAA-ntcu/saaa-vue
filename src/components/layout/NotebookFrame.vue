@@ -3,7 +3,7 @@
     <div class="w-full flex flex-col justify-center py-6 md:py-12 relative overflow-hidden select-none">
       <div class="w-full max-w-[1550px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10 my-auto">
         <!-- Main Notebook Binder Shell (Morandi Sage/Slate Gradient) -->
-        <div class="relative rounded-[2.5rem] p-4 md:p-6 shadow-2xl shadow-slate-900/15 border-y-4 border-x-[12px] border-white/30 overflow-visible bg-gradient-to-br from-[#729289] to-[#5f7e76]">
+        <div class="relative rounded-[2.5rem] p-4 md:p-6 shadow-2xl shadow-slate-900/15 border-y-4 border-x-[12px] border-white/30 overflow-visible bg-gradient-to-br from-[#729289] to-[#5f7e76]" style="background-color: #6a8b81; background-image: linear-gradient(135deg, #729289 0%, #5f7e76 100%);">
           
           <!-- Binder Spine Loops (Left Side Rings: Graphite Slate & Terracotta) -->
           <div class="hidden md:flex absolute left-0 top-10 bottom-12 w-40 flex-col justify-start items-start gap-4 z-30 pointer-events-none transform -translate-x-[34px] overflow-hidden h-[calc(100%-5.5rem)] pb-2">
@@ -44,7 +44,7 @@
           </div>
 
           <!-- Inner Notebook White Page (Content Area) -->
-          <div class="bg-[#fcfdfd] rounded-[2rem] px-4 py-8 sm:px-8 md:pl-20 md:pr-10 shadow-inner min-h-[650px] flex flex-col justify-between relative z-10 border border-slate-100">
+          <div class="bg-[#fcfdfd] rounded-[2rem] px-4 py-8 sm:px-8 md:pl-20 md:pr-10 shadow-inner min-h-[650px] flex flex-col justify-between relative z-10 border border-slate-100" style="background-color: #ffffff;">
             <slot />
           </div>
 
